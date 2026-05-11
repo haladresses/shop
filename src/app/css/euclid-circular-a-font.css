@@ -1,4 +1,12 @@
 @font-face {
+  font-family: "SBC";
+  src: url("/fonts/sbc.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: "Euclid Circular A";
   src: url("../fonts/EuclidCircularA-Bold.woff2") format("woff2"),
     url("../fonts/EuclidCircularA-Bold.woff") format("woff");

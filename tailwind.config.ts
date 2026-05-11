@@ -1,6 +1,5 @@
 import type { Config } from "tailwindcss";
-
-const defaultTheme = require("tailwindcss/defaultTheme");
+import defaultTheme from "tailwindcss/defaultTheme";
 
 const config: Config = {
   content: [
@@ -11,7 +10,12 @@ const config: Config = {
   darkMode: "class",
   theme: {
     fontFamily: {
-      "euclid-circular-a": ["Euclid Circular A"],
+      sbc: ["SBC", ...defaultTheme.fontFamily.sans],
+      "euclid-circular-a": [
+        "SBC",
+        "Euclid Circular A",
+        ...defaultTheme.fontFamily.sans,
+      ],
     },
     container: {
       center: true,
