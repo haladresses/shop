@@ -2,19 +2,21 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import CustomSelect from "./CustomSelect";
-import { menuData } from "./menuData";
+import { getMenuData } from "./menuData";
 import Dropdown from "./Dropdown";
 import { useAppSelector } from "@/redux/store";
 import { useSelector } from "react-redux";
 import { selectTotalPrice } from "@/redux/features/cart-slice";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import Image from "next/image";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
   const { openCartModal } = useCartModalContext();
+  const { language, isArabic, setLanguage } = useLanguage();
 
   const product = useAppSelector((state) => state.cartReducer.items);
   const totalPrice = useSelector(selectTotalPrice);
@@ -36,16 +38,48 @@ const Header = () => {
     window.addEventListener("scroll", handleStickyMenu);
   });
 
-  const options = [
-    { label: "All Collections", value: "0" },
-    { label: "Women New In", value: "1" },
-    { label: "Girls Collection", value: "2" },
-    { label: "Baby Collection", value: "3" },
-    { label: "Party Wear", value: "4" },
-    { label: "Everyday Sets", value: "5" },
-    { label: "Accessories", value: "6" },
-    { label: "Sale", value: "7" },
-  ];
+  const copy = isArabic
+    ? {
+        options: [
+          { label: "كل التشكيلات", value: "0" },
+          { label: "وصل حديثاً للنساء", value: "1" },
+          { label: "تشكيلة البنات", value: "2" },
+          { label: "تشكيلة الأطفال", value: "3" },
+          { label: "ملابس المناسبات", value: "4" },
+          { label: "الأطقم اليومية", value: "5" },
+          { label: "الإكسسوارات", value: "6" },
+          { label: "التخفيضات", value: "7" },
+        ],
+        searchPlaceholder: "ابحثي عن أزياء النساء والأطفال...",
+        searchAria: "بحث",
+        supportEyebrow: "دعم المتجر",
+        accountEyebrow: "حسابي",
+        accountAction: "تسجيل الدخول",
+        bagEyebrow: "السلة",
+        recentlyViewed: "شوهد مؤخراً",
+        wishlist: "المفضلة",
+      }
+    : {
+        options: [
+          { label: "All Collections", value: "0" },
+          { label: "Women New In", value: "1" },
+          { label: "Girls Collection", value: "2" },
+          { label: "Baby Collection", value: "3" },
+          { label: "Party Wear", value: "4" },
+          { label: "Everyday Sets", value: "5" },
+          { label: "Accessories", value: "6" },
+          { label: "Sale", value: "7" },
+        ],
+        searchPlaceholder: "Search women and kids styles...",
+        searchAria: "Search",
+        supportEyebrow: "RETAIL SUPPORT",
+        accountEyebrow: "client area",
+        accountAction: "Log In",
+        bagEyebrow: "bag",
+        recentlyViewed: "Recently Viewed",
+        wishlist: "Wishlist",
+      };
+  const menuData = getMenuData(language);
 
   return (
     <header
@@ -56,12 +90,12 @@ const Header = () => {
       <div className="max-w-[1170px] mx-auto px-4 sm:px-7.5 xl:px-0">
         {/* <!-- header top start --> */}
         <div
-          className={`flex flex-col lg:flex-row gap-5 items-end lg:items-center xl:justify-between ease-out duration-200 ${
+          className={`flex flex-col lg:flex-row gap-5 ${isArabic ? "items-start" : "items-end"} lg:items-center xl:justify-between ease-out duration-200 ${
             stickyMenu ? "py-4" : "py-6"
           }`}
         >
           {/* <!-- header top left --> */}
-          <div className="xl:w-auto flex-col sm:flex-row w-full flex sm:justify-between sm:items-center gap-5 sm:gap-10">
+          <div className={`xl:w-auto flex-col sm:flex-row w-full flex sm:justify-between sm:items-center gap-5 sm:gap-10 ${isArabic ? "text-right" : ""}`}>
             <Link className="flex-shrink-0" href="/">
               <Image
                 src="/images/logo/logo.svg"
@@ -74,7 +108,7 @@ const Header = () => {
             <div className="max-w-[475px] w-full">
               <form>
                 <div className="flex items-center">
-                  <CustomSelect options={options} />
+                  <CustomSelect options={copy.options} />
 
                   <div className="relative max-w-[333px] sm:min-w-[333px] w-full">
                     {/* <!-- divider --> */}
@@ -85,14 +119,14 @@ const Header = () => {
                       type="search"
                       name="search"
                       id="search"
-                      placeholder="Search women and kids styles..."
+                      placeholder={copy.searchPlaceholder}
                       autoComplete="off"
                       className="custom-search w-full rounded-r-[5px] bg-gray-1 !border-l-0 border border-gray-3 py-2.5 pl-4 pr-10 outline-none ease-in duration-200"
                     />
 
                     <button
                       id="search-btn"
-                      aria-label="Search"
+                      aria-label={copy.searchAria}
                       className="flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 ease-in duration-200 hover:text-blue"
                     >
                       <svg
@@ -145,12 +179,37 @@ const Header = () => {
 
               <div>
                 <span className="block text-2xs text-dark-4 uppercase">
-                  RETAIL SUPPORT
+                  {copy.supportEyebrow}
                 </span>
                 <p className="font-medium text-custom-sm text-dark">
                   +968 9944 0312
                 </p>
               </div>
+            </div>
+
+            <div className="hidden md:flex items-center rounded-full border border-gray-3 bg-gray-1 p-1">
+              <button
+                type="button"
+                onClick={() => setLanguage("en")}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase transition ${
+                  language === "en"
+                    ? "bg-dark text-white shadow-sm"
+                    : "text-dark-4 hover:text-dark"
+                }`}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage("ar")}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                  language === "ar"
+                    ? "bg-dark text-white shadow-sm"
+                    : "text-dark-4 hover:text-dark"
+                }`}
+              >
+                عربي
+              </button>
             </div>
 
             {/* <!-- divider --> */}
@@ -182,10 +241,10 @@ const Header = () => {
 
                   <div>
                     <span className="block text-2xs text-dark-4 uppercase">
-                      client area
+                      {copy.accountEyebrow}
                     </span>
                     <p className="font-medium text-custom-sm text-dark">
-                      Log In
+                      {copy.accountAction}
                     </p>
                   </div>
                 </Link>
@@ -233,7 +292,7 @@ const Header = () => {
 
                   <div>
                     <span className="block text-2xs text-dark-4 uppercase">
-                      bag
+                      {copy.bagEyebrow}
                     </span>
                     <p className="font-medium text-custom-sm text-dark">
                       ${totalPrice}
@@ -294,7 +353,7 @@ const Header = () => {
           <div className="flex items-center justify-between">
             {/* <!--=== Main Nav Start ===--> */}
             <div
-              className={`w-[288px] absolute right-4 top-full xl:static xl:w-auto h-0 xl:h-auto invisible xl:visible xl:flex items-center justify-between ${
+              className={`w-[288px] absolute ${isArabic ? "left-4" : "right-4"} top-full xl:static xl:w-auto h-0 xl:h-auto invisible xl:visible xl:flex items-center justify-between ${
                 navigationOpen &&
                 `!visible bg-white shadow-lg border border-gray-3 !h-auto max-h-[400px] overflow-y-scroll rounded-md p-5`
               }`}
@@ -327,6 +386,30 @@ const Header = () => {
                   )}
                 </ul>
               </nav>
+              <div className="mt-5 flex items-center rounded-full border border-gray-3 bg-gray-1 p-1 xl:hidden">
+                <button
+                  type="button"
+                  onClick={() => setLanguage("en")}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase transition ${
+                    language === "en"
+                      ? "bg-dark text-white shadow-sm"
+                      : "text-dark-4 hover:text-dark"
+                  }`}
+                >
+                  EN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage("ar")}
+                  className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                    language === "ar"
+                      ? "bg-dark text-white shadow-sm"
+                      : "text-dark-4 hover:text-dark"
+                  }`}
+                >
+                  عربي
+                </button>
+              </div>
               {/* //   <!-- Main Nav End --> */}
             </div>
             {/* // <!--=== Main Nav End ===--> */}
@@ -356,7 +439,7 @@ const Header = () => {
                         fill=""
                       />
                     </svg>
-                    Recently Viewed
+                    {copy.recentlyViewed}
                   </a>
                 </li>
 
@@ -378,7 +461,7 @@ const Header = () => {
                         fill=""
                       />
                     </svg>
-                    Wishlist
+                    {copy.wishlist}
                   </Link>
                 </li>
               </ul>

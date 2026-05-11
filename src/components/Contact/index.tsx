@@ -1,18 +1,62 @@
+"use client";
+
 import React from "react";
 import Breadcrumb from "../Common/Breadcrumb";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const Contact = () => {
+  const { isArabic } = useLanguage();
+  const copy = isArabic
+    ? {
+        breadcrumbTitle: "اتصل بنا",
+        breadcrumbPage: "اتصل بنا",
+        heading: "تواصلي مع هلا دريسز",
+        name: "الاسم: فريق هلا دريسز",
+        phone: "الهاتف: +968 9944 0312",
+        address: "العنوان: بوشر، مسقط، عمان",
+        firstName: "الاسم الأول",
+        firstNamePlaceholder: "اكتبي اسمك الأول",
+        lastName: "اسم العائلة",
+        lastNamePlaceholder: "اكتبي اسم العائلة",
+        subject: "الموضوع",
+        subjectPlaceholder: "قسم النساء / قسم الأطفال / مساعدة في الطلب",
+        phoneLabel: "الهاتف",
+        phonePlaceholder: "شاركي رقم الهاتف أو الواتساب",
+        message: "الرسالة",
+        messagePlaceholder: "أخبرينا ماذا تبحثين عنه ولمن سيكون",
+        submit: "إرسال إلى فريق المتجر",
+      }
+    : {
+        breadcrumbTitle: "Contact",
+        breadcrumbPage: "contact",
+        heading: "Contact Hala Dresses",
+        name: "Name: Hala Dresses Retail Team",
+        phone: "Phone: +968 9944 0312",
+        address: "Address: Bousher, Muscat, Oman",
+        firstName: "First Name",
+        firstNamePlaceholder: "Your first name",
+        lastName: "Last Name",
+        lastNamePlaceholder: "Your last name",
+        subject: "Subject",
+        subjectPlaceholder: "Women collection / kids collection / order help",
+        phoneLabel: "Phone",
+        phonePlaceholder: "Share your phone or WhatsApp number",
+        message: "Message",
+        messagePlaceholder: "Tell us what you are shopping for and who it is for",
+        submit: "Send to Store Team",
+      };
+
   return (
     <>
-      <Breadcrumb title={"Contact"} pages={["contact"]} />
+      <Breadcrumb title={copy.breadcrumbTitle} pages={[copy.breadcrumbPage]} />
 
       <section className="overflow-hidden py-20 bg-gray-2">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
-          <div className="flex flex-col xl:flex-row gap-7.5">
+          <div className={`flex flex-col xl:flex-row gap-7.5 ${isArabic ? "text-right" : ""}`}>
             <div className="xl:max-w-[370px] w-full bg-white rounded-xl shadow-1">
               <div className="py-5 px-4 sm:px-7.5 border-b border-gray-3">
                 <p className="font-medium text-xl text-dark">
-                  Contact Hala Dresses
+                  {copy.heading}
                 </p>
               </div>
 
@@ -33,7 +77,7 @@ const Contact = () => {
                         fill="#3C50E0"
                       />
                     </svg>
-                    Name: Hala Dresses Retail Team
+                    {copy.name}
                   </p>
 
                   <p className="flex items-center gap-4">
@@ -61,7 +105,7 @@ const Contact = () => {
                         fill="#3C50E0"
                       />
                     </svg>
-                    Phone: +968 9944 0312
+                    {copy.phone}
                   </p>
 
                   <p className="flex gap-4">
@@ -80,7 +124,7 @@ const Contact = () => {
                         fill="#3C50E0"
                       />
                     </svg>
-                    Address: Bousher, Muscat, Oman
+                    {copy.address}
                   </p>
                 </div>
               </div>
@@ -91,28 +135,28 @@ const Contact = () => {
                 <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 mb-5">
                   <div className="w-full">
                     <label htmlFor="firstName" className="block mb-2.5">
-                      First Name <span className="text-red">*</span>
+                      {copy.firstName} <span className="text-red">*</span>
                     </label>
 
                     <input
                       type="text"
                       name="firstName"
                       id="firstName"
-                      placeholder="Your first name"
+                      placeholder={copy.firstNamePlaceholder}
                       className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                     />
                   </div>
 
                   <div className="w-full">
                     <label htmlFor="lastName" className="block mb-2.5">
-                      Last Name <span className="text-red">*</span>
+                      {copy.lastName} <span className="text-red">*</span>
                     </label>
 
                     <input
                       type="text"
                       name="lastName"
                       id="lastName"
-                      placeholder="Your last name"
+                      placeholder={copy.lastNamePlaceholder}
                       className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                     />
                   </div>
@@ -121,28 +165,28 @@ const Contact = () => {
                 <div className="flex flex-col lg:flex-row gap-5 sm:gap-8 mb-5">
                   <div className="w-full">
                     <label htmlFor="subject" className="block mb-2.5">
-                      Subject
+                      {copy.subject}
                     </label>
 
                     <input
                       type="text"
                       name="subject"
                       id="subject"
-                      placeholder="Women collection / kids collection / order help"
+                      placeholder={copy.subjectPlaceholder}
                       className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                     />
                   </div>
 
                   <div className="w-full">
                     <label htmlFor="phone" className="block mb-2.5">
-                      Phone
+                      {copy.phoneLabel}
                     </label>
 
                     <input
                       type="text"
                       name="phone"
                       id="phone"
-                      placeholder="Share your phone or WhatsApp number"
+                      placeholder={copy.phonePlaceholder}
                       className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                     />
                   </div>
@@ -150,14 +194,14 @@ const Contact = () => {
 
                 <div className="mb-7.5">
                   <label htmlFor="message" className="block mb-2.5">
-                    Message
+                    {copy.message}
                   </label>
 
                   <textarea
                     name="message"
                     id="message"
                     rows={5}
-                    placeholder="Tell us what you are shopping for and who it is for"
+                    placeholder={copy.messagePlaceholder}
                     className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full p-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
                   ></textarea>
                 </div>
@@ -166,7 +210,7 @@ const Contact = () => {
                   type="submit"
                   className="inline-flex font-medium text-white bg-blue py-3 px-7 rounded-md ease-out duration-200 hover:bg-blue-dark"
                 >
-                  Send to Store Team
+                  {copy.submit}
                 </button>
               </form>
             </div>

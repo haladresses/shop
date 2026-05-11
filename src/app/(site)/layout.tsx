@@ -11,6 +11,7 @@ import { ReduxProvider } from "@/redux/provider";
 import QuickViewModal from "@/components/Common/QuickViewModal";
 import CartSidebarModal from "@/components/Common/CartSidebarModal";
 import { PreviewSliderProvider } from "../context/PreviewSliderContext";
+import { LanguageProvider } from "../context/LanguageContext";
 import PreviewSliderModal from "@/components/Common/PreviewSlider";
 
 import ScrollToTop from "@/components/Common/ScrollToTop";
@@ -33,7 +34,7 @@ export default function RootLayout({
         {loading ? (
           <PreLoader />
         ) : (
-          <>
+          <LanguageProvider>
             <ReduxProvider>
               <CartModalProvider>
                 <ModalProvider>
@@ -50,7 +51,7 @@ export default function RootLayout({
             </ReduxProvider>
             <ScrollToTop />
             <Footer />
-          </>
+          </LanguageProvider>
         )}
       </body>
     </html>

@@ -3,6 +3,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { useCallback, useRef } from "react";
 import testimonialsData from "./testimonialsData";
 import Image from "next/image";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 // Import Swiper styles
 import "swiper/css/navigation";
@@ -10,6 +11,7 @@ import "swiper/css";
 import SingleItem from "./SingleItem";
 
 const Testimonials = () => {
+  const { isArabic } = useLanguage();
   const sliderRef = useRef(null);
 
   const handlePrev = useCallback(() => {
@@ -29,18 +31,18 @@ const Testimonials = () => {
           <div className="swiper testimonial-carousel common-carousel p-5">
             {/* <!-- section title --> */}
             <div className="mb-10 flex items-center justify-between">
-              <div>
-                <span className="flex items-center gap-2.5 font-medium text-dark mb-1.5">
+              <div className={isArabic ? "text-right" : ""}>
+                <span className={`flex items-center gap-2.5 font-medium text-dark mb-1.5 ${isArabic ? "flex-row-reverse" : ""}`}>
                   <Image
                     src="/images/icons/icon-08.svg"
                     alt="icon"
                     width={17}
                     height={17}
                   />
-                  Testimonials
+                  {isArabic ? "آراء العملاء" : "Testimonials"}
                 </span>
                 <h2 className="font-semibold text-xl xl:text-heading-5 text-dark">
-                  User Feedbacks
+                  {isArabic ? "تجارب المتسوقات" : "User Feedbacks"}
                 </h2>
               </div>
 

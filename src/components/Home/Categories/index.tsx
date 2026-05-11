@@ -1,7 +1,8 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useCallback, useRef, useEffect } from "react";
-import data from "./categoryData";
+import { getCategoryData } from "./categoryData";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 // Import Swiper styles
 import "swiper/css/navigation";
@@ -9,7 +10,9 @@ import "swiper/css";
 import SingleItem from "./SingleItem";
 
 const Categories = () => {
+  const { language, isArabic } = useLanguage();
   const sliderRef = useRef(null);
+  const data = getCategoryData(language);
 
   const handlePrev = useCallback(() => {
     if (!sliderRef.current) return;
@@ -34,7 +37,7 @@ const Categories = () => {
           {/* <!-- section title --> */}
           <div className="mb-10 flex items-center justify-between">
             <div>
-              <span className="flex items-center gap-2.5 font-medium text-dark mb-1.5">
+              <span className={`flex items-center gap-2.5 font-medium text-dark mb-1.5 ${isArabic ? "flex-row-reverse" : ""}`}>
                 <svg
                   width="20"
                   height="20"
@@ -69,10 +72,10 @@ const Categories = () => {
                     </clipPath>
                   </defs>
                 </svg>
-                Categories
+                {isArabic ? "الفئات" : "Categories"}
               </span>
               <h2 className="font-semibold text-xl xl:text-heading-5 text-dark">
-                Browse by Category
+                {isArabic ? "تسوق حسب الفئة" : "Browse by Category"}
               </h2>
             </div>
 
