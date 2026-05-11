@@ -6,8 +6,6 @@ import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css/pagination";
 import "swiper/css";
 
-import Image from "next/image";
-
 const HeroCarousal = () => {
   return (
     <Swiper
@@ -24,84 +22,44 @@ const HeroCarousal = () => {
       className="hero-carousel"
     >
       <SwiperSlide>
-        <div className="flex items-center pt-6 sm:pt-0 flex-col-reverse sm:flex-row">
-          <div className="max-w-[394px] py-10 sm:py-15 lg:py-24.5 pl-4 sm:pl-7.5 lg:pl-12.5">
-            <div className="flex items-center gap-4 mb-7.5 sm:mb-10">
-              <span className="block font-semibold text-heading-3 sm:text-heading-1 text-blue">
-                30%
-              </span>
-              <span className="block text-dark text-sm sm:text-custom-1 sm:leading-[24px]">
-                Sale
-                <br />
-                Off
-              </span>
-            </div>
-
-            <h1 className="font-semibold text-dark text-xl sm:text-3xl mb-3">
-              <a href="#">True Wireless Noise Cancelling Headphone</a>
+        <div className="px-6 sm:px-8 lg:px-12 py-14 sm:py-18 lg:py-24 min-h-[420px] flex items-center">
+          <div className="max-w-[560px]">
+            <span className="inline-flex rounded-full bg-blue/10 px-4 py-2 text-sm font-medium text-blue mb-6">
+              Hala Dresses Women and Kids Retail
+            </span>
+            <h1 className="font-semibold text-dark text-3xl sm:text-5xl leading-tight mb-5">
+              Everyday favorites and occasion looks for women and little ones.
             </h1>
-
-            <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi at ipsum at risus euismod lobortis in
+            <p className="max-w-[500px] text-dark-3 text-custom-sm sm:text-base">
+              Discover curated retail collections in Muscat with fresh women&apos;s styles, girls&apos; looks, and playful wardrobe essentials for every season.
             </p>
-
             <a
-              href="#"
+              href="/shop-with-sidebar"
               className="inline-flex font-medium text-white text-custom-sm rounded-md bg-dark py-3 px-9 ease-out duration-200 hover:bg-blue mt-10"
             >
-              Shop Now
+              Shop the Collection
             </a>
-          </div>
-
-          <div>
-            <Image
-              src="/images/hero/hero-01.png"
-              alt="headphone"
-              width={351}
-              height={358}
-            />
           </div>
         </div>
       </SwiperSlide>
       <SwiperSlide>
-        {" "}
-        <div className="flex items-center pt-6 sm:pt-0 flex-col-reverse sm:flex-row">
-          <div className="max-w-[394px] py-10 sm:py-15 lg:py-26 pl-4 sm:pl-7.5 lg:pl-12.5">
-            <div className="flex items-center gap-4 mb-7.5 sm:mb-10">
-              <span className="block font-semibold text-heading-3 sm:text-heading-1 text-blue">
-                30%
-              </span>
-              <span className="block text-dark text-sm sm:text-custom-1 sm:leading-[24px]">
-                Sale
-                <br />
-                Off
-              </span>
-            </div>
-
-            <h1 className="font-semibold text-dark text-xl sm:text-3xl mb-3">
-              <a href="#">True Wireless Noise Cancelling Headphone</a>
-            </h1>
-
-            <p>
-              Lorem ipsum dolor sit, consectetur elit nunc suscipit non ipsum
-              nec suscipit.
+        <div className="px-6 sm:px-8 lg:px-12 py-14 sm:py-18 lg:py-24 min-h-[420px] flex items-center">
+          <div className="max-w-[560px]">
+            <span className="inline-flex rounded-full bg-dark/5 px-4 py-2 text-sm font-medium text-dark mb-6">
+              Bousher, Muscat
+            </span>
+            <h2 className="font-semibold text-dark text-3xl sm:text-5xl leading-tight mb-5">
+              Visit the store or order directly through WhatsApp.
+            </h2>
+            <p className="max-w-[500px] text-dark-3 text-custom-sm sm:text-base">
+              Hala Dresses serves families across Oman with retail fashion for women and children, plus direct support during store hours from Saturday to Thursday.
             </p>
-
             <a
-              href="#"
-              className="inline-flex font-medium text-white text-custom-sm rounded-md bg-dark py-3 px-9 ease-out duration-200 hover:bg-blue mt-10"
+              href="/contact"
+              className="inline-flex font-medium text-white text-custom-sm rounded-md bg-blue py-3 px-9 ease-out duration-200 hover:bg-blue-dark mt-10"
             >
-              Shop Now
+              Contact the Store
             </a>
-          </div>
-
-          <div>
-            <Image
-              src="/images/hero/hero-01.png"
-              alt="headphone"
-              width={351}
-              height={358}
-            />
           </div>
         </div>
       </SwiperSlide>

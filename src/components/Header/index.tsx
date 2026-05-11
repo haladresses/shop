@@ -37,14 +37,14 @@ const Header = () => {
   });
 
   const options = [
-    { label: "All Categories", value: "0" },
-    { label: "Desktop", value: "1" },
-    { label: "Laptop", value: "2" },
-    { label: "Monitor", value: "3" },
-    { label: "Phone", value: "4" },
-    { label: "Watch", value: "5" },
-    { label: "Mouse", value: "6" },
-    { label: "Tablet", value: "7" },
+    { label: "All Collections", value: "0" },
+    { label: "Women New In", value: "1" },
+    { label: "Girls Collection", value: "2" },
+    { label: "Baby Collection", value: "3" },
+    { label: "Party Wear", value: "4" },
+    { label: "Everyday Sets", value: "5" },
+    { label: "Accessories", value: "6" },
+    { label: "Sale", value: "7" },
   ];
 
   return (
@@ -65,9 +65,9 @@ const Header = () => {
             <Link className="flex-shrink-0" href="/">
               <Image
                 src="/images/logo/logo.svg"
-                alt="Logo"
-                width={219}
-                height={36}
+                alt="Hala Dresses"
+                width={42}
+                height={42}
               />
             </Link>
 
@@ -85,7 +85,7 @@ const Header = () => {
                       type="search"
                       name="search"
                       id="search"
-                      placeholder="I am shopping for..."
+                      placeholder="Search women and kids styles..."
                       autoComplete="off"
                       className="custom-search w-full rounded-r-[5px] bg-gray-1 !border-l-0 border border-gray-3 py-2.5 pl-4 pr-10 outline-none ease-in duration-200"
                     />
@@ -145,10 +145,10 @@ const Header = () => {
 
               <div>
                 <span className="block text-2xs text-dark-4 uppercase">
-                  24/7 SUPPORT
+                  RETAIL SUPPORT
                 </span>
                 <p className="font-medium text-custom-sm text-dark">
-                  (+965) 7492-3477
+                  +968 9944 0312
                 </p>
               </div>
             </div>
@@ -182,10 +182,10 @@ const Header = () => {
 
                   <div>
                     <span className="block text-2xs text-dark-4 uppercase">
-                      account
+                      client area
                     </span>
                     <p className="font-medium text-custom-sm text-dark">
-                      Sign In
+                      Log In
                     </p>
                   </div>
                 </Link>
@@ -233,7 +233,7 @@ const Header = () => {
 
                   <div>
                     <span className="block text-2xs text-dark-4 uppercase">
-                      cart
+                      bag
                     </span>
                     <p className="font-medium text-custom-sm text-dark">
                       ${totalPrice}

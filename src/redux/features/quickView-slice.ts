@@ -22,7 +22,7 @@ export const quickView = createSlice({
   name: "quickView",
   initialState,
   reducers: {
-    updateQuickView: (_, action) => {
+    updateQuickView: (_, action: PayloadAction<Product>) => {
       return {
         value: {
           ...action.payload,

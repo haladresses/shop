@@ -1,41 +1,41 @@
 const data = [
   {
-    title: "Televisions",
+    title: "Women New In",
     id: 1,
     img: "/images/categories/categories-01.png",
   },
   {
-    title: "Laptop & PC",
+    title: "Girls Collection",
     id: 2,
     img: "/images/categories/categories-02.png",
   },
   {
-    title: "Mobile & Tablets",
+    title: "Baby Collection",
     id: 3,
     img: "/images/categories/categories-03.png",
   },
   {
-    title: "Games & Videos",
+    title: "Party Wear",
     id: 4,
     img: "/images/categories/categories-04.png",
   },
   {
-    title: "Home Appliances",
+    title: "Mom and Mini",
     id: 5,
     img: "/images/categories/categories-05.png",
   },
   {
-    title: "Health & Sports",
+    title: "Everyday Basics",
     id: 6,
     img: "/images/categories/categories-06.png",
   },
   {
-    title: "Watches",
+    title: "Accessories",
     id: 7,
     img: "/images/categories/categories-07.png",
   },
   {
-    title: "Televisions",
+    title: "Sale Picks",
     id: 8,
     img: "/images/categories/categories-04.png",
   },

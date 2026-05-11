@@ -6,12 +6,9 @@ import "swiper/css";
 import Image from "next/image";
 
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
-import { useAppSelector } from "@/redux/store";
 
 const PreviewSliderModal = () => {
   const { closePreviewModal, isModalPreviewOpen } = usePreviewSlider();
-
-  const data = useAppSelector((state) => state.productDetailsReducer.value);
 
   const sliderRef = useRef(null);
 

@@ -3,8 +3,8 @@ import BlogDetailsWithSidebar from "@/components/BlogDetailsWithSidebar";
 
 import { Metadata } from "next";
 export const metadata: Metadata = {
-  title: "Blog Details Page | NextCommerce Nextjs E-commerce template",
-  description: "This is Blog Details Page for NextCommerce Template",
+  title: "Journal Story | Hala Dresses",
+  description: "Explore Hala Dresses editorial stories, styling notes, and occasionwear inspiration.",
   // other metadata
 };
 

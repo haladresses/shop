@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import {

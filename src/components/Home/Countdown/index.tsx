@@ -20,8 +20,7 @@ const CounDown = () => {
   };
 
   useEffect(() => {
-    // @ts-ignore
-    const interval = setInterval(() => getTime(deadline), 1000);
+    const interval = setInterval(getTime, 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -36,10 +35,10 @@ const CounDown = () => {
             </span>
 
             <h2 className="font-bold text-dark text-xl lg:text-heading-4 xl:text-heading-3 mb-3">
-              Enhance Your Music Experience
+              The next Hala capsule closes soon.
             </h2>
 
-            <p>The Havit H206d is a wired PC headphone.</p>
+            <p>Reserve your favorite silhouette before the private release ends.</p>
 
             {/* <!-- Countdown timer --> */}
             <div
@@ -104,10 +103,10 @@ const CounDown = () => {
             {/* <!-- Countdown timer ends --> */}
 
             <a
-              href="#"
+              href="/shop-with-sidebar"
               className="inline-flex font-medium text-custom-sm text-white bg-blue py-3 px-9.5 rounded-md ease-out duration-200 hover:bg-blue-dark mt-7.5"
             >
-              Check it Out!
+              Reserve Your Look
             </a>
           </div>
 

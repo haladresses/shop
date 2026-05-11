@@ -3,13 +3,13 @@ import { Menu } from "@/types/Menu";
 export const menuData: Menu[] = [
   {
     id: 1,
-    title: "Popular",
+    title: "Home",
     newTab: false,
     path: "/",
   },
   {
     id: 2,
-    title: "Shop",
+    title: "Collections",
     newTab: false,
     path: "/shop-with-sidebar",
   },
@@ -21,19 +21,19 @@ export const menuData: Menu[] = [
   },
   {
     id: 6,
-    title: "pages",
+    title: "Client Area",
     newTab: false,
     path: "/",
     submenu: [
       {
         id: 61,
-        title: "Shop With Sidebar",
+        title: "The Full Edit",
         newTab: false,
         path: "/shop-with-sidebar",
       },
       {
         id: 62,
-        title: "Shop Without Sidebar",
+        title: "Occasionwear",
         newTab: false,
         path: "/shop-without-sidebar",
       },
@@ -45,7 +45,7 @@ export const menuData: Menu[] = [
       },
       {
         id: 65,
-        title: "Cart",
+        title: "Shopping Bag",
         newTab: false,
         path: "/cart",
       },
@@ -57,13 +57,13 @@ export const menuData: Menu[] = [
       },
       {
         id: 67,
-        title: "Sign in",
+        title: "Client Login",
         newTab: false,
         path: "/signin",
       },
       {
         id: 68,
-        title: "Sign up",
+        title: "Create Account",
         newTab: false,
         path: "/signup",
       },
@@ -95,31 +95,31 @@ export const menuData: Menu[] = [
   },
   {
     id: 7,
-    title: "blogs",
+    title: "Journal",
     newTab: false,
     path: "/",
     submenu: [
       {
         id: 71,
-        title: "Blog Grid with sidebar",
+        title: "Journal With Sidebar",
         newTab: false,
         path: "/blogs/blog-grid-with-sidebar",
       },
       {
         id: 72,
-        title: "Blog Grid",
+        title: "Journal Grid",
         newTab: false,
         path: "/blogs/blog-grid",
       },
       {
         id: 73,
-        title: "Blog details with sidebar",
+        title: "Journal Story With Sidebar",
         newTab: false,
         path: "/blogs/blog-details-with-sidebar",
       },
       {
         id: 74,
-        title: "Blog details",
+        title: "Journal Story",
         newTab: false,
         path: "/blogs/blog-details",
       },
