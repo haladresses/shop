@@ -5,6 +5,7 @@ import Breadcrumb from "../Common/Breadcrumb";
 import { useLanguage } from "@/app/context/LanguageContext";
 
 const Contact = () => {
+  const supportPhone = "+968 9944 0312";
   const { isArabic } = useLanguage();
   const copy = isArabic
     ? {
@@ -12,7 +13,7 @@ const Contact = () => {
         breadcrumbPage: "اتصل بنا",
         heading: "تواصلي مع هلا دريسز",
         name: "الاسم: فريق هلا دريسز",
-        phone: "الهاتف: +968 9944 0312",
+        supportPhoneLabel: "الهاتف:",
         address: "العنوان: بوشر، مسقط، عمان",
         firstName: "الاسم الأول",
         firstNamePlaceholder: "اكتبي اسمك الأول",
@@ -31,7 +32,7 @@ const Contact = () => {
         breadcrumbPage: "contact",
         heading: "Contact Hala Dresses",
         name: "Name: Hala Dresses Retail Team",
-        phone: "Phone: +968 9944 0312",
+        supportPhoneLabel: "Phone:",
         address: "Address: Bousher, Muscat, Oman",
         firstName: "First Name",
         firstNamePlaceholder: "Your first name",
@@ -105,7 +106,8 @@ const Contact = () => {
                         fill="#3C50E0"
                       />
                     </svg>
-                    {copy.phone}
+                    <span>{copy.supportPhoneLabel}</span>
+                    <span className="phone-ltr inline-block">{supportPhone}</span>
                   </p>
 
                   <p className="flex gap-4">

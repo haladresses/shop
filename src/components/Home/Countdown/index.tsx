@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
 
@@ -10,28 +10,36 @@ const CounDown = () => {
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
 
-  const deadline = "December, 31, 2024";
+  const deadline = useMemo(
+    () => new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).getTime(),
+    [],
+  );
 
-  const getTime = () => {
-    const time = Date.parse(deadline) - Date.now();
+  const getTime = useCallback(() => {
+    const time = Math.max(deadline - Date.now(), 0);
 
     setDays(Math.floor(time / (1000 * 60 * 60 * 24)));
     setHours(Math.floor((time / (1000 * 60 * 60)) % 24));
     setMinutes(Math.floor((time / 1000 / 60) % 60));
     setSeconds(Math.floor((time / 1000) % 60));
-  };
+  }, [deadline]);
 
   useEffect(() => {
+    getTime();
     const interval = setInterval(getTime, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [deadline]);
 
   return (
     <section className="overflow-hidden py-20">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
         <div className="relative overflow-hidden z-1 rounded-lg bg-[#D0E9F3] p-4 sm:p-7.5 lg:p-10 xl:p-15">
-          <div className={`max-w-[422px] w-full ${isArabic ? "text-right" : ""}`}>
+          <div
+            className={`relative z-10 max-w-[422px] w-full ${
+              isArabic ? "text-right lg:ml-auto" : "lg:mr-auto"
+            }`}
+          >
             <span className="block font-medium text-custom-1 text-blue mb-2.5">
               {isArabic ? "لا تفوتيه" : "Don’t Miss!!"}
             </span>
@@ -48,7 +56,9 @@ const CounDown = () => {
 
             {/* <!-- Countdown timer --> */}
             <div
-              className="flex flex-wrap gap-6 mt-6"
+              className={`flex flex-wrap gap-6 mt-6 ${
+                isArabic ? "justify-end" : "justify-start"
+              }`}
               x-data="timer()"
               x-init="countdown()"
             >
@@ -120,14 +130,18 @@ const CounDown = () => {
           <Image
             src="/images/countdown/countdown-bg.png"
             alt="bg shapes"
-            className="hidden sm:block absolute right-0 bottom-0 -z-1"
+            className={`hidden sm:block absolute bottom-0 -z-1 ${
+              isArabic ? "left-0 scale-x-[-1]" : "right-0"
+            }`}
             width={737}
             height={482}
           />
           <Image
             src="/images/countdown/countdown-01.png"
             alt="product"
-            className="hidden lg:block absolute right-4 xl:right-33 bottom-4 xl:bottom-10 -z-1"
+            className={`hidden lg:block absolute bottom-4 xl:bottom-10 -z-1 ${
+              isArabic ? "left-4 xl:left-33" : "right-4 xl:right-33"
+            }`}
             width={411}
             height={376}
           />

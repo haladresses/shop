@@ -12,6 +12,7 @@ import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
 
 const Header = () => {
+  const supportPhone = "+968 9944 0312";
   const [searchQuery, setSearchQuery] = useState("");
   const [navigationOpen, setNavigationOpen] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
@@ -112,7 +113,11 @@ const Header = () => {
 
                   <div className="relative max-w-[333px] sm:min-w-[333px] w-full">
                     {/* <!-- divider --> */}
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 inline-block w-px h-5.5 bg-gray-4"></span>
+                    <span
+                      className={`absolute top-1/2 -translate-y-1/2 inline-block w-px h-5.5 bg-gray-4 ${
+                        isArabic ? "right-0" : "left-0"
+                      }`}
+                    ></span>
                     <input
                       onChange={(e) => setSearchQuery(e.target.value)}
                       value={searchQuery}
@@ -120,14 +125,21 @@ const Header = () => {
                       name="search"
                       id="search"
                       placeholder={copy.searchPlaceholder}
+                      dir={isArabic ? "rtl" : "ltr"}
                       autoComplete="off"
-                      className="custom-search w-full rounded-r-[5px] bg-gray-1 !border-l-0 border border-gray-3 py-2.5 pl-4 pr-10 outline-none ease-in duration-200"
+                      className={`custom-search w-full bg-gray-1 border border-gray-3 py-2.5 outline-none ease-in duration-200 ${
+                        isArabic
+                          ? "rounded-l-[5px] !border-r-0 pr-4 pl-10 text-right"
+                          : "rounded-r-[5px] !border-l-0 pl-4 pr-10 text-left"
+                      }`}
                     />
 
                     <button
                       id="search-btn"
                       aria-label={copy.searchAria}
-                      className="flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 ease-in duration-200 hover:text-blue"
+                      className={`flex items-center justify-center absolute top-1/2 -translate-y-1/2 ease-in duration-200 hover:text-blue ${
+                        isArabic ? "left-3" : "right-3"
+                      }`}
                     >
                       <svg
                         className="fill-current"
@@ -151,7 +163,11 @@ const Header = () => {
 
           {/* <!-- header top right --> */}
           <div className="flex w-full lg:w-auto items-center gap-7.5">
-            <div className="hidden xl:flex items-center gap-3.5">
+            <div
+              className={`hidden xl:flex items-center gap-3.5 ${
+                isArabic ? "flex-row-reverse text-right" : ""
+              }`}
+            >
               <svg
                 width="24"
                 height="24"
@@ -178,11 +194,11 @@ const Header = () => {
               </svg>
 
               <div>
-                <span className="block text-2xs text-dark-4 uppercase">
+                <span className={`block text-2xs text-dark-4 ${isArabic ? "" : "uppercase"}`}>
                   {copy.supportEyebrow}
                 </span>
                 <p className="font-medium text-custom-sm text-dark">
-                  +968 9944 0312
+                  <span className="phone-ltr inline-block">{supportPhone}</span>
                 </p>
               </div>
             </div>

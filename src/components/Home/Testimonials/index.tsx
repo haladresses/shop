@@ -46,7 +46,7 @@ const Testimonials = () => {
                 </h2>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="carousel-controls flex items-center gap-3">
                 <div onClick={handlePrev} className="swiper-button-prev">
                   <svg
                     className="fill-current"

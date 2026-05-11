@@ -4,6 +4,7 @@ import React from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 
 const PromoBanner = () => {
+  const supportPhone = "+968 9944 0312";
   const { isArabic } = useLanguage();
   const copy = isArabic
     ? {
@@ -17,7 +18,7 @@ const PromoBanner = () => {
         timingText: "11 صباحاً - 1 ظهراً و6 مساءً - 8 مساءً",
         timingCta: "زورينا",
         whatsappEyebrow: "طلبات واتساب",
-        whatsappTitle: "رد سريع على +968 9944 0312",
+        whatsappTitle: "رد سريع على",
         whatsappText: "اسألي عن التوفر والمقاسات وأقرب إطلالة تناسبك مباشرة عبر واتساب هلا دريسز.",
         whatsappCta: "تواصلي عبر واتساب",
       }
@@ -32,7 +33,7 @@ const PromoBanner = () => {
         timingText: "11AM-1PM and 6PM-8PM",
         timingCta: "Visit Us",
         whatsappEyebrow: "WhatsApp Orders",
-        whatsappTitle: "Fast replies on +968 9944 0312",
+        whatsappTitle: "Fast replies on",
         whatsappText:
           "Ask about stock, sizing, or your nearest favorite look directly through the Hala Dresses WhatsApp line.",
         whatsappCta: "Chat on WhatsApp",
@@ -96,7 +97,10 @@ const PromoBanner = () => {
               </span>
 
               <h2 className="font-bold text-xl lg:text-heading-4 text-dark mb-2.5">
-                <span className="text-orange">{copy.whatsappTitle}</span>
+                <span className="text-orange">
+                  {copy.whatsappTitle}{" "}
+                  <span className="phone-ltr inline-block">{supportPhone}</span>
+                </span>
               </h2>
 
               <p className="max-w-[285px] text-custom-sm">

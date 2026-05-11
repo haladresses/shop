@@ -6,6 +6,7 @@ import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { useLanguage } from "@/app/context/LanguageContext";
 
 const Footer = () => {
+  const supportPhone = "+968 9944 0312";
   const { isArabic } = useLanguage();
   const year = new Date().getFullYear();
   const copy = isArabic
@@ -95,7 +96,7 @@ const Footer = () => {
                       fill="#3C50E0"
                     />
                   </svg>
-                  +968 9944 0312
+                  <span className="phone-ltr inline-block">{supportPhone}</span>
                 </a>
               </li>
 

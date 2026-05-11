@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 
-const CustomSelect = ({ options }) => {
+type Option = {
+  label: string;
+  value: string;
+};
+
+const CustomSelect = ({ options }: { options: Option[] }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState(options[0]);
 
@@ -29,6 +34,10 @@ const CustomSelect = ({ options }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
+
+  useEffect(() => {
+    setSelectedOption(options[0]);
+  }, [options]);
 
   return (
     <div className="dropdown-content custom-select relative" style={{ width: "200px" }}>
