@@ -19,8 +19,8 @@ const Footer = () => {
         instagramLead: "تابعينا على",
         account: "الحساب",
         accountLinks: ["حسابي", "تسجيل الدخول / إنشاء حساب", "سلة التسوق", "المفضلة", "التشكيلات"],
-        care: "خدمة العملاء",
-        careLinks: ["سياسة الخصوصية", "سياسة الاسترجاع", "شروط الاستخدام", "الأسئلة الشائعة", "اتصل بنا"],
+        care: "دعم العملاء",
+        careLinks: ["الخصوصية", "الاسترجاع", "شروط الاستخدام", "الأسئلة الشائعة", "اتصل بنا"],
         copyright: `© ${year}. هلا دريسز. جميع الحقوق محفوظة.`,
         payments: "وسائل الدفع:",
       }
@@ -266,33 +266,33 @@ const Footer = () => {
           </div>
 
           <div className="w-full sm:w-auto">
-            <h2 className="mb-7.5 text-custom-1 font-medium text-dark">
+            <h2 className="mb-7.5 whitespace-nowrap text-custom-1 font-medium text-dark">
               {copy.care}
             </h2>
 
             <ul className="flex flex-col gap-3">
               <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
+                <a className="whitespace-nowrap ease-out duration-200 hover:text-blue" href="#">
                   {copy.careLinks[0]}
                 </a>
               </li>
               <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
+                <a className="whitespace-nowrap ease-out duration-200 hover:text-blue" href="#">
                   {copy.careLinks[1]}
                 </a>
               </li>
               <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
+                <a className="whitespace-nowrap ease-out duration-200 hover:text-blue" href="#">
                   {copy.careLinks[2]}
                 </a>
               </li>
               <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
+                <a className="whitespace-nowrap ease-out duration-200 hover:text-blue" href="#">
                   {copy.careLinks[3]}
                 </a>
               </li>
               <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
+                <a className="whitespace-nowrap ease-out duration-200 hover:text-blue" href="#">
                   {copy.careLinks[4]}
                 </a>
               </li>

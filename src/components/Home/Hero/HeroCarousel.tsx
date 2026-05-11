@@ -8,7 +8,7 @@ import "swiper/css/pagination";
 import "swiper/css";
 
 const HeroCarousal = () => {
-  const { isArabic } = useLanguage();
+  const { language, isArabic } = useLanguage();
   const slides = isArabic
     ? [
         {
@@ -53,6 +53,8 @@ const HeroCarousal = () => {
 
   return (
     <Swiper
+      key={language}
+      dir={isArabic ? "rtl" : "ltr"}
       spaceBetween={30}
       centeredSlides={true}
       autoplay={{

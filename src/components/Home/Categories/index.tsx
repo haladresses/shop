@@ -119,7 +119,9 @@ const Categories = () => {
           </div>
 
           <Swiper
+            key={language}
             ref={sliderRef}
+            dir={isArabic ? "rtl" : "ltr"}
             slidesPerView={6}
             breakpoints={{
               // when window width is >= 640px

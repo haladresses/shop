@@ -11,7 +11,7 @@ import "swiper/css";
 import SingleItem from "./SingleItem";
 
 const Testimonials = () => {
-  const { isArabic } = useLanguage();
+  const { language, isArabic } = useLanguage();
   const sliderRef = useRef(null);
 
   const handlePrev = useCallback(() => {
@@ -86,7 +86,9 @@ const Testimonials = () => {
             </div>
 
             <Swiper
+              key={language}
               ref={sliderRef}
+              dir={isArabic ? "rtl" : "ltr"}
               slidesPerView={3}
               spaceBetween={20}
               breakpoints={{
