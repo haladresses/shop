@@ -45,14 +45,8 @@ const CounDown = () => {
             </span>
 
             <h2 className="font-bold text-dark text-xl lg:text-heading-4 xl:text-heading-3 mb-3">
-              {isArabic ? "الدفعة القادمة من هلا تنتهي قريباً." : "The next Hala capsule closes soon."}
+              {isArabic ? "العرض ينتهي قريباً." : "This offer ends soon."}
             </h2>
-
-            <p>
-              {isArabic
-                ? "احجزي القطع المفضلة لديك قبل انتهاء الدفعة الحالية."
-                : "Reserve your favorite silhouette before the private release ends."}
-            </p>
 
             {/* <!-- Countdown timer --> */}
             <div
@@ -126,25 +120,22 @@ const CounDown = () => {
             </a>
           </div>
 
-          {/* <!-- bg shapes --> */}
-          <Image
-            src="/images/countdown/countdown-bg.png"
-            alt="bg shapes"
-            className={`hidden sm:block absolute bottom-0 -z-1 ${
-              isArabic ? "left-0 scale-x-[-1]" : "right-0"
+          <div
+            className={`hidden lg:block absolute bottom-0 -z-1 ${
+              isArabic ? "left-0" : "right-0"
             }`}
-            width={737}
-            height={482}
-          />
-          <Image
-            src="/images/countdown/countdown-01.png"
-            alt="product"
-            className={`hidden lg:block absolute bottom-4 xl:bottom-10 -z-1 ${
-              isArabic ? "left-4 xl:left-33" : "right-4 xl:right-33"
-            }`}
-            width={411}
-            height={376}
-          />
+            style={{ width: 480, height: "100%" }}
+          >
+            <div className="relative w-full h-full">
+              <Image
+                src="/images/products/p4.webp"
+                alt="featured product"
+                fill
+                className="object-cover object-top"
+                sizes="480px"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </section>

@@ -2,52 +2,45 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import { useLanguage } from "@/app/context/LanguageContext";
+import Image from "next/image";
 
-// Import Swiper styles
 import "swiper/css/pagination";
 import "swiper/css";
 
 const HeroCarousal = () => {
   const { language, isArabic } = useLanguage();
+
   const slides = isArabic
     ? [
         {
-          badge: "هلا دريسز لأزياء النساء والأطفال",
-          title: "إطلالات يومية ومناسبات جميلة للنساء والصغيرات.",
-          description:
-            "اكتشفي تشكيلات مختارة في مسقط تضم أزياء نسائية متجددة، وإطلالات للبنات، وقطعاً مريحة لكل موسم.",
-          cta: "تسوقي التشكيلة",
+          badge: "هلا دريسز — مسقط",
+          title: "أزياء نسائية وأطفال مختارة.",
+          cta: "تسوقي الآن",
           href: "/shop-with-sidebar",
-          tone: "dark",
+          img: "/images/products/p1.png",
         },
         {
-          badge: "بوشر، مسقط",
-          title: "زوري المتجر أو اطلبي مباشرة عبر واتساب.",
-          description:
-            "هلا دريسز يخدم العائلات في عمان بأزياء نسائية وأطفال مع دعم مباشر خلال ساعات عمل المتجر من السبت إلى الخميس.",
-          cta: "تواصلي مع المتجر",
-          href: "/contact",
-          tone: "blue",
+          badge: "تشكيلة البنات",
+          title: "فساتين أنيقة لكل مناسبة.",
+          cta: "اكتشفي التشكيلة",
+          href: "/shop-with-sidebar",
+          img: "/images/products/p3.png",
         },
       ]
     : [
         {
-          badge: "Hala Dresses Women and Kids Retail",
-          title: "Everyday favorites and occasion looks for women and little ones.",
-          description:
-            "Discover curated retail collections in Muscat with fresh women's styles, girls' looks, and playful wardrobe essentials for every season.",
-          cta: "Shop the Collection",
+          badge: "Hala Dresses — Muscat",
+          title: "Women & kids fashion, curated.",
+          cta: "Shop Now",
           href: "/shop-with-sidebar",
-          tone: "dark",
+          img: "/images/products/p1.png",
         },
         {
-          badge: "Bousher, Muscat",
-          title: "Visit the store or order directly through WhatsApp.",
-          description:
-            "Hala Dresses serves families across Oman with retail fashion for women and children, plus direct support during store hours from Saturday to Thursday.",
-          cta: "Contact the Store",
-          href: "/contact",
-          tone: "blue",
+          badge: "Girls' Collection",
+          title: "Elegant dresses for every occasion.",
+          cta: "Explore",
+          href: "/shop-with-sidebar",
+          img: "/images/products/p3.png",
         },
       ];
 
@@ -55,39 +48,51 @@ const HeroCarousal = () => {
     <Swiper
       key={language}
       dir={isArabic ? "rtl" : "ltr"}
-      spaceBetween={30}
+      spaceBetween={0}
       centeredSlides={true}
-      autoplay={{
-        delay: 2500,
-        disableOnInteraction: false,
-      }}
-      pagination={{
-        clickable: true,
-      }}
+      autoplay={{ delay: 4000, disableOnInteraction: false }}
+      pagination={{ clickable: true }}
       modules={[Autoplay, Pagination]}
       className="hero-carousel"
     >
       {slides.map((slide) => (
         <SwiperSlide key={slide.title}>
-        <div className="px-6 sm:px-8 lg:px-12 py-14 sm:py-18 lg:py-24 min-h-[420px] flex items-center">
-          <div className={`max-w-[560px] ${isArabic ? "text-right" : ""}`}>
-            <span className={`inline-flex rounded-full px-4 py-2 text-sm font-medium mb-6 ${slide.tone === "blue" ? "bg-dark/5 text-dark" : "bg-blue/10 text-blue"}`}>
-              {slide.badge}
-            </span>
-            <h1 className="font-semibold text-dark text-3xl sm:text-5xl leading-tight mb-5">
-              {slide.title}
-            </h1>
-            <p className="max-w-[500px] text-dark-3 text-custom-sm sm:text-base">
-              {slide.description}
-            </p>
-            <a
-              href={slide.href}
-              className={`inline-flex font-medium text-white text-custom-sm rounded-md py-3 px-9 ease-out duration-200 mt-10 ${slide.tone === "blue" ? "bg-blue hover:bg-blue-dark" : "bg-dark hover:bg-blue"}`}
-            >
-              {slide.cta}
-            </a>
+          <div className="flex items-center min-h-[420px] px-8 sm:px-12 lg:px-16 py-12 gap-10">
+
+            {/* Text */}
+            <div className={`flex-1 ${isArabic ? "text-right order-2" : ""}`}>
+              <span className="inline-flex rounded-full bg-blue/10 px-4 py-1.5 text-sm font-medium text-blue mb-5">
+                {slide.badge}
+              </span>
+              <h1 className="font-bold text-dark text-3xl sm:text-5xl leading-tight mb-8">
+                {slide.title}
+              </h1>
+              <a
+                href={slide.href}
+                className="inline-flex items-center gap-2.5 font-semibold text-white text-sm rounded-lg py-3.5 px-8 bg-dark hover:bg-blue ease-out duration-200"
+              >
+                {slide.cta}
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className={isArabic ? "rotate-180" : ""}>
+                  <path d="M3 8h10M8 3l5 5-5 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </a>
+            </div>
+
+            {/* Circular image */}
+            <div className={`hidden sm:flex flex-shrink-0 ${isArabic ? "order-1" : ""}`}>
+              <div className="relative w-[220px] h-[220px] lg:w-[280px] lg:h-[280px] rounded-full overflow-hidden border-[6px] border-[#F7EDE7] shadow-xl">
+                <Image
+                  src={slide.img}
+                  alt={slide.title}
+                  fill
+                  className="object-cover object-top"
+                  sizes="280px"
+                  priority
+                />
+              </div>
+            </div>
+
           </div>
-        </div>
         </SwiperSlide>
       ))}
     </Swiper>

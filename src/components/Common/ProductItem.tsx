@@ -9,10 +9,13 @@ import { addItemToWishlist } from "@/redux/features/wishlist-slice";
 import { updateproductDetails } from "@/redux/features/product-details";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
+import { useLanguage } from "@/app/context/LanguageContext";
 import Link from "next/link";
 
 const ProductItem = ({ item }: { item: Product }) => {
   const { openModal } = useModalContext();
+  const { isArabic } = useLanguage();
+  const currency = isArabic ? "ر.ع." : "OMR";
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -166,8 +169,8 @@ const ProductItem = ({ item }: { item: Product }) => {
       </h3>
 
       <span className="flex items-center gap-2 font-medium text-lg">
-        <span className="text-dark">${item.discountedPrice}</span>
-        <span className="text-dark-4 line-through">${item.price}</span>
+        <span className="text-dark">{item.discountedPrice.toFixed(3)} {currency}</span>
+        <span className="text-dark-4 line-through">{item.price.toFixed(3)} {currency}</span>
       </span>
     </div>
   );

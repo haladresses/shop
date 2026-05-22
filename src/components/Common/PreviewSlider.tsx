@@ -95,7 +95,7 @@ const PreviewSliderModal = () => {
         <SwiperSlide>
           <div className="flex justify-center items-center">
             <Image
-              src={"/images/products/product-2-bg-1.png"}
+              src={"/images/products/p2.png"}
               alt={"product image"}
               width={450}
               height={450}
@@ -105,7 +105,7 @@ const PreviewSliderModal = () => {
         <SwiperSlide>
           <div className="flex justify-center items-center">
             <Image
-              src={"/images/products/product-2-bg-1.png"}
+              src={"/images/products/p2.png"}
               alt={"product image"}
               width={450}
               height={450}

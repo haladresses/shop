@@ -1,20 +1,24 @@
 import { Category } from "@/types/category";
-import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 const SingleItem = ({ item }: { item: Category }) => {
   return (
-    <a href="#" className="group flex flex-col items-center">
-      <div className="max-w-[130px] w-full bg-[#F2F3F8] h-32.5 rounded-full flex items-center justify-center mb-4">
-        <Image src={item.img} alt="Category" width={82} height={62} />
+    <Link href="/shop-with-sidebar" className="group flex flex-col items-center gap-3.5">
+      <div className="relative w-[110px] h-[110px] rounded-full overflow-hidden border-4 border-white shadow-md group-hover:shadow-lg group-hover:border-blue/30 transition-all duration-300">
+        <Image
+          src={item.img}
+          alt={item.title}
+          fill
+          className="object-cover object-top transition-transform duration-500 group-hover:scale-110"
+          sizes="110px"
+        />
       </div>
 
-      <div className="flex justify-center">
-        <h3 className="inline-block font-medium text-center text-dark bg-gradient-to-r from-blue to-blue bg-[length:0px_1px] bg-left-bottom bg-no-repeat transition-[background-size] duration-500 hover:bg-[length:100%_3px] group-hover:bg-[length:100%_1px] group-hover:text-blue">
-          {item.title}
-        </h3>
-      </div>
-    </a>
+      <h3 className="font-medium text-sm text-center text-dark group-hover:text-blue transition-colors duration-200">
+        {item.title}
+      </h3>
+    </Link>
   );
 };
 

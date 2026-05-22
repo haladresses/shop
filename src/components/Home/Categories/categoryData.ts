@@ -1,46 +1,15 @@
+const p = ["/images/products/p1.png", "/images/products/p2.png", "/images/products/p3.png"];
+
 export const getCategoryData = (language: "en" | "ar") => {
   const isArabic = language === "ar";
 
   return [
-    {
-      title: isArabic ? "وصل حديثاً للنساء" : "Women New In",
-      id: 1,
-      img: "/images/categories/categories-01.png",
-    },
-    {
-      title: isArabic ? "تشكيلة البنات" : "Girls Collection",
-      id: 2,
-      img: "/images/categories/categories-02.png",
-    },
-    {
-      title: isArabic ? "تشكيلة الأطفال" : "Baby Collection",
-      id: 3,
-      img: "/images/categories/categories-03.png",
-    },
-    {
-      title: isArabic ? "ملابس المناسبات" : "Party Wear",
-      id: 4,
-      img: "/images/categories/categories-04.png",
-    },
-    {
-      title: isArabic ? "الأم والطفلة" : "Mom and Mini",
-      id: 5,
-      img: "/images/categories/categories-05.png",
-    },
-    {
-      title: isArabic ? "الأساسيات اليومية" : "Everyday Basics",
-      id: 6,
-      img: "/images/categories/categories-06.png",
-    },
-    {
-      title: isArabic ? "الإكسسوارات" : "Accessories",
-      id: 7,
-      img: "/images/categories/categories-07.png",
-    },
-    {
-      title: isArabic ? "اختيارات التخفيضات" : "Sale Picks",
-      id: 8,
-      img: "/images/categories/categories-04.png",
-    },
+    { id: 1, title: isArabic ? "لباس دخترانه"   : "Girls' Dresses",  img: p[0] },
+    { id: 2, title: isArabic ? "لباس زنانه"      : "Women's Dresses", img: p[1] },
+    { id: 3, title: isArabic ? "لباس مجلسی"      : "Evening Wear",    img: p[2] },
+    { id: 4, title: isArabic ? "لباس نوزادی"     : "Baby Collection", img: p[0] },
+    { id: 5, title: isArabic ? "ست مادر و دختر"  : "Mom & Mini",      img: p[1] },
+    { id: 6, title: isArabic ? "اکسسوار"         : "Accessories",     img: p[2] },
+    { id: 7, title: isArabic ? "تخفیف‌ها"        : "Sale Picks",      img: p[0] },
   ];
 };

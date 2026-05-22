@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"totalPrice\\\\|\\\\$\\\\|cart\\\\|Cart\" /home/milad/Documents/GitHub/haladresses/shop/src/components/Header/index.tsx)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}

@@ -8,9 +8,9 @@ const Breadcrumb = ({ title, pages }) => {
   const { isArabic } = useLanguage();
 
   return (
-    <div className="overflow-hidden shadow-breadcrumb pt-[209px] sm:pt-[155px] lg:pt-[95px] xl:pt-[165px]">
+    <div className="overflow-hidden shadow-breadcrumb pt-[73px] xl:pt-[125px]">
       <div className="border-t border-gray-3">
-        <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0 py-5 xl:py-10">
+        <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0 py-4 xl:py-6">
           <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${isArabic ? "sm:flex-row-reverse text-right" : ""}`}>
             <h1 className="font-semibold text-dark text-xl sm:text-2xl xl:text-custom-2">
               {title}
