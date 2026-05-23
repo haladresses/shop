@@ -10,11 +10,13 @@ import PriceDropdown from "./PriceDropdown";
 import shopData from "../Shop/shopData";
 import SingleGridItem from "../Shop/SingleGridItem";
 import SingleListItem from "../Shop/SingleListItem";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const ShopWithSidebar = () => {
   const [productStyle, setProductStyle] = useState("grid");
   const [productSidebar, setProductSidebar] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
+  const { isArabic } = useLanguage();
 
   const handleStickyMenu = () => {
     if (window.scrollY >= 80) {
@@ -24,26 +26,47 @@ const ShopWithSidebar = () => {
     }
   };
 
-  const options = [
-    { label: "Latest Products", value: "0" },
-    { label: "Best Selling", value: "1" },
-    { label: "Old Products", value: "2" },
-  ];
+  const options = isArabic
+    ? [
+        { label: "الأحدث", value: "0" },
+        { label: "الأكثر مبيعاً", value: "1" },
+        { label: "الأقدم", value: "2" },
+      ]
+    : [
+        { label: "Latest Products", value: "0" },
+        { label: "Best Selling", value: "1" },
+        { label: "Old Products", value: "2" },
+      ];
 
-  const categories = [
-    { name: "لباس دخترانه", products: 3, isRefined: true },
-    { name: "لباس زنانه", products: 2, isRefined: false },
-    { name: "لباس مجلسی", products: 1, isRefined: false },
-    { name: "لباس نوزادی", products: 1, isRefined: false },
-    { name: "ست مادر و دختر", products: 1, isRefined: false },
-    { name: "اکسسوار", products: 0, isRefined: false },
-  ];
+  const categories = isArabic
+    ? [
+        { name: "فساتين البنات", products: 3, isRefined: true },
+        { name: "فساتين النساء", products: 2, isRefined: false },
+        { name: "فساتين السهرة", products: 1, isRefined: false },
+        { name: "ملابس الأطفال", products: 1, isRefined: false },
+        { name: "طقم الأم والبنت", products: 1, isRefined: false },
+        { name: "الإكسسوارات", products: 0, isRefined: false },
+      ]
+    : [
+        { name: "Girls' Dresses", products: 3, isRefined: true },
+        { name: "Women's Dresses", products: 2, isRefined: false },
+        { name: "Evening Wear", products: 1, isRefined: false },
+        { name: "Baby Collection", products: 1, isRefined: false },
+        { name: "Mom & Mini", products: 1, isRefined: false },
+        { name: "Accessories", products: 0, isRefined: false },
+      ];
 
-  const genders = [
-    { name: "زنانه", products: 5 },
-    { name: "دخترانه", products: 3 },
-    { name: "نوزادی", products: 1 },
-  ];
+  const genders = isArabic
+    ? [
+        { name: "نساء", products: 5 },
+        { name: "بنات", products: 3 },
+        { name: "أطفال", products: 1 },
+      ]
+    : [
+        { name: "Women", products: 5 },
+        { name: "Girls", products: 3 },
+        { name: "Baby", products: 1 },
+      ];
 
   useEffect(() => {
     window.addEventListener("scroll", handleStickyMenu);
@@ -85,7 +108,7 @@ const ShopWithSidebar = () => {
             >
               {/* Close header — mobile only */}
               <div className="xl:hidden flex items-center justify-between mb-5 pb-4 border-b border-gray-3">
-                <span className="font-semibold text-dark text-base">Filters</span>
+                <span className="font-semibold text-dark text-base">{isArabic ? "الفلاتر" : "Filters"}</span>
                 <button
                   onClick={() => setProductSidebar(false)}
                   className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-gray-1 text-dark-4 hover:text-dark transition-colors"
@@ -101,8 +124,8 @@ const ShopWithSidebar = () => {
                   {/* <!-- filter box --> */}
                   <div className="bg-white shadow-1 rounded-lg py-4 px-5">
                     <div className="flex items-center justify-between">
-                      <p>Filters:</p>
-                      <button className="text-blue">Clean All</button>
+                      <p>{isArabic ? "الفلاتر:" : "Filters:"}</p>
+                      <button className="text-blue">{isArabic ? "مسح الكل" : "Clean All"}</button>
                     </div>
                   </div>
 
@@ -139,14 +162,16 @@ const ShopWithSidebar = () => {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
                         <path d="M3 6H21M7 12H17M11 18H13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
                       </svg>
-                      Filters
+                      {isArabic ? "الفلاتر" : "Filters"}
                     </button>
 
                     <CustomSelect options={options} />
 
                     <p className="hidden sm:block">
-                      Showing <span className="text-dark">9 of 50</span>{" "}
-                      Products
+                      {isArabic
+                        ? <><span className="text-dark">٩ من ٥٠</span> منتج</>
+                        : <>Showing <span className="text-dark">9 of 50</span> Products</>
+                      }
                     </p>
                   </div>
 

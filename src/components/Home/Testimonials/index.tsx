@@ -1,7 +1,7 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useCallback, useRef } from "react";
-import testimonialsData from "./testimonialsData";
+import { getTestimonialsData } from "./testimonialsData";
 import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
 
@@ -106,7 +106,7 @@ const Testimonials = () => {
                 },
               }}
             >
-              {testimonialsData.map((item, key) => (
+              {getTestimonialsData(language).map((item, key) => (
                 <SwiperSlide key={key}>
                   <SingleItem testimonial={item} />
                 </SwiperSlide>
