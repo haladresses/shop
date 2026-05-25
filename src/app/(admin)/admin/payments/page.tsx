@@ -1,0 +1,126 @@
+"use client";
+import { useEffect, useState, useCallback } from "react";
+
+type Payment = {
+  id: string;
+  amount: number;
+  method: string;
+  status: string;
+  transactionId?: string;
+  createdAt: string;
+  order: {
+    orderNumber: string;
+    user?: { nameEn?: string; email: string } | null;
+  };
+};
+
+const statusColors: Record<string, string> = {
+  PAID: "badge-paid", UNPAID: "badge-unpaid", PARTIAL: "badge-partial",
+  REFUNDED: "badge-refunded", FAILED: "badge-failed",
+};
+
+const methodLabels: Record<string, string> = {
+  CASH_ON_DELIVERY: "Cash on Delivery",
+  BANK_TRANSFER: "Bank Transfer",
+  CARD: "Credit Card",
+  THAWANI: "Thawani",
+  STRIPE: "Stripe",
+};
+
+export default function PaymentsPage() {
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ totalRevenue: 0, pendingAmount: 0, paidCount: 0 });
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    // Get orders with payments
+    const res = await fetch("/api/orders?pageSize=50");
+    const data = await res.json();
+    if (data.success) {
+      const allPayments: Payment[] = [];
+      data.data.forEach((order: {
+        payments: Payment[];
+        orderNumber: string;
+        user?: { nameEn?: string; email: string } | null;
+      }) => {
+        order.payments.forEach((p: Payment) => {
+          allPayments.push({ ...p, order: { orderNumber: order.orderNumber, user: order.user } });
+        });
+      });
+      setPayments(allPayments);
+      setTotal(allPayments.length);
+
+      const paid = allPayments.filter((p) => p.status === "PAID");
+      const unpaid = allPayments.filter((p) => p.status === "UNPAID");
+      setStats({
+        totalRevenue: paid.reduce((s, p) => s + Number(p.amount), 0),
+        pendingAmount: unpaid.reduce((s, p) => s + Number(p.amount), 0),
+        paidCount: paid.length,
+      });
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  return (
+    <div className="space-y-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="stat-card">
+          <p className="text-xs text-slate-500 uppercase tracking-wide">Total Revenue</p>
+          <p className="text-2xl font-bold text-slate-800 mt-1">{stats.totalRevenue.toFixed(3)} OMR</p>
+        </div>
+        <div className="stat-card">
+          <p className="text-xs text-slate-500 uppercase tracking-wide">Pending Payments</p>
+          <p className="text-2xl font-bold text-amber-600 mt-1">{stats.pendingAmount.toFixed(3)} OMR</p>
+        </div>
+        <div className="stat-card">
+          <p className="text-xs text-slate-500 uppercase tracking-wide">Paid Orders</p>
+          <p className="text-2xl font-bold text-green-600 mt-1">{stats.paidCount}</p>
+        </div>
+      </div>
+
+      <div className="admin-card">
+        {loading ? <div className="flex justify-center py-12"><div className="spinner" /></div> : (
+          <div className="overflow-x-auto">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Order #</th>
+                  <th>Customer</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Status</th>
+                  <th>Transaction ID</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments.map((p) => (
+                  <tr key={p.id}>
+                    <td className="font-mono font-medium text-indigo-600">{p.order.orderNumber}</td>
+                    <td>{p.order.user?.nameEn || p.order.user?.email || "Guest"}</td>
+                    <td className="font-medium">{Number(p.amount).toFixed(3)} OMR</td>
+                    <td className="text-slate-600">{methodLabels[p.method] || p.method}</td>
+                    <td><span className={`badge ${statusColors[p.status] || "badge-unpaid"}`}>{p.status}</span></td>
+                    <td className="font-mono text-xs text-slate-400">{p.transactionId || "—"}</td>
+                    <td className="text-slate-500 text-sm">{new Date(p.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+                {payments.length === 0 && (
+                  <tr><td colSpan={7} className="text-center py-8 text-slate-400">No payments yet</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="px-4 py-3 border-t border-slate-100 text-sm text-slate-500">
+          Total: {total} payments
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,30 @@
+/* Seller Panel Styles */
+
+.seller-sidebar {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  min-height: 100vh;
+}
+
+.seller-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #94a3b8;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.seller-nav-link:hover,
+.seller-nav-link.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+
+.seller-nav-link.active {
+  background: rgba(14, 165, 233, 0.3);
+  color: #38bdf8;
+}
