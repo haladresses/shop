@@ -15,11 +15,13 @@ export async function GET(req: NextRequest) {
     const pageSize = 20;
     const skip = (page - 1) * pageSize;
     const status = sp.get("status") || "";
+    const paymentStatus = sp.get("paymentStatus") || "";
     const search = sp.get("search") || "";
 
     const where = {
       ...(isAdminRole(user.role) ? {} : { userId: user.id }),
       ...(status && { status: status as never }),
+      ...(paymentStatus && { paymentStatus: paymentStatus as never }),
       ...(search && {
         OR: [
           { orderNumber: { contains: search, mode: "insensitive" as const } },

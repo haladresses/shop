@@ -28,4 +28,19 @@ export const updateOrderStatusSchema = z.object({
   status: z.enum(["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"]),
 });
 
+export const updateOrderSchema = z
+  .object({
+    status: z
+      .enum(["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"])
+      .optional(),
+    paymentStatus: z
+      .enum(["UNPAID", "PAID", "PARTIAL", "REFUNDED", "FAILED"])
+      .optional(),
+    notes: z.string().max(2000).optional(),
+  })
+  .refine(
+    (d) => d.status !== undefined || d.paymentStatus !== undefined || d.notes !== undefined,
+    { message: "No changes provided" }
+  );
+
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;

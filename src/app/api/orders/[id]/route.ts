@@ -2,7 +2,8 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
 import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
-import { updateOrderStatusSchema } from "@/lib/validations/order";
+import { updateOrderSchema } from "@/lib/validations/order";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -41,22 +42,36 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const { id } = await params;
     const body = await req.json();
-    const parsed = updateOrderStatusSchema.safeParse(body);
+    const parsed = updateOrderSchema.safeParse(body);
     if (!parsed.success) return error(parsed.error.errors[0].message);
+
+    const existing = await prisma.order.findUnique({ where: { id }, select: { id: true } });
+    if (!existing) return notFound("Order");
+
+    const { status, paymentStatus, notes } = parsed.data;
+
+    const data: Prisma.OrderUpdateInput = {};
+    if (status !== undefined) data.status = status as never;
+    if (notes !== undefined) data.notes = notes;
+
+    // Determine the effective payment status: explicit value wins, otherwise
+    // delivering an order implies it has been paid.
+    const effectivePaymentStatus =
+      paymentStatus ?? (status === "DELIVERED" ? "PAID" : undefined);
+
+    if (effectivePaymentStatus !== undefined) {
+      data.paymentStatus = effectivePaymentStatus as never;
+      data.payments = {
+        updateMany: {
+          where: { orderId: id },
+          data: { status: effectivePaymentStatus as never },
+        },
+      };
+    }
 
     const order = await prisma.order.update({
       where: { id },
-      data: {
-        status: parsed.data.status as never,
-        ...(parsed.data.status === "DELIVERED" && {
-          payments: {
-            updateMany: {
-              where: { orderId: id },
-              data: { status: "PAID" as never },
-            },
-          },
-        }),
-      },
+      data,
     });
 
     return ok(order);
