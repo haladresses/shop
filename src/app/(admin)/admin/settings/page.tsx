@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { LuCheck } from "react-icons/lu";
 
 const DEFAULT_SETTINGS = [
   { key: "store_name_en", group: "general", labelEn: "Store Name (English)", type: "string", defaultValue: "Hala Dresses" },
@@ -107,7 +108,11 @@ export default function SettingsPage() {
         <button onClick={save} disabled={saving} className="admin-btn admin-btn-primary px-8">
           {saving ? "Saving..." : "Save Settings"}
         </button>
-        {saved && <span className="text-green-600 text-sm font-medium">✓ Settings saved!</span>}
+        {saved && (
+          <span className="text-green-600 text-sm font-medium flex items-center gap-1">
+            <LuCheck size={16} /> Settings saved!
+          </span>
+        )}
       </div>
     </div>
   );

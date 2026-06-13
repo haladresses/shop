@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { LuStar } from "react-icons/lu";
 
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<Array<{
@@ -23,7 +24,9 @@ export default function ReviewsPage() {
           <div className="flex justify-center py-12"><div className="spinner" /></div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="text-5xl mb-4">⭐</div>
+            <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mb-4">
+              <LuStar className="text-amber-500" size={32} />
+            </div>
             <h3 className="text-lg font-semibold text-slate-700 mb-2">Reviews Management</h3>
             <p className="text-slate-500 max-w-md">
               Customer reviews will appear here. You can approve or reject reviews before they are shown publicly.

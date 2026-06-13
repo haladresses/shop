@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { LuX, LuChevronLeft, LuChevronRight } from "react-icons/lu";
 
 type InventoryItem = {
   id: string;
@@ -124,9 +125,9 @@ export default function InventoryPage() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
             <span className="text-sm text-slate-500">Total: {total}</span>
             <div className="flex gap-2">
-              <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">← Prev</button>
+              <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40"><LuChevronLeft size={14} /> Prev</button>
               <span className="text-sm self-center">Page {page} of {totalPages}</span>
-              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Next →</button>
+              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Next <LuChevronRight size={14} /></button>
             </div>
           </div>
         )}
@@ -138,7 +139,7 @@ export default function InventoryPage() {
           <div className="admin-modal max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Adjust Inventory</h3>
-              <button onClick={() => setAdjusting(null)} className="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+              <button onClick={() => setAdjusting(null)} className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><LuX size={18} /></button>
             </div>
             <div className="bg-slate-50 rounded-lg p-3 mb-4">
               <p className="font-medium">{adjusting.variant.product.nameEn}</p>

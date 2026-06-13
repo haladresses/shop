@@ -68,7 +68,7 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-4">
       {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="stat-card">
           <p className="text-xs text-slate-500 uppercase tracking-wide">Total Revenue</p>
           <p className="text-2xl font-bold text-slate-800 mt-1">{stats.totalRevenue.toFixed(3)} OMR</p>

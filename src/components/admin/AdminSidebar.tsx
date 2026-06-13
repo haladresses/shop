@@ -2,21 +2,52 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  LuLayoutDashboard,
+  LuPackage,
+  LuShirt,
+  LuTags,
+  LuWarehouse,
+  LuUsers,
+  LuCreditCard,
+  LuTicket,
+  LuStar,
+  LuSettings,
+  LuStore,
+  LuLogOut,
+  LuChevronLeft,
+  LuChevronRight,
+  LuX,
+} from "react-icons/lu";
+import type { IconType } from "react-icons";
 
-const navItems = [
-  { href: "/admin", label: "Dashboard", icon: "📊", exact: true },
-  { href: "/admin/orders", label: "Orders", icon: "📦" },
-  { href: "/admin/products", label: "Products", icon: "👗" },
-  { href: "/admin/categories", label: "Categories", icon: "🏷️" },
-  { href: "/admin/inventory", label: "Inventory", icon: "🏪" },
-  { href: "/admin/users", label: "Users", icon: "👥" },
-  { href: "/admin/payments", label: "Payments", icon: "💳" },
-  { href: "/admin/coupons", label: "Coupons", icon: "🎫" },
-  { href: "/admin/reviews", label: "Reviews", icon: "⭐" },
-  { href: "/admin/settings", label: "Settings", icon: "⚙️" },
+type NavItem = {
+  href: string;
+  label: string;
+  icon: IconType;
+  color: string;
+  exact?: boolean;
+};
+
+const navItems: NavItem[] = [
+  { href: "/admin", label: "Dashboard", icon: LuLayoutDashboard, color: "text-sky-400", exact: true },
+  { href: "/admin/orders", label: "Orders", icon: LuPackage, color: "text-amber-400" },
+  { href: "/admin/products", label: "Products", icon: LuShirt, color: "text-rose-400" },
+  { href: "/admin/categories", label: "Categories", icon: LuTags, color: "text-emerald-400" },
+  { href: "/admin/inventory", label: "Inventory", icon: LuWarehouse, color: "text-orange-400" },
+  { href: "/admin/users", label: "Users", icon: LuUsers, color: "text-violet-400" },
+  { href: "/admin/payments", label: "Payments", icon: LuCreditCard, color: "text-green-400" },
+  { href: "/admin/coupons", label: "Coupons", icon: LuTicket, color: "text-pink-400" },
+  { href: "/admin/reviews", label: "Reviews", icon: LuStar, color: "text-yellow-400" },
+  { href: "/admin/settings", label: "Settings", icon: LuSettings, color: "text-slate-300" },
 ];
 
-export default function AdminSidebar() {
+type AdminSidebarProps = {
+  mobileOpen?: boolean;
+  onClose?: () => void;
+};
+
+export default function AdminSidebar({ mobileOpen = false, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -30,51 +61,92 @@ export default function AdminSidebar() {
   };
 
   return (
-    <aside
-      className={`admin-sidebar flex flex-col transition-all duration-300 ${collapsed ? "w-16" : "w-64"}`}
-    >
-      {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-5 border-b border-white/10">
-        {!collapsed && (
-          <div>
-            <h1 className="text-white font-bold text-lg leading-tight">Hala Dresses</h1>
-            <p className="text-indigo-300 text-xs">Admin Panel</p>
-          </div>
-        )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="text-indigo-300 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
-        >
-          {collapsed ? "→" : "←"}
-        </button>
-      </div>
+    <>
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`admin-nav-link ${isActive(item.href, item.exact) ? "active" : ""}`}
-            title={collapsed ? item.label : undefined}
+      <aside
+        className={`admin-sidebar flex flex-col transition-all duration-300
+          fixed inset-y-0 left-0 z-50 lg:static lg:z-auto lg:translate-x-0
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+          ${collapsed ? "lg:w-16 w-64" : "w-64"}`}
+      >
+        {/* Logo */}
+        <div className="flex items-center justify-between px-4 py-5 border-b border-slate-700/60">
+          {!collapsed && (
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center shadow-lg">
+                <LuShirt className="text-white text-lg" />
+              </div>
+              <div>
+                <h1 className="text-white font-bold text-base leading-tight">Hala Dresses</h1>
+                <p className="text-slate-400 text-[11px]">Admin Panel</p>
+              </div>
+            </div>
+          )}
+          {/* Collapse toggle (desktop only) */}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="hidden lg:inline-flex text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+            title={collapsed ? "Expand" : "Collapse"}
           >
-            <span className="text-lg flex-shrink-0">{item.icon}</span>
-            {!collapsed && <span>{item.label}</span>}
-          </Link>
-        ))}
-      </nav>
+            {collapsed ? <LuChevronRight size={18} /> : <LuChevronLeft size={18} />}
+          </button>
+          {/* Close button (mobile only) */}
+          <button
+            onClick={onClose}
+            className="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+            title="Close"
+          >
+            <LuX size={20} />
+          </button>
+        </div>
 
-      {/* Bottom */}
-      <div className="px-3 py-4 border-t border-white/10 space-y-1">
-        <Link href="/" className="admin-nav-link" target="_blank">
-          <span className="text-lg">🛍️</span>
-          {!collapsed && <span>View Store</span>}
-        </Link>
-        <button onClick={handleLogout} className="admin-nav-link w-full text-left">
-          <span className="text-lg">🚪</span>
-          {!collapsed && <span>Logout</span>}
-        </button>
-      </div>
-    </aside>
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = isActive(item.href, item.exact);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`admin-nav-link ${active ? "active" : ""} ${collapsed ? "lg:justify-center" : ""}`}
+                title={collapsed ? item.label : undefined}
+              >
+                <Icon size={19} className={`flex-shrink-0 ${item.color}`} />
+                <span className={collapsed ? "lg:hidden" : ""}>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Bottom */}
+        <div className="px-3 py-4 border-t border-slate-700/60 space-y-1">
+          <Link
+            href="/"
+            className={`admin-nav-link ${collapsed ? "lg:justify-center" : ""}`}
+            target="_blank"
+            title={collapsed ? "View Store" : undefined}
+          >
+            <LuStore size={19} className="flex-shrink-0 text-teal-400" />
+            <span className={collapsed ? "lg:hidden" : ""}>View Store</span>
+          </Link>          <button
+            onClick={handleLogout}
+            className={`admin-nav-link w-full text-left ${collapsed ? "lg:justify-center" : ""}`}
+            title={collapsed ? "Logout" : undefined}
+          >
+            <LuLogOut size={19} className="flex-shrink-0 text-red-400" />
+            <span className={collapsed ? "lg:hidden" : ""}>Logout</span>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

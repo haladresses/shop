@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { LuShirt } from "react-icons/lu";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -40,7 +41,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">👗</span>
+            <LuShirt className="text-white" size={30} />
           </div>
           <h1 className="text-2xl font-bold text-white">Hala Dresses</h1>
           <p className="text-indigo-300 mt-1">Admin Panel</p>

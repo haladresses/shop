@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { LuX, LuPlus, LuShirt, LuPencil, LuTrash2, LuImagePlus, LuChevronLeft, LuChevronRight } from "react-icons/lu";
 
 type Product = {
   id: string;
@@ -133,7 +134,7 @@ export default function ProductsPage() {
           </select>
         </div>
         <button className="admin-btn admin-btn-primary" onClick={() => { setError(""); setShowModal(true); }}>
-          + Add Product
+          <LuPlus size={16} /> Add Product
         </button>
       </div>
 
@@ -160,7 +161,7 @@ export default function ProductsPage() {
                       {p.images[0] ? (
                         <img src={p.images[0].url} alt={p.nameEn} className="w-12 h-12 object-cover rounded-lg" />
                       ) : (
-                        <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center text-xl">👗</div>
+                        <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300"><LuShirt size={22} /></div>
                       )}
                     </td>
                     <td>
@@ -191,8 +192,8 @@ export default function ProductsPage() {
                     </td>
                     <td>
                       <div className="flex gap-2">
-                        <Link href={`/admin/products/${p.id}`} className="admin-btn admin-btn-secondary text-xs py-1">Edit</Link>
-                        <button onClick={() => deleteProduct(p.id)} className="admin-btn admin-btn-danger text-xs py-1">Del</button>
+                        <Link href={`/admin/products/${p.id}`} className="admin-btn admin-btn-secondary text-xs py-1"><LuPencil size={14} /> Edit</Link>
+                        <button onClick={() => deleteProduct(p.id)} className="admin-btn admin-btn-danger text-xs py-1"><LuTrash2 size={14} /> Del</button>
                       </div>
                     </td>
                   </tr>
@@ -208,9 +209,9 @@ export default function ProductsPage() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
             <span className="text-sm text-slate-500">Total: {total}</span>
             <div className="flex gap-2">
-              <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">← Prev</button>
+              <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40"><LuChevronLeft size={14} /> Prev</button>
               <span className="text-sm self-center">Page {page} of {totalPages}</span>
-              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Next →</button>
+              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Next <LuChevronRight size={14} /></button>
             </div>
           </div>
         )}
@@ -221,11 +222,11 @@ export default function ProductsPage() {
           <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-semibold">Add Product</h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><LuX size={18} /></button>
             </div>
             {error && <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg mb-4">{error}</div>}
             <form onSubmit={createProduct} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Name (EN) *</label>
                   <input className="admin-input" value={form.nameEn} onChange={(e) => setForm({ ...form, nameEn: e.target.value })} required />
@@ -242,7 +243,7 @@ export default function ProductsPage() {
                   {categories.map((c) => <option key={c.id} value={c.id}>{c.nameEn}</option>)}
                 </select>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Base Price (OMR) *</label>
                   <input type="number" step="0.001" min="0" className="admin-input" value={form.basePrice} onChange={(e) => setForm({ ...form, basePrice: e.target.value })} required />
@@ -274,9 +275,9 @@ export default function ProductsPage() {
                       <button
                         type="button"
                         onClick={() => removeImage(url)}
-                        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100"
+                        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100"
                       >
-                        ✕
+                        <LuX size={12} />
                       </button>
                     </div>
                   ))}
@@ -285,8 +286,8 @@ export default function ProductsPage() {
                       <span className="spinner" />
                     ) : (
                       <>
-                        <span className="text-xl leading-none">+</span>
-                        <span>Upload</span>
+                        <LuImagePlus size={20} />
+                        <span className="mt-0.5">Upload</span>
                       </>
                     )}
                     <input

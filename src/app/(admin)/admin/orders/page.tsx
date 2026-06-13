@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { LuX, LuChevronLeft, LuChevronRight } from "react-icons/lu";
 
 type Order = {
   id: string;
@@ -119,9 +120,9 @@ export default function OrdersPage() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
             <span className="text-sm text-slate-500">Total: {total}</span>
             <div className="flex gap-2">
-              <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">← Prev</button>
+              <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40"><LuChevronLeft size={14} /> Prev</button>
               <span className="text-sm self-center">Page {page} of {totalPages}</span>
-              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Next →</button>
+              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Next <LuChevronRight size={14} /></button>
             </div>
           </div>
         )}
@@ -136,10 +137,10 @@ export default function OrdersPage() {
                 <h3 className="text-lg font-semibold">Order {selected.orderNumber}</h3>
                 <p className="text-sm text-slate-500">{new Date(selected.createdAt).toLocaleString()}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+              <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><LuX size={18} /></button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
               <div className="bg-slate-50 rounded-lg p-3">
                 <p className="text-xs font-medium text-slate-500 uppercase mb-2">Customer</p>
                 <p className="font-medium">{selected.user?.nameEn || "Guest"}</p>

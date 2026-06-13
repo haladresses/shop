@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { LuX } from "react-icons/lu";
 
 type Coupon = {
   id: string;
@@ -121,7 +122,7 @@ export default function CouponsPage() {
           <div className="admin-modal max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-semibold">Create Coupon</h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 text-xl">✕</button>
+              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><LuX size={18} /></button>
             </div>
             {error && <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg mb-4">{error}</div>}
             <form onSubmit={createCoupon} className="space-y-4">
@@ -129,7 +130,7 @@ export default function CouponsPage() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Code *</label>
                 <input className="admin-input uppercase" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="SAVE20" required />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
                   <select className="admin-input admin-select" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
@@ -142,7 +143,7 @@ export default function CouponsPage() {
                   <input type="number" step="0.001" min="0" className="admin-input" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} required />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Min Order (OMR)</label>
                   <input type="number" step="0.001" min="0" className="admin-input" value={form.minOrder} onChange={(e) => setForm({ ...form, minOrder: e.target.value })} />

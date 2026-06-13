@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import defaultTheme from "tailwindcss/defaultTheme";
+import defaultColors from "tailwindcss/colors";
 
 const config: Config = {
   content: [
@@ -29,6 +30,24 @@ const config: Config = {
       current: "currentColor",
       transparent: "transparent",
       white: "#FFFFFF",
+      // Standard Tailwind palettes used by the admin panel (not part of the
+      // storefront brand colors). Added because the custom `colors` object
+      // below replaces Tailwind's default palette entirely.
+      slate: defaultColors.slate,
+      zinc: defaultColors.zinc,
+      neutral: defaultColors.neutral,
+      stone: defaultColors.stone,
+      indigo: defaultColors.indigo,
+      sky: defaultColors.sky,
+      cyan: defaultColors.cyan,
+      violet: defaultColors.violet,
+      purple: defaultColors.purple,
+      fuchsia: defaultColors.fuchsia,
+      pink: defaultColors.pink,
+      rose: defaultColors.rose,
+      emerald: defaultColors.emerald,
+      lime: defaultColors.lime,
+      amber: defaultColors.amber,
       body: "#6C6F93",
       meta: {
         DEFAULT: "#F8F3EF",
@@ -45,6 +64,7 @@ const config: Config = {
         5: "#CDBFB8",
       },
       gray: {
+        ...defaultColors.gray,
         DEFAULT: "#F3F5F6",
         1: "#F9FAFB",
         2: "#F3F4F6",
@@ -64,6 +84,7 @@ const config: Config = {
         "light-5": "#F7E8EA",
       },
       red: {
+        ...defaultColors.red,
         DEFAULT: "#F23030",
         dark: "#E10E0E",
         light: "#F56060",
@@ -74,6 +95,7 @@ const config: Config = {
         "light-6": "#FEF3F3",
       },
       green: {
+        ...defaultColors.green,
         DEFAULT: "#22AD5C",
         dark: "#1A8245",
         light: "#2CD673",
@@ -84,6 +106,7 @@ const config: Config = {
         "light-6": "#DAF8E6",
       },
       yellow: {
+        ...defaultColors.yellow,
         DEFAULT: "#FBBF24",
         dark: "#F59E0B",
         "dark-2": "#D97706",
@@ -93,10 +116,12 @@ const config: Config = {
         "light-4": "#FFFBEB",
       },
       teal: {
+        ...defaultColors.teal,
         DEFAULT: "#02AAA4",
         dark: "#06A09B",
       },
       orange: {
+        ...defaultColors.orange,
         DEFAULT: "#F27430",
         dark: "#E1580E",
       },
