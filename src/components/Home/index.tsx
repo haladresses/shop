@@ -3,8 +3,6 @@ import Hero from "./Hero";
 import Categories from "./Categories";
 import PromoBanner from "./PromoBanner";
 import CounDown from "./Countdown";
-import Testimonials from "./Testimonials";
-import Newsletter from "../Common/Newsletter";
 
 const Home = () => {
   return (
@@ -13,8 +11,6 @@ const Home = () => {
       <Categories />
       <PromoBanner />
       <CounDown />
-      <Testimonials />
-      <Newsletter />
     </main>
   );
 };
