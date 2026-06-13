@@ -5,8 +5,13 @@
 - Node.js 18+
 
 ## 1. Configure Database
-Edit `.env` and update DATABASE_URL:
+Edit `.env` and update DATABASE_URL. On Linux, if your PostgreSQL role matches your OS user, the Unix socket form works without a password:
 ```
+DATABASE_URL="postgresql://YOUR_USER@localhost/haladresses?host=/var/run/postgresql&schema=public"
+```
+
+If you prefer TCP with a password, use:
+```bash
 DATABASE_URL="postgresql://YOUR_USER:YOUR_PASSWORD@localhost:5432/haladresses?schema=public"
 ```
 

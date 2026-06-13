@@ -1,5 +1,21 @@
 import { NextResponse } from "next/server";
 
+function getPublicErrorMessage(e: unknown) {
+  if (!(e instanceof Error)) return "Internal server error";
+
+  const message = e.message.toLowerCase();
+
+  if (
+    message.includes("authentication failed against database server") ||
+    message.includes("can't reach database server") ||
+    message.includes("provided database credentials")
+  ) {
+    return "Service temporarily unavailable. Please try again later.";
+  }
+
+  return "Internal server error";
+}
+
 export function ok<T>(data: T, status = 200) {
   return NextResponse.json({ success: true, data }, { status });
 }
@@ -39,7 +55,6 @@ export function notFound(entity = "Resource") {
 }
 
 export function serverError(e: unknown) {
-  const message = e instanceof Error ? e.message : "Internal server error";
   console.error("[API Error]", e);
-  return error(message, 500);
+  return error(getPublicErrorMessage(e), 500);
 }
