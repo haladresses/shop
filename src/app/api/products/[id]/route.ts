@@ -2,21 +2,8 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
 import { getAuthFromRequest, isAdminRole, isSellerOrAdmin } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
-import { z } from "zod";
-
-const updateSchema = z.object({
-  nameEn: z.string().min(2).optional(),
-  nameAr: z.string().min(2).optional(),
-  descriptionEn: z.string().optional(),
-  descriptionAr: z.string().optional(),
-  categoryId: z.string().optional(),
-  basePrice: z.number().positive().optional(),
-  salePrice: z.number().positive().optional().nullable(),
-  isActive: z.boolean().optional(),
-  isFeatured: z.boolean().optional(),
-  isNew: z.boolean().optional(),
-  isBestSeller: z.boolean().optional(),
-});
+import { productUpdateSchema } from "@/lib/validations/product";
+import { Prisma } from "@prisma/client";
 
 export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -24,7 +11,11 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
     const product = await prisma.product.findUnique({
       where: { id },
       include: {
-        category: true,
+        category: {
+          include: {
+            attributes: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+          },
+        },
         images: { orderBy: { sortOrder: "asc" } },
         variants: {
           include: { inventory: true },
@@ -55,7 +46,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const { id } = await params;
     const body = await req.json();
-    const parsed = updateSchema.safeParse(body);
+    const parsed = productUpdateSchema.safeParse(body);
     if (!parsed.success) return error(parsed.error.errors[0].message);
 
     const product = await prisma.product.findUnique({ where: { id } });
@@ -63,7 +54,54 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     if (!isAdminRole(user.role) && product.sellerId !== user.id) return forbidden();
 
-    const updated = await prisma.product.update({ where: { id }, data: parsed.data });
+    const { images, variants, attributes, ...scalar } = parsed.data;
+
+    const data: Prisma.ProductUpdateInput = { ...scalar };
+
+    if (attributes !== undefined) {
+      data.attributes =
+        attributes && Object.keys(attributes).length
+          ? (attributes as Prisma.InputJsonValue)
+          : Prisma.JsonNull;
+    }
+
+    // Replace images when an explicit images array is provided.
+    if (images !== undefined) {
+      data.images = {
+        deleteMany: {},
+        create: images.map((img, i) => ({
+          url: img.url,
+          isPrimary: img.isPrimary || i === 0,
+          sortOrder: img.sortOrder ?? i,
+        })),
+      };
+    }
+
+    // Replace variants (and their inventory) when an explicit array is provided.
+    if (variants !== undefined) {
+      data.variants = {
+        deleteMany: {},
+        create: variants.map((v) => ({
+          color: v.color,
+          colorHex: v.colorHex,
+          size: v.size,
+          sku: v.sku,
+          priceAdjustment: v.priceAdjustment,
+          isActive: v.isActive,
+          inventory: { create: { quantity: v.stock, lowStockAlert: 5 } },
+        })),
+      };
+    }
+
+    const updated = await prisma.product.update({
+      where: { id },
+      data,
+      include: {
+        category: true,
+        images: { orderBy: { sortOrder: "asc" } },
+        variants: { include: { inventory: true } },
+      },
+    });
     return ok(updated);
   } catch (e) {
     return serverError(e);

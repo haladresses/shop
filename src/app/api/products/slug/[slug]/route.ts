@@ -11,7 +11,11 @@ export async function GET(
     const product = await prisma.product.findUnique({
       where: { slug },
       include: {
-        category: true,
+        category: {
+          include: {
+            attributes: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+          },
+        },
         images: { orderBy: { sortOrder: "asc" } },
         variants: {
           include: { inventory: true },

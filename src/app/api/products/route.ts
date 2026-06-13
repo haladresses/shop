@@ -4,6 +4,7 @@ import { getAuthFromRequest, isAdminRole, isSellerOrAdmin } from "@/lib/auth";
 import { ok, paginated, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { slugify } from "@/lib/utils";
 import { productSchema } from "@/lib/validations/product";
+import { Prisma } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
   try {
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
     const parsed = productSchema.safeParse(body);
     if (!parsed.success) return error(parsed.error.errors[0].message);
 
-    const { variants, images, ...productData } = parsed.data;
+    const { variants, images, attributes, ...productData } = parsed.data;
 
     let slug = slugify(productData.nameEn);
     const existing = await prisma.product.findUnique({ where: { slug } });
@@ -72,6 +73,9 @@ export async function POST(req: NextRequest) {
       data: {
         ...productData,
         slug,
+        attributes: attributes && Object.keys(attributes).length
+          ? (attributes as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
         sellerId: isAdminRole(user.role) ? (body.sellerId || null) : user.id,
         images: {
           create: images.map((img, i) => ({

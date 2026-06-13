@@ -29,8 +29,15 @@ export const productSchema = z.object({
   isFeatured: z.boolean().default(false),
   isNew: z.boolean().default(true),
   isBestSeller: z.boolean().default(false),
+  attributes: z.record(z.string(), z.any()).optional().default({}),
   variants: z.array(productVariantSchema).default([]),
   images: z.array(productImageSchema).default([]),
 });
 
+export const productUpdateSchema = productSchema.partial().extend({
+  variants: z.array(productVariantSchema).optional(),
+  images: z.array(productImageSchema).optional(),
+});
+
 export type ProductInput = z.infer<typeof productSchema>;
+export type ProductUpdateInput = z.infer<typeof productUpdateSchema>;

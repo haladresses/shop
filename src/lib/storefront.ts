@@ -5,6 +5,19 @@ const PLACEHOLDER = "/images/products/p1.png";
 export type ApiProductImage = {
   url: string;
   isPrimary?: boolean;
+  altEn?: string | null;
+  altAr?: string | null;
+  sortOrder?: number;
+};
+
+export type ApiProductVariant = {
+  id: string;
+  color?: string | null;
+  colorHex?: string | null;
+  size?: string | null;
+  priceAdjustment?: number | string;
+  isActive?: boolean;
+  inventory?: { quantity: number } | null;
 };
 
 export type ApiProduct = {
@@ -16,12 +29,20 @@ export type ApiProduct = {
   descriptionAr?: string | null;
   basePrice: number | string;
   salePrice?: number | string | null;
+  sku?: string | null;
   isActive?: boolean;
   isFeatured?: boolean;
   isNew?: boolean;
   isBestSeller?: boolean;
+  attributes?: Record<string, unknown> | null;
   images?: ApiProductImage[];
-  category?: { nameEn: string; nameAr?: string } | null;
+  variants?: ApiProductVariant[];
+  category?: {
+    nameEn: string;
+    nameAr?: string;
+    slug?: string;
+    attributes?: unknown[];
+  } | null;
   _count?: { reviews?: number; variants?: number };
 };
 
@@ -36,9 +57,15 @@ export function mapApiProduct(
   const isArabic = language === "ar";
   const base = Number(p.basePrice) || 0;
   const sale = p.salePrice != null ? Number(p.salePrice) : base;
-  const urls = (p.images && p.images.length > 0
-    ? p.images.map((img) => img.url)
-    : [PLACEHOLDER]
+  const sortedImages = (p.images && p.images.length > 0 ? [...p.images] : []).sort(
+    (a, b) => {
+      if (a.isPrimary && !b.isPrimary) return -1;
+      if (!a.isPrimary && b.isPrimary) return 1;
+      return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+    }
+  );
+  const urls = (
+    sortedImages.length > 0 ? sortedImages.map((img) => img.url) : [PLACEHOLDER]
   ).filter(Boolean);
 
   return {

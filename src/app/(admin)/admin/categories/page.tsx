@@ -3,8 +3,10 @@ import { useEffect, useState, useCallback } from "react";
 import {
   LuX, LuPlus, LuPencil, LuTrash2, LuImagePlus, LuLayers, LuTags,
   LuFolderTree, LuPackage, LuCircleCheck, LuSearch, LuChevronLeft, LuChevronRight,
+  LuSlidersHorizontal,
 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
+import CategoryAttributesEditor from "@/components/admin/CategoryAttributesEditor";
 
 type Category = {
   id: string;
@@ -38,6 +40,7 @@ export default function CategoriesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [attrTarget, setAttrTarget] = useState<Category | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -230,6 +233,7 @@ export default function CategoriesPage() {
                         <p className="text-sm text-slate-500 truncate" dir="rtl">{cat.nameAr}</p>
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
+                        <button onClick={() => setAttrTarget(cat)} title="Manage attributes" className="admin-btn admin-btn-secondary text-xs py-1.5 px-2.5"><LuSlidersHorizontal size={13} /></button>
                         <button onClick={() => openEdit(cat)} className="admin-btn admin-btn-secondary text-xs py-1.5 px-2.5"><LuPencil size={13} /></button>
                         <button onClick={() => deleteCategory(cat)} className="admin-btn admin-btn-danger text-xs py-1.5 px-2.5"><LuTrash2 size={13} /></button>
                       </div>
@@ -286,6 +290,7 @@ export default function CategoriesPage() {
                       </td>
                       <td>
                         <div className="flex gap-2 justify-end">
+                          <button onClick={() => setAttrTarget(cat)} className="admin-btn admin-btn-secondary text-xs py-1"><LuSlidersHorizontal size={14} /> Attributes</button>
                           <button onClick={() => openEdit(cat)} className="admin-btn admin-btn-secondary text-xs py-1"><LuPencil size={14} /> Edit</button>
                           <button onClick={() => deleteCategory(cat)} className="admin-btn admin-btn-danger text-xs py-1"><LuTrash2 size={14} /></button>
                         </div>
@@ -413,6 +418,21 @@ export default function CategoriesPage() {
                 <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg mt-4 w-full">{deleteError}</div>
               )}
             </div>
+      </AdminModal>
+
+      {/* Category attributes editor modal */}
+      <AdminModal
+        open={!!attrTarget}
+        onClose={() => setAttrTarget(null)}
+        className="!max-w-3xl"
+        title={attrTarget ? `Attributes - ${attrTarget.nameEn}` : "Attributes"}
+      >
+        {attrTarget && (
+          <CategoryAttributesEditor
+            categoryId={attrTarget.id}
+            categoryName={attrTarget.nameEn}
+          />
+        )}
       </AdminModal>
     </div>
   );

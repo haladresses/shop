@@ -6,9 +6,15 @@ import "swiper/css";
 import Image from "next/image";
 
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
+import { useAppSelector } from "@/redux/store";
 
 const PreviewSliderModal = () => {
   const { closePreviewModal, isModalPreviewOpen } = usePreviewSlider();
+  const product = useAppSelector((state) => state.productDetailsReducer.value);
+  const previews =
+    product?.imgs?.previews && product.imgs.previews.length > 0
+      ? product.imgs.previews
+      : ["/images/products/p1.png"];
 
   const sliderRef = useRef(null);
 
@@ -92,26 +98,18 @@ const PreviewSliderModal = () => {
       </div>
 
       <Swiper ref={sliderRef} slidesPerView={1} spaceBetween={20}>
-        <SwiperSlide>
-          <div className="flex justify-center items-center">
-            <Image
-              src={"/images/products/p2.png"}
-              alt={"product image"}
-              width={450}
-              height={450}
-            />
-          </div>
-        </SwiperSlide>
-        <SwiperSlide>
-          <div className="flex justify-center items-center">
-            <Image
-              src={"/images/products/p2.png"}
-              alt={"product image"}
-              width={450}
-              height={450}
-            />
-          </div>
-        </SwiperSlide>
+        {previews.map((src, i) => (
+          <SwiperSlide key={i}>
+            <div className="flex justify-center items-center">
+              <Image
+                src={src}
+                alt={"product image"}
+                width={450}
+                height={450}
+              />
+            </div>
+          </SwiperSlide>
+        ))}
       </Swiper>
     </div>
   );

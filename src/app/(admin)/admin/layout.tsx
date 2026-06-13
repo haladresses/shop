@@ -8,6 +8,7 @@ const pageTitles: Record<string, string> = {
   "/admin": "Dashboard",
   "/admin/users": "Users Management",
   "/admin/products": "Products Management",
+  "/admin/products/new": "Add Product",
   "/admin/categories": "Categories",
   "/admin/orders": "Orders",
   "/admin/inventory": "Inventory",
@@ -17,6 +18,13 @@ const pageTitles: Record<string, string> = {
   "/admin/hero": "Homepage Hero",
   "/admin/settings": "Settings",
 };
+
+function resolveTitle(pathname: string): string {
+  if (pageTitles[pathname]) return pageTitles[pathname];
+  // Edit product: /admin/products/<id>
+  if (/^\/admin\/products\/[^/]+$/.test(pathname)) return "Edit Product";
+  return "Admin";
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -49,7 +57,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  const title = pageTitles[pathname] || "Admin";
+  const title = resolveTitle(pathname);
 
   return (
     <div className="flex min-h-screen bg-slate-50 overflow-x-hidden">

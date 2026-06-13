@@ -59,6 +59,15 @@ enum CouponType {
   FIXED
 }
 
+enum AttributeType {
+  TEXT
+  NUMBER
+  SELECT
+  MULTISELECT
+  COLOR
+  BOOLEAN
+}
+
 // ─────────────────────────────────────────────
 // USERS & AUTH
 // ─────────────────────────────────────────────
@@ -118,9 +127,37 @@ model Category {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
-  products Product[]
+  products   Product[]
+  attributes CategoryAttribute[]
 
   @@map("categories")
+}
+
+// ─────────────────────────────────────────────
+// CATEGORY ATTRIBUTES (dynamic per-category specs)
+// ─────────────────────────────────────────────
+
+model CategoryAttribute {
+  id           String        @id @default(cuid())
+  categoryId   String
+  key          String
+  labelEn      String
+  labelAr      String
+  type         AttributeType @default(TEXT)
+  options      Json? // [{ value, labelEn, labelAr, hex? }] for SELECT/MULTISELECT/COLOR
+  unit         String? // e.g. "cm", "kg"
+  placeholder  String?
+  isRequired   Boolean       @default(false)
+  isFilterable Boolean       @default(false)
+  sortOrder    Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, key])
+  @@index([categoryId])
+  @@map("category_attributes")
 }
 
 // ─────────────────────────────────────────────
@@ -142,6 +179,7 @@ model Product {
   isFeatured    Boolean  @default(false)
   isNew         Boolean  @default(true)
   isBestSeller  Boolean  @default(false)
+  attributes    Json? // { [attributeKey]: value } keyed by CategoryAttribute.key
   sellerId      String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
