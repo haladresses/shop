@@ -28,18 +28,30 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(req.nextUrl.searchParams.get("page") || "1"));
     const pageSize = 20;
     const skip = (page - 1) * pageSize;
+    const search = (req.nextUrl.searchParams.get("search") || "").trim();
+
+    const where = search
+      ? {
+          OR: [
+            { nameEn: { contains: search, mode: "insensitive" as const } },
+            { nameAr: { contains: search } },
+            { slug: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {};
 
     const [categories, total] = await Promise.all([
       prisma.category.findMany({
+        where,
         skip,
         take: pageSize,
         orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }],
         include: {
           parent: { select: { nameEn: true, nameAr: true } },
-          _count: { select: { products: true } },
+          _count: { select: { products: true, children: true } },
         },
       }),
-      prisma.category.count(),
+      prisma.category.count({ where }),
     ]);
 
     return paginated(categories, { page, pageSize, total });

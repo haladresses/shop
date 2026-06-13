@@ -42,6 +42,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const parsed = updateSchema.safeParse(body);
     if (!parsed.success) return error(parsed.error.errors[0].message);
 
+    if (parsed.data.parentId === id) return error("A category cannot be its own parent");
+
     const category = await prisma.category.update({ where: { id }, data: parsed.data });
     return ok(category);
   } catch (e) {
@@ -58,6 +60,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const { id } = await params;
     const hasProducts = await prisma.product.count({ where: { categoryId: id } });
     if (hasProducts > 0) return error("Cannot delete category with products");
+
+    const hasChildren = await prisma.category.count({ where: { parentId: id } });
+    if (hasChildren > 0) return error("Cannot delete category with sub-categories");
 
     await prisma.category.delete({ where: { id } });
     return ok({ message: "Category deleted" });
