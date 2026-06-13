@@ -57,16 +57,25 @@ const ShopDetails = () => {
   useEffect(() => {
     const slug = new URLSearchParams(window.location.search).get("slug");
     if (!slug) { setLoading(false); setNotFound(true); return; }
+    let ignore = false;
     const controller = new AbortController();
     setLoading(true);
+    setNotFound(false);
     fetchProductBySlug(slug, controller.signal)
       .then((data) => {
+        if (ignore) return;
         if (data) setApi(data);
         else setNotFound(true);
       })
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false));
-    return () => controller.abort();
+      .catch((e) => {
+        // Ignore aborts (React Strict Mode remounts) - only real failures are "not found".
+        if (ignore || (e as Error)?.name === "AbortError") return;
+        setNotFound(true);
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => { ignore = true; controller.abort(); };
   }, []);
 
   // Mapped storefront product (for cart/wishlist/preview slider).
