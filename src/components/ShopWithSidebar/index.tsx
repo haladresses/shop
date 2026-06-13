@@ -10,13 +10,26 @@ import PriceDropdown from "./PriceDropdown";
 import shopData from "../Shop/shopData";
 import SingleGridItem from "../Shop/SingleGridItem";
 import SingleListItem from "../Shop/SingleListItem";
+import { fetchProducts } from "@/lib/storefront";
+import { Product } from "@/types/product";
 import { useLanguage } from "@/app/context/LanguageContext";
 
 const ShopWithSidebar = () => {
   const [productStyle, setProductStyle] = useState("grid");
   const [productSidebar, setProductSidebar] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
-  const { isArabic } = useLanguage();
+  const { isArabic, language } = useLanguage();
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchProducts({ pageSize: 24, language, signal: controller.signal })
+      .then((res) => {
+        setProducts(res.products.length ? res.products : shopData);
+      })
+      .catch(() => setProducts(shopData));
+    return () => controller.abort();
+  }, [language]);
 
   const handleStickyMenu = () => {
     if (window.scrollY >= 80) {
@@ -264,7 +277,7 @@ const ShopWithSidebar = () => {
                     : "flex flex-col gap-7.5"
                 }`}
               >
-                {shopData.map((item, key) =>
+                {products.map((item, key) =>
                   productStyle === "grid" ? (
                     <SingleGridItem item={item} key={key} />
                   ) : (

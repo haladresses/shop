@@ -1,13 +1,25 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import ProductItem from "@/components/Common/ProductItem";
 import { getShopData } from "@/components/Shop/shopData";
+import { fetchProducts } from "@/lib/storefront";
+import { Product } from "@/types/product";
 import { useLanguage } from "@/app/context/LanguageContext";
 
 const NewArrival = () => {
   const { language, isArabic } = useLanguage();
-  const products = getShopData(language);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchProducts({ pageSize: 8, language, signal: controller.signal })
+      .then((res) => {
+        setProducts(res.products.length ? res.products : getShopData(language));
+      })
+      .catch(() => setProducts(getShopData(language)));
+    return () => controller.abort();
+  }, [language]);
 
   const copy = isArabic
     ? { eyebrow: "هذا الأسبوع", title: "وصل حديثاً", viewAll: "عرض الكل" }

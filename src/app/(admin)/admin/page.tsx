@@ -24,6 +24,14 @@ type DashboardData = {
     createdAt: string;
     user?: { nameEn?: string; email: string };
   }>;
+  topProducts?: Array<{
+    productId: string;
+    _sum: { quantity: number | null };
+    product?: {
+      nameEn: string;
+      images?: { url: string }[];
+    } | null;
+  }>;
 };
 
 const statusClass: Record<string, string> = {
@@ -53,6 +61,14 @@ export default function AdminDashboard() {
   }
 
   const stats = data?.stats;
+  const topProducts = data?.topProducts ?? [];
+  const maxSold = Math.max(
+    1,
+    ...topProducts.map((p) => p._sum.quantity ?? 0)
+  );
+  const thisMonth = stats?.revenueThisMonth ?? 0;
+  const lastMonth = stats?.revenueLastMonth ?? 0;
+  const revenueMax = Math.max(1, thisMonth, lastMonth);
 
   const statCards = [
     {
@@ -107,6 +123,78 @@ export default function AdminDashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Revenue comparison + Top products */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="admin-card">
+          <div className="px-6 py-4 border-b border-slate-100">
+            <h3 className="font-semibold text-slate-800">Revenue (This vs Last Month)</h3>
+          </div>
+          <div className="p-6 space-y-5">
+            {[
+              { label: "This Month", value: thisMonth, color: "bg-indigo-500" },
+              { label: "Last Month", value: lastMonth, color: "bg-slate-300" },
+            ].map((row) => (
+              <div key={row.label}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-sm text-slate-600">{row.label}</span>
+                  <span className="text-sm font-medium text-slate-800">
+                    {row.value.toFixed(3)} OMR
+                  </span>
+                </div>
+                <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${row.color}`}
+                    style={{ width: `${(row.value / revenueMax) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="admin-card">
+          <div className="px-6 py-4 border-b border-slate-100">
+            <h3 className="font-semibold text-slate-800">Top Selling Products</h3>
+          </div>
+          <div className="p-6 space-y-4">
+            {topProducts.length === 0 && (
+              <p className="text-sm text-slate-400">No sales data yet.</p>
+            )}
+            {topProducts.map((tp) => {
+              const sold = tp._sum.quantity ?? 0;
+              return (
+                <div key={tp.productId} className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0">
+                    {tp.product?.images?.[0]?.url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={tp.product.images[0].url}
+                        alt={tp.product?.nameEn || ""}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-700 truncate">
+                      {tp.product?.nameEn || "Unknown product"}
+                    </p>
+                    <div className="h-2 mt-1 rounded-full bg-slate-100 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-rose-400"
+                        style={{ width: `${(sold / maxSold) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <span className="text-sm font-semibold text-slate-600 flex-shrink-0">
+                    {sold}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Recent Orders */}

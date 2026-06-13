@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     const parsed = productSchema.safeParse(body);
     if (!parsed.success) return error(parsed.error.errors[0].message);
 
-    const { variants, ...productData } = parsed.data;
+    const { variants, images, ...productData } = parsed.data;
 
     let slug = slugify(productData.nameEn);
     const existing = await prisma.product.findUnique({ where: { slug } });
@@ -71,6 +71,13 @@ export async function POST(req: NextRequest) {
         ...productData,
         slug,
         sellerId: isAdminRole(user.role) ? (body.sellerId || null) : user.id,
+        images: {
+          create: images.map((img, i) => ({
+            url: img.url,
+            isPrimary: img.isPrimary || i === 0,
+            sortOrder: img.sortOrder ?? i,
+          })),
+        },
         variants: {
           create: variants.map((v) => ({
             color: v.color,

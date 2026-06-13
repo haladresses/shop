@@ -6,6 +6,8 @@ import Newsletter from "../Common/Newsletter";
 import RecentlyViewdItems from "./RecentlyViewd";
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { useAppSelector } from "@/redux/store";
+import { fetchProductBySlug, mapApiProduct } from "@/lib/storefront";
+import { Product } from "@/types/product";
 
 const ShopDetails = () => {
   const [activeColor, setActiveColor] = useState("blue");
@@ -75,15 +77,34 @@ const ShopDetails = () => {
 
   const colors = ["red", "blue", "orange", "pink", "purple"];
 
-  const alreadyExist = localStorage.getItem("productDetails");
   const productFromStorage = useAppSelector(
     (state) => state.productDetailsReducer.value
   );
-
-  const product = alreadyExist ? JSON.parse(alreadyExist) : productFromStorage;
+  const [fetched, setFetched] = useState<Product | null>(null);
 
   useEffect(() => {
-    localStorage.setItem("productDetails", JSON.stringify(product));
+    const slug = new URLSearchParams(window.location.search).get("slug");
+    if (!slug) return;
+    const controller = new AbortController();
+    fetchProductBySlug(slug, controller.signal)
+      .then((api) => {
+        if (api) setFetched(mapApiProduct(api));
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
+
+  const snapshot =
+    typeof window !== "undefined" && localStorage.getItem("productDetails")
+      ? JSON.parse(localStorage.getItem("productDetails") as string)
+      : productFromStorage;
+
+  const product = fetched || snapshot;
+
+  useEffect(() => {
+    if (product?.title) {
+      localStorage.setItem("productDetails", JSON.stringify(product));
+    }
   }, [product]);
 
   // pass the product here when you get the real data.

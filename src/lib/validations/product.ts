@@ -10,6 +10,12 @@ export const productVariantSchema = z.object({
   stock: z.number().int().min(0).default(0),
 });
 
+export const productImageSchema = z.object({
+  url: z.string().min(1),
+  isPrimary: z.boolean().default(false),
+  sortOrder: z.number().int().default(0),
+});
+
 export const productSchema = z.object({
   nameEn: z.string().min(2, "Name is required"),
   nameAr: z.string().min(2, "Arabic name is required"),
@@ -24,6 +30,7 @@ export const productSchema = z.object({
   isNew: z.boolean().default(true),
   isBestSeller: z.boolean().default(false),
   variants: z.array(productVariantSchema).default([]),
+  images: z.array(productImageSchema).default([]),
 });
 
 export type ProductInput = z.infer<typeof productSchema>;

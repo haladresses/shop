@@ -10,7 +10,7 @@ export const getShopData = (language: "en" | "ar"): Product[] => {
       reviews: 12,
       price: 18.5,
       discountedPrice: 14.9,
-      id: 1,
+      id: "sample-1",
       imgs: {
         thumbnails: [p[0], p[1]],
         previews: [p[0], p[1]],
@@ -21,7 +21,7 @@ export const getShopData = (language: "en" | "ar"): Product[] => {
       reviews: 8,
       price: 35.0,
       discountedPrice: 28.5,
-      id: 2,
+      id: "sample-2",
       imgs: {
         thumbnails: [p[1], p[2]],
         previews: [p[1], p[2]],
@@ -32,7 +32,7 @@ export const getShopData = (language: "en" | "ar"): Product[] => {
       reviews: 20,
       price: 22.5,
       discountedPrice: 18.0,
-      id: 3,
+      id: "sample-3",
       imgs: {
         thumbnails: [p[2], p[0]],
         previews: [p[2], p[0]],

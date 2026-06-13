@@ -37,6 +37,33 @@ export default function ProductsPage() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadImages = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    setError("");
+    try {
+      const uploaded: string[] = [];
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append("file", file);
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        const data = await res.json();
+        if (data.success) uploaded.push(data.data.url);
+        else setError(data.error || "Upload failed");
+      }
+      setImages((prev) => [...prev, ...uploaded]);
+    } catch {
+      setError("Upload failed");
+    }
+    setUploading(false);
+  };
+
+  const removeImage = (url: string) => {
+    setImages((prev) => prev.filter((u) => u !== url));
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,11 +108,13 @@ export default function ProductsPage() {
         ...form,
         basePrice: parseFloat(form.basePrice),
         salePrice: form.salePrice ? parseFloat(form.salePrice) : null,
+        images: images.map((url, i) => ({ url, isPrimary: i === 0, sortOrder: i })),
       }),
     });
     const data = await res.json();
     if (!data.success) { setError(data.error); } else {
       setShowModal(false);
+      setImages([]);
       load();
     }
     setSaving(false);
@@ -234,6 +263,43 @@ export default function ProductsPage() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Description (AR)</label>
                 <textarea className="admin-input" rows={2} dir="rtl" value={form.descriptionAr} onChange={(e) => setForm({ ...form, descriptionAr: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Product Images</label>
+                <div className="flex flex-wrap gap-3">
+                  {images.map((url) => (
+                    <div key={url} className="relative w-20 h-20 rounded-lg overflow-hidden border border-slate-200 group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={url} alt="product" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(url)}
+                        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  <label className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer text-slate-400 hover:border-indigo-400 hover:text-indigo-500 text-xs">
+                    {uploading ? (
+                      <span className="spinner" />
+                    ) : (
+                      <>
+                        <span className="text-xl leading-none">+</span>
+                        <span>Upload</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => uploadImages(e.target.files)}
+                      disabled={uploading}
+                    />
+                  </label>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">First image is the primary. JPG, PNG, WEBP, AVIF up to 5MB.</p>
               </div>
               <div className="flex flex-wrap gap-4">
                 {[

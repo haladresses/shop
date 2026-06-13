@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Breadcrumb from "../Common/Breadcrumb";
 
 import SingleGridItem from "../Shop/SingleGridItem";
@@ -7,9 +7,34 @@ import SingleListItem from "../Shop/SingleListItem";
 import CustomSelect from "../ShopWithSidebar/CustomSelect";
 
 import shopData from "../Shop/shopData";
+import { fetchProducts } from "@/lib/storefront";
+import { Product } from "@/types/product";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const ShopWithoutSidebar = () => {
   const [productStyle, setProductStyle] = useState("grid");
+  const { language } = useLanguage();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchProducts({ pageSize: 24, language, signal: controller.signal })
+      .then((res) => {
+        if (res.products.length) {
+          setProducts(res.products);
+          setTotal(res.total);
+        } else {
+          setProducts(shopData);
+          setTotal(shopData.length);
+        }
+      })
+      .catch(() => {
+        setProducts(shopData);
+        setTotal(shopData.length);
+      });
+    return () => controller.abort();
+  }, [language]);
 
   const options = [
     { label: "Latest Products", value: "0" },
@@ -35,7 +60,7 @@ const ShopWithoutSidebar = () => {
                     <CustomSelect options={options} />
 
                     <p>
-                      Showing <span className="text-dark">9 of 50</span>{" "}
+                      Showing <span className="text-dark">{products.length} of {total}</span>{" "}
                       Products
                     </p>
                   </div>
@@ -129,7 +154,7 @@ const ShopWithoutSidebar = () => {
                     : "flex flex-col gap-7.5"
                 }`}
               >
-                {shopData.map((item, key) =>
+                {products.map((item, key) =>
                   productStyle === "grid" ? (
                     <SingleGridItem item={item} key={key} />
                   ) : (
