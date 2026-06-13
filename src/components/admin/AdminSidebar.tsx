@@ -14,6 +14,7 @@ import {
   LuStar,
   LuSettings,
   LuStore,
+  LuImage,
   LuLogOut,
   LuChevronLeft,
   LuChevronRight,
@@ -39,6 +40,7 @@ const navItems: NavItem[] = [
   { href: "/admin/payments", label: "Payments", icon: LuCreditCard, color: "text-green-400" },
   { href: "/admin/coupons", label: "Coupons", icon: LuTicket, color: "text-pink-400" },
   { href: "/admin/reviews", label: "Reviews", icon: LuStar, color: "text-yellow-400" },
+  { href: "/admin/hero", label: "Homepage Hero", icon: LuImage, color: "text-cyan-400" },
   { href: "/admin/settings", label: "Settings", icon: LuSettings, color: "text-slate-300" },
 ];
 

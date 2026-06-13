@@ -46,13 +46,13 @@ const SingleListItem = ({ item }: { item: Product }) => {
   return (
     <div className="group rounded-lg bg-white shadow-1">
       <div className="flex">
-        <div className="shadow-list relative overflow-hidden flex items-center justify-center max-w-[270px] w-full sm:min-h-[270px]">
+        <div className="relative overflow-hidden bg-[#F6F7FB] max-w-[270px] w-full sm:min-h-[270px] aspect-square sm:aspect-auto">
           <Image
             src={item.imgs.previews[0]}
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, 250px"
-            className="object-contain p-4"
+            className="object-cover"
           />
 
           <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
