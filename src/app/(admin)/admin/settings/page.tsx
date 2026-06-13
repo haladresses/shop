@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { LuCheck } from "react-icons/lu";
+import FooterSettings from "@/components/admin/FooterSettings";
 
 const DEFAULT_SETTINGS = [
   { key: "store_name_en", group: "general", labelEn: "Store Name (English)", type: "string", defaultValue: "Hala Dresses" },
@@ -20,7 +21,7 @@ const DEFAULT_SETTINGS = [
   { key: "whatsapp_number", group: "social", labelEn: "WhatsApp Number", type: "string", defaultValue: "" },
 ];
 
-const groups = ["general", "shipping", "checkout", "notifications", "social"];
+const groups = ["general", "shipping", "checkout", "notifications", "social", "footer"];
 
 export default function SettingsPage() {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -77,7 +78,11 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      <div className="admin-card p-6">
+      {activeGroup === "footer" ? (
+        <FooterSettings />
+      ) : (
+        <>
+          <div className="admin-card p-6">
         <div className="space-y-5">
           {groupSettings.map((setting) => (
             <div key={setting.key}>
@@ -114,6 +119,8 @@ export default function SettingsPage() {
           </span>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

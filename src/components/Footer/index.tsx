@@ -1,50 +1,51 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { useLanguage } from "@/app/context/LanguageContext";
+import {
+  DEFAULT_FOOTER_CONFIG,
+  fetchFooter,
+  type FooterConfig,
+} from "@/lib/footer";
 
 const Footer = () => {
-  const supportPhone = "+968 9944 0312";
   const { isArabic } = useLanguage();
   const year = new Date().getFullYear();
-  const copy = isArabic
-    ? {
-        brandHeading: "هلا دريسز",
-        address: "بوشر، مسقط، عمان.",
-        storeHours: "ساعات العمل",
-        storeHoursText: "من السبت إلى الخميس، 11 صباحاً - 1 ظهراً و6 مساءً - 8 مساءً.",
-        whatsappLead: "تواصلي معنا عبر",
-        instagramLead: "تابعينا على",
-        account: "الحساب",
-        accountLinks: ["حسابي", "تسجيل الدخول", "سلة التسوق", "المفضلة", "التشكيلات"],
-        care: "دعم العملاء",
-        careLinks: ["الخصوصية", "الاسترجاع", "شروط الاستخدام", "الأسئلة الشائعة", "اتصل بنا"],
-        copyright: `© ${year}. هلا دريسز. جميع الحقوق محفوظة.`,
-        payments: "وسائل الدفع:",
-      }
-    : {
-        brandHeading: "Hala Dresses",
-        address: "Bousher, Muscat, Oman.",
-        storeHours: "Store Hours",
-        storeHoursText: "Saturday to Thursday, 11AM-1PM and 6PM-8PM.",
-        whatsappLead: "Chat with us on",
-        instagramLead: "Get in on",
-        account: "Account",
-        accountLinks: ["My Account", "Client Login", "Shopping Bag", "Wishlist", "Collections"],
-        care: "Client Care",
-        careLinks: ["Privacy Policy", "Refund Policy", "Terms of Use", "FAQ’s", "Contact"],
-        copyright: `© ${year}. Hala Dresses. All rights reserved.`,
-        payments: "We Accept:",
-      };
+  const [config, setConfig] = useState<FooterConfig>(DEFAULT_FOOTER_CONFIG);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchFooter(controller.signal).then(setConfig);
+    return () => controller.abort();
+  }, []);
+
+  const pick = (en: string, ar: string) => (isArabic ? ar : en);
+
+  const supportPhone = config.phone;
+  const copy = {
+    brandHeading: pick(config.brandEn, config.brandAr),
+    address: pick(config.addressEn, config.addressAr),
+    storeHours: pick(config.storeHoursTitleEn, config.storeHoursTitleAr),
+    storeHoursText: pick(config.storeHoursTextEn, config.storeHoursTextAr),
+    whatsappLead: pick(config.whatsappLeadEn, config.whatsappLeadAr),
+    instagramLead: pick(config.instagramLeadEn, config.instagramLeadAr),
+    copyright: pick(config.copyrightEn, config.copyrightAr).replace(
+      /\{year\}/g,
+      String(year)
+    ),
+    payments: isArabic ? "وسائل الدفع:" : "We Accept:",
+  };
+
+  const whatsappHref = `https://api.whatsapp.com/send?phone=${config.whatsappNumber.replace(/[^\d]/g, "")}`;
 
   return (
     <footer className="overflow-hidden">
       <div className="max-w-[1170px] mx-auto px-4 sm:px-8 xl:px-0">
         {/* <!-- footer menu start --> */}
-        <div className={`flex flex-wrap xl:flex-nowrap gap-10 xl:gap-19 xl:justify-between pt-17.5 xl:pt-22.5 pb-10 xl:pb-15 ${isArabic ? "text-right" : ""}`}>
-          <div className="max-w-[330px] w-full">
+        <div className={`grid grid-cols-2 gap-x-6 gap-y-10 pt-12 sm:pt-16 xl:pt-22.5 pb-10 xl:pb-15 xl:grid-cols-12 xl:gap-x-8 ${isArabic ? "text-right" : ""}`}>
+          <div className="col-span-2 xl:col-span-4 xl:max-w-[330px]">
             <h2 className="mb-7.5 text-custom-1 font-medium text-dark">
               {copy.brandHeading}
             </h2>
@@ -101,7 +102,7 @@ const Footer = () => {
               </li>
 
               <li>
-                <a href="#" className="flex items-center gap-4.5">
+                <a href={config.instagramUrl} className="flex items-center gap-4.5">
                   <svg
                     width="24"
                     height="24"
@@ -116,7 +117,7 @@ const Footer = () => {
                       fill="#3C50E0"
                     />
                   </svg>
-                  instagram.com/7ala_dresses
+                  {config.instagramHandle}
                 </a>
               </li>
             </ul>
@@ -124,7 +125,7 @@ const Footer = () => {
             {/* <!-- Social Links start --> */}
             <div className="flex items-center gap-4 mt-7.5">
               <a
-                href="#"
+                href={config.facebookUrl}
                 aria-label="Facebook Social Link"
                 className="flex ease-out duration-200 hover:text-blue"
               >
@@ -149,7 +150,7 @@ const Footer = () => {
               </a>
 
               <a
-                href="#"
+                href={config.twitterUrl}
                 aria-label="Twitter Social Link"
                 className="flex ease-out duration-200 hover:text-blue"
               >
@@ -169,7 +170,7 @@ const Footer = () => {
               </a>
 
               <a
-                href="#"
+                href={config.instagramUrl}
                 aria-label="Instagram Social Link"
                 className="flex ease-out duration-200 hover:text-blue"
               >
@@ -204,7 +205,7 @@ const Footer = () => {
               </a>
 
               <a
-                href="#"
+                href={config.linkedinUrl}
                 aria-label="Linkedin Social Link"
                 className="flex ease-out duration-200 hover:text-blue"
               >
@@ -231,118 +232,71 @@ const Footer = () => {
             {/* <!-- Social Links end --> */}
           </div>
 
-          <div className="w-full sm:w-auto">
-            <h2 className="mb-7.5 text-custom-1 font-medium text-dark">
-              {copy.account}
-            </h2>
+          {config.columns.map((column, idx) => (
+            <div key={idx} className="xl:col-span-2">
+              <h2 className="mb-7.5 whitespace-nowrap text-custom-1 font-medium text-dark">
+                {pick(column.titleEn, column.titleAr)}
+              </h2>
 
-            <ul className="flex flex-col gap-3.5">
-              <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
-                  {copy.accountLinks[0]}
-                </a>
-              </li>
-              <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
-                  {copy.accountLinks[1]}
-                </a>
-              </li>
-              <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
-                  {copy.accountLinks[2]}
-                </a>
-              </li>
-              <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
-                  {copy.accountLinks[3]}
-                </a>
-              </li>
-              <li>
-                <a className="ease-out duration-200 hover:text-blue" href="#">
-                  {copy.accountLinks[4]}
-                </a>
-              </li>
-            </ul>
-          </div>
+              <ul className="flex flex-col gap-3.5">
+                {column.links.map((link, i) => (
+                  <li key={i}>
+                    <a
+                      className="whitespace-nowrap ease-out duration-200 hover:text-blue"
+                      href={link.href || "#"}
+                    >
+                      {pick(link.labelEn, link.labelAr)}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
 
-          <div className="w-full sm:w-auto">
-            <h2 className="mb-7.5 whitespace-nowrap text-custom-1 font-medium text-dark">
-              {copy.care}
-            </h2>
-
-            <ul className="flex flex-col gap-3">
-              <li>
-                <a className="whitespace-nowrap ease-out duration-200 hover:text-blue" href="#">
-                  {copy.careLinks[0]}
-                </a>
-              </li>
-              <li>
-                <a className="whitespace-nowrap ease-out duration-200 hover:text-blue" href="#">
-                  {copy.careLinks[1]}
-                </a>
-              </li>
-              <li>
-                <a className="whitespace-nowrap ease-out duration-200 hover:text-blue" href="#">
-                  {copy.careLinks[2]}
-                </a>
-              </li>
-              <li>
-                <a className="whitespace-nowrap ease-out duration-200 hover:text-blue" href="#">
-                  {copy.careLinks[3]}
-                </a>
-              </li>
-              <li>
-                <a className="whitespace-nowrap ease-out duration-200 hover:text-blue" href="#">
-                  {copy.careLinks[4]}
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          <div className="w-full sm:w-auto">
-            <h2 className="mb-7.5 text-custom-1 font-medium text-dark lg:text-right">
+          <div className="col-span-2 xl:col-span-4">
+            <h2 className="mb-7.5 text-custom-1 font-medium text-dark xl:text-right">
               {copy.storeHours}
             </h2>
 
-            <p className="lg:text-right text-custom-sm mb-4">
+            <p className="text-custom-sm mb-4 xl:text-right">
               {copy.storeHoursText}
             </p>
 
-            <ul className="flex flex-col lg:items-end gap-3">
-              <li>
+            <ul className="flex flex-row flex-wrap gap-3 xl:flex-col xl:items-end">
+              <li className="flex-1 min-w-[140px] xl:flex-none">
                 <a
-                  className="inline-flex min-w-[220px] items-center gap-3 rounded-xl bg-[#2D221E] px-4 py-3 text-white shadow-[0_10px_30px_rgba(45,34,30,0.18)] ease-out duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(45,34,30,0.22)]"
-                  href="https://api.whatsapp.com/send?phone=96899440312"
+                  className="flex w-full items-center gap-2.5 rounded-lg bg-[#2D221E] px-3 py-2.5 text-white shadow-[0_8px_22px_rgba(45,34,30,0.16)] ease-out duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(45,34,30,0.2)] xl:min-w-[200px]"
+                  href={whatsappHref}
                   aria-label="Chat with Hala Dresses on WhatsApp"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366]/20 text-[#25D366]">
-                    <FaWhatsapp className="h-7 w-7" />
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#25D366]/20 text-[#25D366]">
+                    <FaWhatsapp className="h-5 w-5" />
                   </span>
 
-                  <div>
+                  <div className="min-w-0">
                     <span className="block text-custom-xs text-white/70">
                       {copy.whatsappLead}
                     </span>
-                    <p className="text-lg font-semibold">WhatsApp</p>
+                    <p className="text-sm font-semibold">WhatsApp</p>
                   </div>
                 </a>
               </li>
 
-              <li>
+              <li className="flex-1 min-w-[140px] xl:flex-none">
                 <a
-                  className="inline-flex min-w-[220px] items-center gap-3 rounded-xl bg-[linear-gradient(135deg,#833AB4_0%,#E1306C_55%,#FCAF45_100%)] px-4 py-3 text-white shadow-[0_10px_30px_rgba(225,48,108,0.22)] ease-out duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(225,48,108,0.28)]"
-                  href="https://www.instagram.com/7ala_dresses"
+                  className="flex w-full items-center gap-2.5 rounded-lg bg-[linear-gradient(135deg,#833AB4_0%,#E1306C_55%,#FCAF45_100%)] px-3 py-2.5 text-white shadow-[0_8px_22px_rgba(225,48,108,0.2)] ease-out duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_28px_rgba(225,48,108,0.26)] xl:min-w-[200px]"
+                  href={config.instagramUrl}
                   aria-label="Visit Hala Dresses on Instagram"
                 >
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm">
-                    <FaInstagram className="h-7 w-7" />
+                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm">
+                    <FaInstagram className="h-5 w-5" />
                   </span>
 
-                  <div>
+                  <div className="min-w-0">
                     <span className="block text-custom-xs text-white/80">
                       {copy.instagramLead}
                     </span>
-                    <p className="text-lg font-semibold">Instagram</p>
+                    <p className="text-sm font-semibold">Instagram</p>
                   </div>
                 </a>
               </li>
@@ -355,15 +309,15 @@ const Footer = () => {
       {/* <!-- footer bottom start --> */}
       <div className="py-5 xl:py-7.5 bg-gray-1">
         <div className="max-w-[1170px] mx-auto px-4 sm:px-8 xl:px-0">
-          <div className="flex gap-5 flex-wrap items-center justify-between">
-            <p className="text-dark font-medium">
+          <div className={`flex flex-col items-center gap-5 text-center sm:flex-row sm:flex-wrap sm:justify-between ${isArabic ? "sm:text-right" : "sm:text-left"}`}>
+            <p className="text-dark font-medium order-2 sm:order-1">
               {copy.copyright}
             </p>
 
-            <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3 order-1 sm:order-2">
               <p className="font-medium">{copy.payments}</p>
 
-              <div className="flex flex-wrap items-center gap-6">
+              <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-6">
                 <a href="#" aria-label="payment system with visa card">
                   <Image
                     src="/images/payment/payment-01.svg"
