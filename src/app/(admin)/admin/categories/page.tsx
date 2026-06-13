@@ -182,9 +182,9 @@ export default function CategoriesPage() {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <LuSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <LuSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
           <input
-            className="admin-input pl-9"
+            className="admin-input !pl-10"
             placeholder="Search categories..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
