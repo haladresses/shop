@@ -93,7 +93,7 @@ export default function SettingsPage() {
                     className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${values[setting.key] === "true" ? "bg-indigo-600" : "bg-slate-200"}`}
                     onClick={() => setValues({ ...values, [setting.key]: values[setting.key] === "true" ? "false" : "true" })}
                   >
-                    <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${values[setting.key] === "true" ? "ml-5.5 translate-x-5" : "translate-x-0.5"}`} />
+                    <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${values[setting.key] === "true" ? "translate-x-5" : "translate-x-0.5"}`} />
                   </div>
                   <span className="text-sm text-slate-600">{values[setting.key] === "true" ? "Enabled" : "Disabled"}</span>
                 </label>
