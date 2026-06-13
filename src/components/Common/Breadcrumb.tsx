@@ -18,7 +18,7 @@ const Breadcrumb = ({ title, pages }) => {
                 : "items-start text-left sm:flex-row"
             }`}
           >
-            <div className={`w-full sm:w-auto ${isArabic ? "sm:order-2" : "sm:order-1"}`}>
+            <div className="w-full sm:w-auto sm:order-1">
               <h1 className="font-semibold text-dark text-xl sm:text-2xl xl:text-custom-2">
                 {title}
               </h1>
@@ -27,7 +27,7 @@ const Breadcrumb = ({ title, pages }) => {
             <ul
               dir={isArabic ? "rtl" : "ltr"}
               className={`flex w-full flex-wrap items-center gap-2 sm:w-auto ${
-                isArabic ? "justify-start text-left sm:order-1" : "justify-start text-left sm:order-2"
+                isArabic ? "justify-start text-left sm:order-2" : "justify-start text-left sm:order-2"
               }`}
             >
               <li className="text-custom-sm hover:text-blue">
