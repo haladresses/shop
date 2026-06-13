@@ -56,7 +56,7 @@ const PromoBanner = () => {
             <p>{copy.heroDescription}</p>
 
             <a
-              href="/shop-with-sidebar"
+              href="/shop"
               className="inline-flex font-medium text-custom-sm text-white bg-blue py-[11px] px-9.5 rounded-md ease-out duration-200 hover:bg-blue-dark mt-7.5"
             >
               {copy.heroCta}

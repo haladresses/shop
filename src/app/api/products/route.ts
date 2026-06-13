@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * pageSize;
     const search = sp.get("search") || "";
     const categoryId = sp.get("categoryId") || "";
+    const categorySlug = sp.get("category") || "";
     const isActive = sp.get("isActive");
     const sellerId = sp.get("sellerId") || "";
 
@@ -25,6 +26,7 @@ export async function GET(req: NextRequest) {
         ],
       }),
       ...(categoryId && { categoryId }),
+      ...(categorySlug && { category: { slug: categorySlug } }),
       ...(isActive !== null && isActive !== "" && { isActive: isActive === "true" }),
       ...(sellerId && { sellerId }),
     };

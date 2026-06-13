@@ -1,8 +1,9 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import { getCategoryData } from "./categoryData";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { fetchCategories, StoreCategory } from "@/lib/storefront";
 
 // Import Swiper styles
 import "swiper/css/navigation";
@@ -12,7 +13,17 @@ import SingleItem from "./SingleItem";
 const Categories = () => {
   const { language, isArabic } = useLanguage();
   const sliderRef = useRef(null);
-  const data = getCategoryData(language);
+  const [data, setData] = useState<StoreCategory[]>([]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchCategories({ language, parentOnly: true, signal: controller.signal })
+      .then((cats) => {
+        setData(cats.length ? cats : getCategoryData(language));
+      })
+      .catch(() => setData(getCategoryData(language)));
+    return () => controller.abort();
+  }, [language]);
 
   const handlePrev = useCallback(() => {
     if (!sliderRef.current) return;

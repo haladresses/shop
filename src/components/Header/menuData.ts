@@ -14,7 +14,7 @@ export const getMenuData = (language: "en" | "ar"): Menu[] => {
       id: 2,
       title: isArabic ? "التشكيلات" : "Collections",
       newTab: false,
-      path: "/shop-with-sidebar",
+      path: "/shop",
     },
     {
       id: 3,
@@ -32,7 +32,7 @@ export const getMenuData = (language: "en" | "ar"): Menu[] => {
           id: 61,
           title: isArabic ? "كل التشكيلة" : "Full Collection",
           newTab: false,
-          path: "/shop-with-sidebar",
+          path: "/shop",
         },
         {
           id: 62,

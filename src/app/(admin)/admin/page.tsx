@@ -279,7 +279,7 @@ export default function AdminDashboard() {
           {data?.recentOrders.map((order) => (
             <Link
               key={order.id}
-              href={`/admin/orders/${order.id}`}
+              href={`/admin/orders?view=${order.id}`}
               className="flex items-center justify-between gap-3 px-5 py-3.5 active:bg-slate-50"
             >
               <div className="min-w-0">
@@ -323,7 +323,7 @@ export default function AdminDashboard() {
               {data?.recentOrders.map((order) => (
                 <tr key={order.id}>
                   <td>
-                    <Link href={`/admin/orders/${order.id}`} className="font-medium text-indigo-600 hover:text-indigo-800">
+                    <Link href={`/admin/orders?view=${order.id}`} className="font-medium text-indigo-600 hover:text-indigo-800">
                       {order.orderNumber}
                     </Link>
                   </td>

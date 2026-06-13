@@ -5,7 +5,13 @@ type Option = {
   value: string;
 };
 
-const CustomSelect = ({ options }: { options: Option[] }) => {
+const CustomSelect = ({
+  options,
+  onChange,
+}: {
+  options: Option[];
+  onChange?: (option: Option) => void;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState(options[0]);
 
@@ -16,6 +22,7 @@ const CustomSelect = ({ options }: { options: Option[] }) => {
   const handleOptionClick = (option) => {
     setSelectedOption(option);
     toggleDropdown();
+    onChange?.(option);
   };
 
   useEffect(() => {
@@ -50,7 +57,7 @@ const CustomSelect = ({ options }: { options: Option[] }) => {
         {selectedOption.label}
       </div>
       <div className={`select-items ${isOpen ? "" : "select-hide"}`}>
-        {options.slice(1, -1).map((option, index) => (
+        {options.slice(1).map((option, index) => (
           <div
             key={index}
             onClick={() => handleOptionClick(option)}

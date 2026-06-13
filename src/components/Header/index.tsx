@@ -2,12 +2,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/redux/store";
 import { useSelector } from "react-redux";
 import { selectTotalPrice } from "@/redux/features/cart-slice";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { getMenuData } from "./menuData";
+import { fetchCategories, StoreCategory } from "@/lib/storefront";
 import CustomSelect from "./CustomSelect";
 import Dropdown from "./Dropdown";
 import LanguageDropdown from "./LanguageDropdown";
@@ -16,9 +18,11 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sticky, setSticky] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [dbCategories, setDbCategories] = useState<StoreCategory[]>([]);
   const [user, setUser] = useState<{ nameEn?: string | null; nameAr?: string | null; email: string; role: string } | null>(null);
   const { openCartModal } = useCartModalContext();
   const { language, isArabic } = useLanguage();
+  const router = useRouter();
   const cartItems = useAppSelector((s) => s.cartReducer.items);
   const totalPrice = useSelector(selectTotalPrice);
   const menuData = getMenuData(language);
@@ -28,6 +32,14 @@ const Header = () => {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchCategories({ language, parentOnly: true, signal: controller.signal })
+      .then((cats) => setDbCategories(cats))
+      .catch(() => setDbCategories([]));
+    return () => controller.abort();
+  }, [language]);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -97,6 +109,23 @@ const Header = () => {
         currency: "OMR",
       };
 
+  const allLabel = isArabic ? "كل التشكيلات" : "All Collections";
+  const categoryOptions =
+    dbCategories.length > 0
+      ? [
+          { label: allLabel, value: "" },
+          ...dbCategories.map((c) => ({ label: c.title, value: c.slug })),
+        ]
+      : copy.options;
+
+  const handleCategorySelect = (option: { label: string; value: string }) => {
+    router.push(
+      option.value
+        ? `/shop?category=${encodeURIComponent(option.value)}`
+        : "/shop"
+    );
+  };
+
   return (
     <header
       dir={isArabic ? "rtl" : "ltr"}
@@ -114,7 +143,7 @@ const Header = () => {
           {/* Search — hidden on mobile, visible md+ */}
           <div className="hidden md:flex flex-1 min-w-0">
             <div className="flex w-full max-w-[520px]">
-              <CustomSelect options={copy.options} />
+              <CustomSelect options={categoryOptions} onChange={handleCategorySelect} />
               <div className="relative flex-1">
                 <span className={`absolute top-1/2 -translate-y-1/2 w-px h-5 bg-gray-3 ${isArabic ? "right-0" : "left-0"}`} />
                 <input
@@ -251,7 +280,7 @@ const Header = () => {
 
           {/* Mobile search — only shown on screens where it's not in the top bar */}
           <div className="md:hidden flex">
-            <CustomSelect options={copy.options} />
+            <CustomSelect options={categoryOptions} onChange={handleCategorySelect} />
             <div className="relative flex-1">
               <span className={`absolute top-1/2 -translate-y-1/2 w-px h-5 bg-gray-3 ${isArabic ? "right-0" : "left-0"}`} />
               <input

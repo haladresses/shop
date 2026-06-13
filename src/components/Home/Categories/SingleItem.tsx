@@ -1,10 +1,14 @@
-import { Category } from "@/types/category";
+import { StoreCategory } from "@/lib/storefront";
 import Image from "next/image";
 import Link from "next/link";
 
-const SingleItem = ({ item }: { item: Category }) => {
+const SingleItem = ({ item }: { item: StoreCategory }) => {
+  const href = item.slug
+    ? `/shop?category=${encodeURIComponent(item.slug)}`
+    : "/shop";
+
   return (
-    <Link href="/shop-with-sidebar" className="group flex flex-col items-center gap-3.5">
+    <Link href={href} className="group flex flex-col items-center gap-3.5">
       <div className="relative w-[110px] h-[110px] rounded-full overflow-hidden border-4 border-white shadow-md group-hover:shadow-lg group-hover:border-blue/30 transition-all duration-300">
         <Image
           src={item.img}

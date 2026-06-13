@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Breadcrumb from "../Common/Breadcrumb";
 import CustomSelect from "./CustomSelect";
 import CategoryDropdown from "./CategoryDropdown";
@@ -10,26 +11,73 @@ import PriceDropdown from "./PriceDropdown";
 import shopData from "../Shop/shopData";
 import SingleGridItem from "../Shop/SingleGridItem";
 import SingleListItem from "../Shop/SingleListItem";
-import { fetchProducts } from "@/lib/storefront";
+import { fetchProducts, fetchCategories, StoreCategory } from "@/lib/storefront";
 import { Product } from "@/types/product";
 import { useLanguage } from "@/app/context/LanguageContext";
 
-const ShopWithSidebar = () => {
+const PAGE_SIZE = 12;
+
+const ShopWithSidebarContent = () => {
   const [productStyle, setProductStyle] = useState("grid");
   const [productSidebar, setProductSidebar] = useState(false);
   const [stickyMenu, setStickyMenu] = useState(false);
   const { isArabic, language } = useLanguage();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activeCategory = searchParams.get("category") || "";
   const [products, setProducts] = useState<Product[]>([]);
+  const [dbCategories, setDbCategories] = useState<StoreCategory[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+
+  // reset to first page whenever the category filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [activeCategory]);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchProducts({ pageSize: 24, language, signal: controller.signal })
+    setLoading(true);
+    fetchProducts({
+      page,
+      pageSize: PAGE_SIZE,
+      category: activeCategory,
+      language,
+      signal: controller.signal,
+    })
       .then((res) => {
-        setProducts(res.products.length ? res.products : shopData);
+        const list = res.products.length ? res.products : !activeCategory && page === 1 ? shopData : [];
+        setProducts(list);
+        setTotal(res.total || list.length);
+        setTotalPages(Math.max(1, res.totalPages || 1));
       })
-      .catch(() => setProducts(shopData));
+      .catch(() => {
+        if (!activeCategory && page === 1) {
+          setProducts(shopData);
+          setTotal(shopData.length);
+          setTotalPages(1);
+        } else {
+          setProducts([]);
+        }
+      })
+      .finally(() => setLoading(false));
+    return () => controller.abort();
+  }, [language, page, activeCategory]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchCategories({ language, parentOnly: true, signal: controller.signal })
+      .then((cats) => setDbCategories(cats))
+      .catch(() => setDbCategories([]));
     return () => controller.abort();
   }, [language]);
+
+  const selectCategory = (slug: string) => {
+    setProductSidebar(false);
+    router.push(slug ? `/shop?category=${encodeURIComponent(slug)}` : "/shop", { scroll: false });
+  };
 
   const handleStickyMenu = () => {
     if (window.scrollY >= 80) {
@@ -51,23 +99,32 @@ const ShopWithSidebar = () => {
         { label: "Old Products", value: "2" },
       ];
 
-  const categories = isArabic
+  const fallbackCategories = isArabic
     ? [
-        { name: "فساتين البنات", products: 3, isRefined: true },
-        { name: "فساتين النساء", products: 2, isRefined: false },
-        { name: "فساتين السهرة", products: 1, isRefined: false },
-        { name: "ملابس الأطفال", products: 1, isRefined: false },
-        { name: "طقم الأم والبنت", products: 1, isRefined: false },
-        { name: "الإكسسوارات", products: 0, isRefined: false },
+        { name: "فساتين البنات", products: 3, slug: "" },
+        { name: "فساتين النساء", products: 2, slug: "" },
+        { name: "فساتين السهرة", products: 1, slug: "" },
+        { name: "ملابس الأطفال", products: 1, slug: "" },
+        { name: "طقم الأم والبنت", products: 1, slug: "" },
+        { name: "الإكسسوارات", products: 0, slug: "" },
       ]
     : [
-        { name: "Girls' Dresses", products: 3, isRefined: true },
-        { name: "Women's Dresses", products: 2, isRefined: false },
-        { name: "Evening Wear", products: 1, isRefined: false },
-        { name: "Baby Collection", products: 1, isRefined: false },
-        { name: "Mom & Mini", products: 1, isRefined: false },
-        { name: "Accessories", products: 0, isRefined: false },
+        { name: "Girls' Dresses", products: 3, slug: "" },
+        { name: "Women's Dresses", products: 2, slug: "" },
+        { name: "Evening Wear", products: 1, slug: "" },
+        { name: "Baby Collection", products: 1, slug: "" },
+        { name: "Mom & Mini", products: 1, slug: "" },
+        { name: "Accessories", products: 0, slug: "" },
       ];
+
+  const categories =
+    dbCategories.length > 0
+      ? dbCategories.map((c) => ({
+          name: c.title,
+          products: c.products,
+          slug: c.slug,
+        }))
+      : fallbackCategories;
 
   const genders = isArabic
     ? [
@@ -98,8 +155,8 @@ const ShopWithSidebar = () => {
   return (
     <>
       <Breadcrumb
-        title={"Explore All Products"}
-        pages={["shop", "/", "shop with sidebar"]}
+        title={isArabic ? "المتجر" : "Shop"}
+        pages={isArabic ? ["المتجر"] : ["shop"]}
       />
 
       {/* Mobile backdrop */}
@@ -137,13 +194,24 @@ const ShopWithSidebar = () => {
                   {/* <!-- filter box --> */}
                   <div className="bg-white shadow-1 rounded-lg py-4 px-5">
                     <div className="flex items-center justify-between">
-                      <p>{isArabic ? "الفلاتر:" : "Filters:"}</p>
-                      <button className="text-blue">{isArabic ? "مسح الكل" : "Clean All"}</button>
+                      <p className="font-medium text-dark">{isArabic ? "الفلاتر:" : "Filters:"}</p>
+                      <button
+                        type="button"
+                        onClick={() => selectCategory("")}
+                        className="text-blue hover:underline"
+                      >
+                        {isArabic ? "مسح الكل" : "Clean All"}
+                      </button>
                     </div>
                   </div>
 
                   {/* <!-- category box --> */}
-                  <CategoryDropdown categories={categories} />
+                  <CategoryDropdown
+                    categories={categories}
+                    activeSlug={activeCategory}
+                    onSelect={selectCategory}
+                    label={isArabic ? "الفئة" : "Category"}
+                  />
 
                   {/* <!-- gender box --> */}
                   <GenderDropdown genders={genders} />
@@ -181,10 +249,15 @@ const ShopWithSidebar = () => {
                     <CustomSelect options={options} />
 
                     <p className="hidden sm:block">
-                      {isArabic
-                        ? <><span className="text-dark">٩ من ٥٠</span> منتج</>
-                        : <>Showing <span className="text-dark">9 of 50</span> Products</>
-                      }
+                      {isArabic ? (
+                        <>
+                          <span className="text-dark">{products.length}</span> من {total} منتج
+                        </>
+                      ) : (
+                        <>
+                          Showing <span className="text-dark">{products.length}</span> of {total} Products
+                        </>
+                      )}
                     </p>
                   </div>
 
@@ -270,139 +343,95 @@ const ShopWithSidebar = () => {
               </div>
 
               {/* <!-- Products Grid Tab Content Start --> */}
-              <div
-                className={`${
-                  productStyle === "grid"
-                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-7.5 gap-y-9"
-                    : "flex flex-col gap-7.5"
-                }`}
-              >
-                {products.map((item, key) =>
-                  productStyle === "grid" ? (
-                    <SingleGridItem item={item} key={key} />
-                  ) : (
-                    <SingleListItem item={item} key={key} />
-                  )
-                )}
-              </div>
+              {loading ? (
+                <div className="flex flex-col items-center justify-center bg-white shadow-1 rounded-lg py-20">
+                  <span className="inline-block w-8 h-8 border-2 border-gray-3 border-t-blue rounded-full animate-spin" />
+                </div>
+              ) : products.length === 0 ? (
+                <div className="flex flex-col items-center justify-center bg-white shadow-1 rounded-lg py-20 px-6 text-center">
+                  <p className="text-dark font-medium">
+                    {isArabic ? "لا توجد منتجات مطابقة" : "No products found"}
+                  </p>
+                  {activeCategory && (
+                    <button
+                      type="button"
+                      onClick={() => selectCategory("")}
+                      className="mt-3 text-blue hover:underline"
+                    >
+                      {isArabic ? "مسح الفلاتر" : "Clear filters"}
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div
+                  className={`${
+                    productStyle === "grid"
+                      ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-7.5 gap-y-9"
+                      : "flex flex-col gap-7.5"
+                  }`}
+                >
+                  {products.map((item, key) =>
+                    productStyle === "grid" ? (
+                      <SingleGridItem item={item} key={key} />
+                    ) : (
+                      <SingleListItem item={item} key={key} />
+                    )
+                  )}
+                </div>
+              )}
               {/* <!-- Products Grid Tab Content End --> */}
 
               {/* <!-- Products Pagination Start --> */}
-              <div className="flex justify-center mt-15">
-                <div className="bg-white shadow-1 rounded-md p-2">
-                  <ul className="flex items-center">
-                    <li>
-                      <button
-                        id="paginationLeft"
-                        aria-label="button for pagination left"
-                        type="button"
-                        disabled
-                        className="flex items-center justify-center w-8 h-9 ease-out duration-200 rounded-[3px disabled:text-gray-4"
-                      >
-                        <svg
-                          className="fill-current"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
+              {!loading && products.length > 0 && totalPages > 1 && (
+                <div className="flex justify-center mt-15">
+                  <div className="bg-white shadow-1 rounded-md p-2">
+                    <ul className="flex items-center gap-1">
+                      <li>
+                        <button
+                          aria-label="previous page"
+                          type="button"
+                          disabled={page <= 1}
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          className="flex items-center justify-center w-8 h-9 ease-out duration-200 rounded-[3px] hover:text-white hover:bg-blue disabled:text-gray-4 disabled:hover:bg-transparent disabled:hover:text-gray-4 disabled:cursor-not-allowed"
                         >
-                          <path
-                            d="M12.1782 16.1156C12.0095 16.1156 11.8407 16.0594 11.7282 15.9187L5.37197 9.45C5.11885 9.19687 5.11885 8.80312 5.37197 8.55L11.7282 2.08125C11.9813 1.82812 12.3751 1.82812 12.6282 2.08125C12.8813 2.33437 12.8813 2.72812 12.6282 2.98125L6.72197 9L12.6563 15.0187C12.9095 15.2719 12.9095 15.6656 12.6563 15.9187C12.4876 16.0312 12.347 16.1156 12.1782 16.1156Z"
-                            fill=""
-                          />
-                        </svg>
-                      </button>
-                    </li>
+                          <svg className="fill-current rtl:rotate-180" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12.1782 16.1156C12.0095 16.1156 11.8407 16.0594 11.7282 15.9187L5.37197 9.45C5.11885 9.19687 5.11885 8.80312 5.37197 8.55L11.7282 2.08125C11.9813 1.82812 12.3751 1.82812 12.6282 2.08125C12.8813 2.33437 12.8813 2.72812 12.6282 2.98125L6.72197 9L12.6563 15.0187C12.9095 15.2719 12.9095 15.6656 12.6563 15.9187C12.4876 16.0312 12.347 16.1156 12.1782 16.1156Z" fill="" />
+                          </svg>
+                        </button>
+                      </li>
 
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] bg-blue text-white hover:text-white hover:bg-blue"
-                      >
-                        1
-                      </a>
-                    </li>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                        <li key={n}>
+                          <button
+                            type="button"
+                            onClick={() => setPage(n)}
+                            aria-current={n === page ? "page" : undefined}
+                            className={`flex py-1.5 px-3.5 duration-200 rounded-[3px] ${
+                              n === page ? "bg-blue text-white" : "hover:text-white hover:bg-blue"
+                            }`}
+                          >
+                            {n}
+                          </button>
+                        </li>
+                      ))}
 
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        2
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        3
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        4
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        5
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        ...
-                      </a>
-                    </li>
-
-                    <li>
-                      <a
-                        href="#"
-                        className="flex py-1.5 px-3.5 duration-200 rounded-[3px] hover:text-white hover:bg-blue"
-                      >
-                        10
-                      </a>
-                    </li>
-
-                    <li>
-                      <button
-                        id="paginationLeft"
-                        aria-label="button for pagination left"
-                        type="button"
-                        className="flex items-center justify-center w-8 h-9 ease-out duration-200 rounded-[3px] hover:text-white hover:bg-blue disabled:text-gray-4"
-                      >
-                        <svg
-                          className="fill-current"
-                          width="18"
-                          height="18"
-                          viewBox="0 0 18 18"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
+                      <li>
+                        <button
+                          aria-label="next page"
+                          type="button"
+                          disabled={page >= totalPages}
+                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                          className="flex items-center justify-center w-8 h-9 ease-out duration-200 rounded-[3px] hover:text-white hover:bg-blue disabled:text-gray-4 disabled:hover:bg-transparent disabled:hover:text-gray-4 disabled:cursor-not-allowed"
                         >
-                          <path
-                            d="M5.82197 16.1156C5.65322 16.1156 5.5126 16.0594 5.37197 15.9469C5.11885 15.6937 5.11885 15.3 5.37197 15.0469L11.2782 9L5.37197 2.98125C5.11885 2.72812 5.11885 2.33437 5.37197 2.08125C5.6251 1.82812 6.01885 1.82812 6.27197 2.08125L12.6282 8.55C12.8813 8.80312 12.8813 9.19687 12.6282 9.45L6.27197 15.9187C6.15947 16.0312 5.99072 16.1156 5.82197 16.1156Z"
-                            fill=""
-                          />
-                        </svg>
-                      </button>
-                    </li>
-                  </ul>
+                          <svg className="fill-current rtl:rotate-180" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M5.82197 16.1156C5.65322 16.1156 5.5126 16.0594 5.37197 15.9469C5.11885 15.6937 5.11885 15.3 5.37197 15.0469L11.2782 9L5.37197 2.98125C5.11885 2.72812 5.11885 2.33437 5.37197 2.08125C5.6251 1.82812 6.01885 1.82812 6.27197 2.08125L12.6282 8.55C12.8813 8.80312 12.8813 9.19687 12.6282 9.45L6.27197 15.9187C6.15947 16.0312 5.99072 16.1156 5.82197 16.1156Z" fill="" />
+                          </svg>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-              </div>
+              )}
               {/* <!-- Products Pagination End --> */}
             </div>
             {/* // <!-- Content End --> */}
@@ -412,5 +441,11 @@ const ShopWithSidebar = () => {
     </>
   );
 };
+
+const ShopWithSidebar = () => (
+  <Suspense fallback={null}>
+    <ShopWithSidebarContent />
+  </Suspense>
+);
 
 export default ShopWithSidebar;

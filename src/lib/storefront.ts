@@ -60,6 +60,7 @@ type FetchProductsParams = {
   pageSize?: number;
   search?: string;
   categoryId?: string;
+  category?: string;
   language?: "en" | "ar";
   signal?: AbortSignal;
 };
@@ -81,6 +82,7 @@ export async function fetchProducts(
     pageSize = 12,
     search = "",
     categoryId = "",
+    category = "",
     language = "en",
     signal,
   } = params;
@@ -92,6 +94,7 @@ export async function fetchProducts(
   });
   if (search) query.set("search", search);
   if (categoryId) query.set("categoryId", categoryId);
+  if (category) query.set("category", category);
 
   const res = await fetch(`/api/products?${query.toString()}`, { signal });
   const json = await res.json();
@@ -119,4 +122,56 @@ export async function fetchProductBySlug(
   });
   const json = await res.json();
   return json.success ? (json.data as ApiProduct) : null;
+}
+
+const CATEGORY_PLACEHOLDER = "/images/products/p1.png";
+
+export type ApiCategory = {
+  id: string;
+  slug: string;
+  nameEn: string;
+  nameAr: string;
+  image?: string | null;
+  parentId?: string | null;
+  sortOrder?: number;
+  children?: ApiCategory[];
+  _count?: { products?: number };
+};
+
+export type StoreCategory = {
+  id: string;
+  slug: string;
+  title: string;
+  img: string;
+  products: number;
+};
+
+/** Map an API category into the storefront category shape (localized title). */
+export function mapApiCategory(
+  c: ApiCategory,
+  language: "en" | "ar" = "en"
+): StoreCategory {
+  const isArabic = language === "ar";
+  return {
+    id: c.id,
+    slug: c.slug,
+    title: (isArabic ? c.nameAr : c.nameEn) || c.nameEn || c.nameAr || "",
+    img: c.image || CATEGORY_PLACEHOLDER,
+    products: c._count?.products ?? 0,
+  };
+}
+
+/** Fetch the active category list (top-level by default) from the public API. */
+export async function fetchCategories(
+  params: { language?: "en" | "ar"; parentOnly?: boolean; signal?: AbortSignal } = {}
+): Promise<StoreCategory[]> {
+  const { language = "en", parentOnly = false, signal } = params;
+  const query = new URLSearchParams({ all: "true" });
+  if (parentOnly) query.set("parentOnly", "true");
+
+  const res = await fetch(`/api/categories?${query.toString()}`, { signal });
+  const json = await res.json();
+
+  if (!json.success) return [];
+  return (json.data as ApiCategory[]).map((c) => mapApiCategory(c, language));
 }

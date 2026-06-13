@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   LuSearch, LuChevronLeft, LuChevronRight, LuEye, LuShoppingBag,
   LuClock, LuTruck, LuCircleCheck, LuWallet, LuUser, LuMapPin, LuPhone,
@@ -85,7 +86,7 @@ const fmtDate = (d: string) =>
 const customerName = (o: Order) =>
   o.user?.nameEn || o.guestName || o.user?.email || o.guestEmail || "Guest";
 
-export default function OrdersPage() {
+function OrdersView() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [total, setTotal] = useState(0);
@@ -101,6 +102,9 @@ export default function OrdersPage() {
   const [notesDraft, setNotesDraft] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -125,23 +129,37 @@ export default function OrdersPage() {
   useEffect(() => { load(); }, [load]);
   useEffect(() => { loadStats(); }, [loadStats]);
 
-  const openDetail = async (o: Order) => {
-    setSelected(o);
-    setNotesDraft(o.notes || "");
+  const openDetailById = useCallback(async (id: string, base?: Order) => {
+    if (base) {
+      setSelected(base);
+      setNotesDraft(base.notes || "");
+    }
     setConfirmStatus(null);
     setDetailLoading(true);
-    const res = await fetch(`/api/orders/${o.id}`);
+    const res = await fetch(`/api/orders/${id}`);
     const data = await res.json();
     if (data.success) {
       setSelected(data.data);
       setNotesDraft(data.data.notes || "");
     }
     setDetailLoading(false);
-  };
+  }, []);
+
+  const openDetail = (o: Order) => openDetailById(o.id, o);
+
+  // Open a specific order when arriving via /admin/orders?view=<id> (e.g. from the dashboard).
+  useEffect(() => {
+    const viewId = searchParams.get("view");
+    if (viewId) openDetailById(viewId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const closeDetail = () => {
     setSelected(null);
     setConfirmStatus(null);
+    if (searchParams.get("view")) {
+      router.replace("/admin/orders", { scroll: false });
+    }
   };
 
   const patchOrder = async (id: string, payload: Record<string, unknown>) => {
@@ -561,5 +579,13 @@ export default function OrdersPage() {
         </div>
       </AdminModal>
     </div>
+  );
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center py-16"><div className="spinner" /></div>}>
+      <OrdersView />
+    </Suspense>
   );
 }

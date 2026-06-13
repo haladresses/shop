@@ -16,14 +16,14 @@ const HeroCarousal = () => {
           badge: "هلا دريسز — مسقط",
           title: "أزياء نسائية وأطفال مختارة.",
           cta: "تسوقي الآن",
-          href: "/shop-with-sidebar",
+          href: "/shop",
           img: "/images/products/p1.png",
         },
         {
           badge: "تشكيلة البنات",
           title: "فساتين أنيقة لكل مناسبة.",
           cta: "اكتشفي التشكيلة",
-          href: "/shop-with-sidebar",
+          href: "/shop",
           img: "/images/products/p3.png",
         },
       ]
@@ -32,14 +32,14 @@ const HeroCarousal = () => {
           badge: "Hala Dresses — Muscat",
           title: "Women & kids fashion, curated.",
           cta: "Shop Now",
-          href: "/shop-with-sidebar",
+          href: "/shop",
           img: "/images/products/p1.png",
         },
         {
           badge: "Girls' Collection",
           title: "Elegant dresses for every occasion.",
           cta: "Explore",
-          href: "/shop-with-sidebar",
+          href: "/shop",
           img: "/images/products/p3.png",
         },
       ];

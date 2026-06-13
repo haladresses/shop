@@ -2,23 +2,23 @@
 
 import { useState } from "react";
 
-const CategoryItem = ({ category }) => {
-  const [selected, setSelected] = useState(false);
+const CategoryItem = ({ category, active, onSelect }) => {
   return (
     <button
+      type="button"
       className={`${
-        selected && "text-blue"
-      } group flex items-center justify-between ease-out duration-200 hover:text-blue `}
-      onClick={() => setSelected(!selected)}
+        active ? "text-blue" : "text-dark-4"
+      } group flex items-center justify-between ease-out duration-200 hover:text-blue`}
+      onClick={() => onSelect(active ? "" : category.slug)}
     >
       <div className="flex items-center gap-2">
         <div
           className={`cursor-pointer flex items-center justify-center rounded w-4 h-4 border ${
-            selected ? "border-blue bg-blue" : "bg-white border-gray-3"
+            active ? "border-blue bg-blue" : "bg-white border-gray-3"
           }`}
         >
           <svg
-            className={selected ? "block" : "hidden"}
+            className={active ? "block" : "hidden"}
             width="10"
             height="10"
             viewBox="0 0 10 10"
@@ -40,7 +40,7 @@ const CategoryItem = ({ category }) => {
 
       <span
         className={`${
-          selected ? "text-white bg-blue" : "bg-gray-2"
+          active ? "text-white bg-blue" : "bg-gray-2"
         } inline-flex rounded-[30px] text-custom-xs px-2 ease-out duration-200 group-hover:text-white group-hover:bg-blue`}
       >
         {category.products}
@@ -49,7 +49,7 @@ const CategoryItem = ({ category }) => {
   );
 };
 
-const CategoryDropdown = ({ categories }) => {
+const CategoryDropdown = ({ categories, activeSlug = "", onSelect, label = "Category" }) => {
   const [toggleDropdown, setToggleDropdown] = useState(true);
 
   return (
@@ -63,7 +63,7 @@ const CategoryDropdown = ({ categories }) => {
           toggleDropdown && "shadow-filter"
         }`}
       >
-        <p className="text-dark">Category</p>
+        <p className="text-dark font-medium">{label}</p>
         <button
           aria-label="button for category dropdown"
           className={`text-dark ease-out duration-200 ${
@@ -96,7 +96,12 @@ const CategoryDropdown = ({ categories }) => {
         }`}
       >
         {categories.map((category, key) => (
-          <CategoryItem key={key} category={category} />
+          <CategoryItem
+            key={key}
+            category={category}
+            active={!!category.slug && category.slug === activeSlug}
+            onSelect={onSelect || (() => {})}
+          />
         ))}
       </div>
     </div>
