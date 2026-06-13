@@ -54,13 +54,13 @@ async function main() {
 
   // ── Categories ────────────────────────────────────────────
   const categoryData = [
-    { nameEn: "Women's Dresses", nameAr: "لباس زنانه", slug: "womens-dresses", sortOrder: 1 },
-    { nameEn: "Girls' Dresses", nameAr: "لباس دخترانه", slug: "girls-dresses", sortOrder: 2 },
-    { nameEn: "Evening Wear", nameAr: "لباس مجلسي", slug: "evening-wear", sortOrder: 3 },
-    { nameEn: "Baby Collection", nameAr: "لباس نوزادی", slug: "baby-collection", sortOrder: 4 },
-    { nameEn: "Mom & Mini Sets", nameAr: "ست مادر و دختر", slug: "mom-mini-sets", sortOrder: 5 },
-    { nameEn: "Accessories", nameAr: "اکسسوار", slug: "accessories", sortOrder: 6 },
-    { nameEn: "Sale Picks", nameAr: "تخفیف‌ها", slug: "sale-picks", sortOrder: 7 },
+    { nameEn: "Women's Dresses", nameAr: "فساتين نسائية", slug: "womens-dresses", sortOrder: 1 },
+    { nameEn: "Girls' Dresses", nameAr: "فساتين بنات", slug: "girls-dresses", sortOrder: 2 },
+    { nameEn: "Evening Wear", nameAr: "فساتين السهرة", slug: "evening-wear", sortOrder: 3 },
+    { nameEn: "Baby Collection", nameAr: "ملابس المواليد", slug: "baby-collection", sortOrder: 4 },
+    { nameEn: "Mom & Mini Sets", nameAr: "أطقم الأم والطفلة", slug: "mom-mini-sets", sortOrder: 5 },
+    { nameEn: "Accessories", nameAr: "إكسسوارات", slug: "accessories", sortOrder: 6 },
+    { nameEn: "Sale Picks", nameAr: "مختارات التخفيضات", slug: "sale-picks", sortOrder: 7 },
   ];
 
   const categories: Record<string, string> = {};

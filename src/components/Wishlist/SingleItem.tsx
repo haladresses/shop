@@ -1,6 +1,7 @@
 import React from "react";
 import { AppDispatch } from "@/redux/store";
 import { useDispatch } from "react-redux";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 import { removeItemFromWishlist } from "@/redux/features/wishlist-slice";
 import { addItemToCart } from "@/redux/features/cart-slice";
@@ -9,6 +10,21 @@ import Image from "next/image";
 
 const SingleItem = ({ item }) => {
   const dispatch = useDispatch<AppDispatch>();
+  const { isArabic } = useLanguage();
+
+  const copy = isArabic
+    ? {
+        removeLabel: "زر حذف المنتج من المفضلة",
+        productAlt: "منتج",
+        outOfStock: "غير متوفر",
+        addToCart: "أضيفيه إلى السلة",
+      }
+    : {
+        removeLabel: "button for remove product from wishlist",
+        productAlt: "product",
+        outOfStock: "Out of Stock",
+        addToCart: "Add to Cart",
+      };
 
   const handleRemoveFromWishlist = () => {
     dispatch(removeItemFromWishlist(item.id));
@@ -24,11 +40,11 @@ const SingleItem = ({ item }) => {
   };
 
   return (
-    <div className="flex items-center border-t border-gray-3 py-5 px-10">
+    <div dir={isArabic ? "rtl" : "ltr"} className="flex items-center border-t border-gray-3 py-5 px-10">
       <div className="min-w-[83px]">
         <button
           onClick={() => handleRemoveFromWishlist()}
-          aria-label="button for remove product from wishlist"
+          aria-label={copy.removeLabel}
           className="flex items-center justify-center rounded-lg max-w-[38px] w-full h-9.5 bg-gray-2 border border-gray-3 ease-out duration-200 hover:bg-red-light-6 hover:border-red-light-4 hover:text-red"
         >
           <svg
@@ -57,7 +73,7 @@ const SingleItem = ({ item }) => {
         <div className="flex items-center justify-between gap-5">
           <div className="w-full flex items-center gap-5.5">
             <div className="flex items-center justify-center rounded-[5px] bg-gray-2 max-w-[80px] w-full h-17.5">
-              <Image src={item.imgs?.thumbnails[0]} alt="product" width={200} height={200} />
+              <Image src={item.imgs?.thumbnails[0]} alt={copy.productAlt} width={200} height={200} />
             </div>
 
             <div>
@@ -98,7 +114,7 @@ const SingleItem = ({ item }) => {
             />
           </svg>
 
-          <span className="text-red"> Out of Stock </span>
+          <span className="text-red"> {copy.outOfStock} </span>
         </div>
       </div>
 
@@ -107,7 +123,7 @@ const SingleItem = ({ item }) => {
           onClick={() => handleAddToCart()}
           className="inline-flex text-dark hover:text-white bg-gray-1 border border-gray-3 py-2.5 px-6 rounded-md ease-out duration-200 hover:bg-blue hover:border-gray-3"
         >
-          Add to Cart
+          {copy.addToCart}
         </button>
       </div>
     </div>
