@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { LuX, LuChevronLeft, LuChevronRight } from "react-icons/lu";
+import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
+import AdminModal from "@/components/admin/AdminModal";
 
 type InventoryItem = {
   id: string;
@@ -135,12 +136,20 @@ export default function InventoryPage() {
 
       {/* Adjustment Modal */}
       {adjusting && (
-        <div className="admin-modal-overlay" onClick={() => setAdjusting(null)}>
-          <div className="admin-modal max-w-md" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">Adjust Inventory</h3>
-              <button onClick={() => setAdjusting(null)} className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><LuX size={18} /></button>
-            </div>
+        <AdminModal
+          open={!!adjusting}
+          onClose={() => setAdjusting(null)}
+          className="!max-w-md"
+          title="Adjust Inventory"
+          footer={
+            <>
+              <button type="button" onClick={() => setAdjusting(null)} className="admin-btn admin-btn-secondary">Cancel</button>
+              <button type="submit" form="inventory-form" disabled={saving} className="admin-btn admin-btn-primary justify-center">
+                {saving ? "Saving..." : "Apply Adjustment"}
+              </button>
+            </>
+          }
+        >
             <div className="bg-slate-50 rounded-lg p-3 mb-4">
               <p className="font-medium">{adjusting.variant.product.nameEn}</p>
               <p className="text-sm text-slate-500">
@@ -148,7 +157,7 @@ export default function InventoryPage() {
               </p>
               <p className="text-sm mt-1">Current stock: <span className="font-semibold">{adjusting.quantity}</span></p>
             </div>
-            <form onSubmit={applyAdjustment} className="space-y-4">
+            <form id="inventory-form" onSubmit={applyAdjustment} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Transaction Type</label>
                 <select className="admin-input admin-select" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
@@ -164,15 +173,8 @@ export default function InventoryPage() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Note</label>
                 <input className="admin-input" value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="Optional reason..." />
               </div>
-              <div className="flex gap-3">
-                <button type="submit" disabled={saving} className="admin-btn admin-btn-primary flex-1 justify-center">
-                  {saving ? "Saving..." : "Apply Adjustment"}
-                </button>
-                <button type="button" onClick={() => setAdjusting(null)} className="admin-btn admin-btn-secondary">Cancel</button>
-              </div>
             </form>
-          </div>
-        </div>
+        </AdminModal>
       )}
     </div>
   );

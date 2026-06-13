@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { LuX } from "react-icons/lu";
+import AdminModal from "@/components/admin/AdminModal";
 
 type Coupon = {
   id: string;
@@ -118,14 +118,22 @@ export default function CouponsPage() {
       </div>
 
       {showModal && (
-        <div className="admin-modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="admin-modal max-w-md" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-semibold">Create Coupon</h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><LuX size={18} /></button>
-            </div>
+        <AdminModal
+          open={showModal}
+          onClose={() => setShowModal(false)}
+          className="!max-w-md"
+          title="Create Coupon"
+          footer={
+            <>
+              <button type="button" onClick={() => setShowModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
+              <button type="submit" form="coupon-form" disabled={saving} className="admin-btn admin-btn-primary justify-center">
+                {saving ? "Creating..." : "Create Coupon"}
+              </button>
+            </>
+          }
+        >
             {error && <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg mb-4">{error}</div>}
-            <form onSubmit={createCoupon} className="space-y-4">
+            <form id="coupon-form" onSubmit={createCoupon} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Code *</label>
                 <input className="admin-input uppercase" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="SAVE20" required />
@@ -157,15 +165,8 @@ export default function CouponsPage() {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Expires At</label>
                 <input type="datetime-local" className="admin-input" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} />
               </div>
-              <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={saving} className="admin-btn admin-btn-primary flex-1 justify-center">
-                  {saving ? "Creating..." : "Create Coupon"}
-                </button>
-                <button type="button" onClick={() => setShowModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
-              </div>
             </form>
-          </div>
-        </div>
+        </AdminModal>
       )}
     </div>
   );

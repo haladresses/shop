@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import {
-  LuX, LuSearch, LuChevronLeft, LuChevronRight, LuEye, LuShoppingBag,
+  LuSearch, LuChevronLeft, LuChevronRight, LuEye, LuShoppingBag,
   LuClock, LuTruck, LuCircleCheck, LuWallet, LuUser, LuMapPin, LuPhone,
   LuMail, LuPackage, LuTriangleAlert, LuSave, LuReceipt, LuBan,
 } from "react-icons/lu";
@@ -335,22 +335,28 @@ export default function OrdersPage() {
       </div>
 
       {/* Order detail modal */}
-      <AdminModal open={!!selected} onClose={closeDetail} className="!max-w-3xl">
+      <AdminModal
+        open={!!selected}
+        onClose={closeDetail}
+        className="!max-w-3xl"
+        title={
+          selected ? (
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-mono">{selected.orderNumber}</span>
+                <span className={`badge ${statusColors[selected.status] || "badge-pending"}`}>{selected.status}</span>
+                <span className={`badge ${payColors[selected.paymentStatus] || "badge-unpaid"}`}>{selected.paymentStatus}</span>
+              </div>
+              <span className="text-xs font-normal text-slate-500">{fmtDate(selected.createdAt)}</span>
+            </div>
+          ) : null
+        }
+        footer={
+          <button onClick={closeDetail} className="admin-btn admin-btn-secondary">Close</button>
+        }
+      >
         {selected && (
           <div>
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3 mb-5">
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-lg font-semibold text-slate-800 font-mono">{selected.orderNumber}</h3>
-                  <span className={`badge ${statusColors[selected.status] || "badge-pending"}`}>{selected.status}</span>
-                  <span className={`badge ${payColors[selected.paymentStatus] || "badge-unpaid"}`}>{selected.paymentStatus}</span>
-                </div>
-                <p className="text-sm text-slate-500 mt-1">{fmtDate(selected.createdAt)}</p>
-              </div>
-              <button onClick={closeDetail} className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center flex-shrink-0"><LuX size={18} /></button>
-            </div>
-
             {detailLoading && (
               <div className="flex justify-center py-6"><div className="spinner" /></div>
             )}
@@ -526,19 +532,13 @@ export default function OrdersPage() {
       </AdminModal>
 
       {/* Destructive status confirmation */}
-      <AdminModal open={!!confirmStatus} onClose={() => setConfirmStatus(null)} className="!max-w-md">
-        <div className="text-center">
-          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-            {confirmStatus === "REFUNDED" ? <LuBan size={24} className="text-red-600" /> : <LuTriangleAlert size={24} className="text-red-600" />}
-          </div>
-          <h3 className="text-lg font-semibold text-slate-800 mb-1">
-            {confirmStatus === "REFUNDED" ? "Refund this order?" : "Cancel this order?"}
-          </h3>
-          <p className="text-sm text-slate-500 mb-5">
-            Order <span className="font-mono font-medium">{selected?.orderNumber}</span> will be marked as{" "}
-            <span className="font-medium">{confirmStatus}</span>. This notifies the customer.
-          </p>
-          <div className="flex gap-3 justify-center">
+      <AdminModal
+        open={!!confirmStatus}
+        onClose={() => setConfirmStatus(null)}
+        className="!max-w-md"
+        title={confirmStatus === "REFUNDED" ? "Refund this order?" : "Cancel this order?"}
+        footer={
+          <>
             <button onClick={() => setConfirmStatus(null)} className="admin-btn admin-btn-secondary">Keep Order</button>
             <button
               onClick={() => confirmStatus && applyStatus(confirmStatus)}
@@ -547,7 +547,17 @@ export default function OrdersPage() {
             >
               {updating ? <span className="spinner !w-4 !h-4 !border-2" /> : <LuBan size={15} />} Confirm {confirmStatus}
             </button>
+          </>
+        }
+      >
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            {confirmStatus === "REFUNDED" ? <LuBan size={24} className="text-red-600" /> : <LuTriangleAlert size={24} className="text-red-600" />}
           </div>
+          <p className="text-sm text-slate-500">
+            Order <span className="font-mono font-medium">{selected?.orderNumber}</span> will be marked as{" "}
+            <span className="font-medium">{confirmStatus}</span>. This notifies the customer.
+          </p>
         </div>
       </AdminModal>
     </div>

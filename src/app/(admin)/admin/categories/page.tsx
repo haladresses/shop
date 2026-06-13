@@ -311,13 +311,21 @@ export default function CategoriesPage() {
       </div>
 
       {/* Modal */}
-      <AdminModal open={showModal} onClose={() => setShowModal(false)}>
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-semibold text-slate-800">{editing ? "Edit Category" : "Add Category"}</h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center"><LuX size={18} /></button>
-            </div>
+      <AdminModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        title={editing ? "Edit Category" : "Add Category"}
+        footer={
+          <>
+            <button type="button" onClick={() => setShowModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
+            <button type="submit" form="category-form" disabled={saving || uploading} className="admin-btn admin-btn-primary justify-center disabled:opacity-60">
+              {saving ? "Saving..." : editing ? "Update Category" : "Create Category"}
+            </button>
+          </>
+        }
+      >
             {error && <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg mb-4">{error}</div>}
-            <form onSubmit={save} className="space-y-4">
+            <form id="category-form" onSubmit={save} className="space-y-4">
               {/* Image */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Category Image</label>
@@ -376,35 +384,34 @@ export default function CategoriesPage() {
                 <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} className="rounded" />
                 <span className="font-medium text-slate-700">Active (visible in the storefront)</span>
               </label>
-
-              <div className="flex gap-3 pt-2">
-                <button type="submit" disabled={saving || uploading} className="admin-btn admin-btn-primary flex-1 justify-center disabled:opacity-60">
-                  {saving ? "Saving..." : editing ? "Update Category" : "Create Category"}
-                </button>
-                <button type="button" onClick={() => setShowModal(false)} className="admin-btn admin-btn-secondary">Cancel</button>
-              </div>
             </form>
       </AdminModal>
 
       {/* Delete confirmation modal */}
-      <AdminModal open={!!deleteTarget} onClose={() => !deleting && setDeleteTarget(null)} className="!max-w-md">
+      <AdminModal
+        open={!!deleteTarget}
+        onClose={() => !deleting && setDeleteTarget(null)}
+        className="!max-w-md"
+        title="Delete category?"
+        footer={
+          <>
+            <button onClick={() => setDeleteTarget(null)} disabled={deleting} className="admin-btn admin-btn-secondary">Cancel</button>
+            <button onClick={confirmDelete} disabled={deleting} className="admin-btn admin-btn-danger justify-center disabled:opacity-60">
+              {deleting ? "Deleting..." : "Delete"}
+            </button>
+          </>
+        }
+      >
             <div className="flex flex-col items-center text-center">
               <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center text-red-500 mb-4">
                 <LuTrash2 size={26} />
               </div>
-              <h3 className="text-lg font-semibold text-slate-800">Delete category?</h3>
-              <p className="text-sm text-slate-500 mt-1.5">
+              <p className="text-sm text-slate-500">
                 You are about to delete <span className="font-semibold text-slate-700">{deleteTarget?.nameEn}</span>. This action cannot be undone.
               </p>
               {deleteError && (
                 <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg mt-4 w-full">{deleteError}</div>
               )}
-              <div className="flex gap-3 w-full mt-6">
-                <button onClick={() => setDeleteTarget(null)} disabled={deleting} className="admin-btn admin-btn-secondary flex-1 justify-center">Cancel</button>
-                <button onClick={confirmDelete} disabled={deleting} className="admin-btn admin-btn-danger flex-1 justify-center disabled:opacity-60">
-                  {deleting ? "Deleting..." : "Delete"}
-                </button>
-              </div>
             </div>
       </AdminModal>
     </div>
