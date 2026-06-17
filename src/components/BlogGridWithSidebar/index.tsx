@@ -182,7 +182,7 @@ const BlogGridWithSidebar = () => {
               <LatestProducts products={shopData} />
 
               {/* <!-- Popular Category box --> */}
-              <Categories categories={categories} />
+              <Categories />
 
               {/* <!-- Tags box --> */}
               <div className="shadow-1 bg-white rounded-xl mt-7.5">

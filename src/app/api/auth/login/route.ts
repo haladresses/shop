@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const parsed = loginSchema.safeParse(body);
-    if (!parsed.success) return error(parsed.error.errors[0].message);
+    if (!parsed.success) return error(parsed.error.issues[0].message);
 
     const { email, password } = parsed.data;
     const user = await prisma.user.findUnique({ where: { email } });

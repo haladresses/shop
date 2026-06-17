@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const parsed = categorySchema.safeParse(body);
-    if (!parsed.success) return error(parsed.error.errors[0].message);
+    if (!parsed.success) return error(parsed.error.issues[0].message);
 
     let slug = slugify(parsed.data.nameEn);
     const existing = await prisma.category.findUnique({ where: { slug } });

@@ -35,7 +35,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const body = await req.json();
     const parsed = categoryAttributesPayloadSchema.safeParse(body);
-    if (!parsed.success) return error(parsed.error.errors[0].message);
+    if (!parsed.success) return error(parsed.error.issues[0].message);
 
     const { attributes } = parsed.data;
 

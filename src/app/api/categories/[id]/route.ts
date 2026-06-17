@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params;
     const body = await req.json();
     const parsed = updateSchema.safeParse(body);
-    if (!parsed.success) return error(parsed.error.errors[0].message);
+    if (!parsed.success) return error(parsed.error.issues[0].message);
 
     if (parsed.data.parentId === id) return error("A category cannot be its own parent");
 

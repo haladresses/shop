@@ -43,7 +43,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const { id } = await params;
     const body = await req.json();
     const parsed = updateOrderSchema.safeParse(body);
-    if (!parsed.success) return error(parsed.error.errors[0].message);
+    if (!parsed.success) return error(parsed.error.issues[0].message);
 
     const existing = await prisma.order.findUnique({ where: { id }, select: { id: true } });
     if (!existing) return notFound("Order");

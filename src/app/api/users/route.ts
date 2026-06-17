@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const parsed = createUserSchema.safeParse(body);
-    if (!parsed.success) return error(parsed.error.errors[0].message);
+    if (!parsed.success) return error(parsed.error.issues[0].message);
 
     const { email, password, nameEn, nameAr, phone, role } = parsed.data;
 

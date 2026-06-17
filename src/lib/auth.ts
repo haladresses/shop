@@ -79,9 +79,9 @@ export async function getAuthFromRequest(req: NextRequest) {
 }
 
 export function isAdminRole(role: Role): boolean {
-  return [Role.SUPER_ADMIN, Role.ADMIN, Role.STAFF].includes(role);
+  return ([Role.SUPER_ADMIN, Role.ADMIN, Role.STAFF] as Role[]).includes(role);
 }
 
 export function isSellerOrAdmin(role: Role): boolean {
-  return [Role.SUPER_ADMIN, Role.ADMIN, Role.SELLER].includes(role);
+  return ([Role.SUPER_ADMIN, Role.ADMIN, Role.SELLER] as Role[]).includes(role);
 }

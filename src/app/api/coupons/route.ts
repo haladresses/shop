@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const parsed = couponSchema.safeParse(body);
-    if (!parsed.success) return error(parsed.error.errors[0].message);
+    if (!parsed.success) return error(parsed.error.issues[0].message);
 
     const existing = await prisma.coupon.findUnique({ where: { code: parsed.data.code } });
     if (existing) return error("Coupon code already exists");
