@@ -214,6 +214,131 @@ async function main() {
   }
 
   console.log("✅ Settings created");
+
+  // ── Wasellee Branches ───────────────────────────────────────
+  // Domestic prices are placeholders (Wasellee hasn't published a
+  // per-city rate card yet) — adjust per branch in /admin/shipping.
+  const PLACEHOLDER_HOME_COST = 1.5;
+  const PLACEHOLDER_OFFICE_COST = 1.0;
+
+  const MUSCAT = { regionEn: "Muscat", regionAr: "مسقط" };
+  const BATINAH = { regionEn: "Al Batinah (North & South)", regionAr: "الباطنة (شمال وجنوب)" };
+  const SHARQIYAH = { regionEn: "Ash Sharqiyah (North & South)", regionAr: "الشرقية (شمال وجنوب)" };
+  const DAKHILIYAH = { regionEn: "Ad Dakhiliyah", regionAr: "الداخلية" };
+  const OTHER = { regionEn: "Other Governorates", regionAr: "محافظات أخرى" };
+
+  const waselleeBranches: {
+    cityEn: string;
+    cityAr: string;
+    phone: string;
+    region: { regionEn: string; regionAr: string };
+  }[] = [
+    // Muscat
+    { cityEn: "Bousher", cityAr: "بوشر", phone: "74186126", region: MUSCAT },
+    { cityEn: "Quriyat", cityAr: "قريات", phone: "72424835", region: MUSCAT },
+    { cityEn: "Al Ma'abilah", cityAr: "المعبيلة", phone: "94659939", region: MUSCAT },
+    { cityEn: "Al Amerat", cityAr: "العامرات", phone: "98228572", region: MUSCAT },
+    { cityEn: "Al Khoudh", cityAr: "الخوض", phone: "93331927", region: MUSCAT },
+    { cityEn: "Muttrah", cityAr: "مطرح", phone: "90404433", region: MUSCAT },
+    { cityEn: "Seeb", cityAr: "السيب", phone: "77583399", region: MUSCAT },
+    // Al Batinah
+    { cityEn: "Suwaiq", cityAr: "السويق", phone: "94477843", region: BATINAH },
+    { cityEn: "Saham", cityAr: "صحم", phone: "77852028", region: BATINAH },
+    { cityEn: "Sohar", cityAr: "صحار", phone: "95468558", region: BATINAH },
+    { cityEn: "Rustaq", cityAr: "الرستاق", phone: "78643653", region: BATINAH },
+    { cityEn: "Khabourah", cityAr: "الخابورة", phone: "76730188", region: BATINAH },
+    { cityEn: "Barka", cityAr: "بركاء", phone: "79002525", region: BATINAH },
+    { cityEn: "Nakhal", cityAr: "نخل", phone: "97807544", region: BATINAH },
+    { cityEn: "Musanaah", cityAr: "المصنعة", phone: "96544099", region: BATINAH },
+    { cityEn: "Shinas", cityAr: "شناص", phone: "95431899", region: BATINAH },
+    { cityEn: "Liwa", cityAr: "لوى", phone: "77274403", region: BATINAH },
+    // Ash Sharqiyah
+    { cityEn: "Sur", cityAr: "صور", phone: "79281891", region: SHARQIYAH },
+    { cityEn: "Ja'alan", cityAr: "جعلان", phone: "79229101", region: SHARQIYAH },
+    { cityEn: "Sinaw", cityAr: "سناو", phone: "77585229", region: SHARQIYAH },
+    { cityEn: "Ibra", cityAr: "إبراء", phone: "94887296", region: SHARQIYAH },
+    { cityEn: "Bidiyah", cityAr: "بدية", phone: "98032383", region: SHARQIYAH },
+    { cityEn: "Samad Al Shan", cityAr: "سمد الشأن", phone: "79048666", region: SHARQIYAH },
+    // Ad Dakhiliyah
+    { cityEn: "Nizwa 1", cityAr: "نزوى 1", phone: "79053354", region: DAKHILIYAH },
+    { cityEn: "Nizwa 2", cityAr: "نزوى 2", phone: "92200503", region: DAKHILIYAH },
+    { cityEn: "Bahla", cityAr: "بهلاء", phone: "98030789", region: DAKHILIYAH },
+    { cityEn: "Izki", cityAr: "إزكي", phone: "92640891", region: DAKHILIYAH },
+    { cityEn: "Samail", cityAr: "سمائل", phone: "93264694", region: DAKHILIYAH },
+    { cityEn: "Adam", cityAr: "آدم", phone: "72424833", region: DAKHILIYAH },
+    { cityEn: "Fanja", cityAr: "فنجاء", phone: "92640851", region: DAKHILIYAH },
+    { cityEn: "Manah", cityAr: "منح", phone: "77313218", region: DAKHILIYAH },
+    { cityEn: "Al Hamra", cityAr: "الحمراء", phone: "77417415", region: DAKHILIYAH },
+    // Other governorates
+    { cityEn: "Al Buraimi", cityAr: "البريمي", phone: "99224159", region: OTHER },
+    { cityEn: "Salalah (Dhofar)", cityAr: "صلالة (ظفار)", phone: "92000746", region: OTHER },
+    { cityEn: "Khasab (Musandam)", cityAr: "خصب (مسندم)", phone: "91211378", region: OTHER },
+    { cityEn: "Ibri (Al Dhahirah)", cityAr: "عبري (الظاهرة)", phone: "78475114", region: OTHER },
+    { cityEn: "Yanqul (Al Dhahirah)", cityAr: "ينقل (الظاهرة)", phone: "91275987", region: OTHER },
+  ];
+
+  for (let i = 0; i < waselleeBranches.length; i++) {
+    const b = waselleeBranches[i];
+    const existing = await prisma.waselleeBranch.findFirst({ where: { cityEn: b.cityEn } });
+    if (!existing) {
+      await prisma.waselleeBranch.create({
+        data: {
+          cityEn: b.cityEn,
+          cityAr: b.cityAr,
+          phone: b.phone,
+          regionEn: b.region.regionEn,
+          regionAr: b.region.regionAr,
+          homeDeliveryCost: PLACEHOLDER_HOME_COST,
+          officePickupCost: PLACEHOLDER_OFFICE_COST,
+          isActive: true,
+          sortOrder: i,
+        },
+      });
+    }
+  }
+
+  console.log(`✅ Wasellee branches created (${waselleeBranches.length})`);
+
+  // ── Wasellee International Rates ───────────────────────────
+  // Currency wasn't confirmed by Wasellee (OMR assumed) — verify in admin.
+  const waselleeRates = [
+    { countryEn: "Saudi Arabia", countryAr: "المملكة العربية السعودية", countryCode: "SA", baseWeightKg: 1, baseCost: 4.5, additionalKgCost: 2.5 },
+    { countryEn: "Bahrain", countryAr: "البحرين", countryCode: "BH", baseWeightKg: 1, baseCost: 5.0, additionalKgCost: 3.0 },
+    { countryEn: "Kuwait", countryAr: "الكويت", countryCode: "KW", baseWeightKg: 1, baseCost: 5.0, additionalKgCost: 3.0 },
+    { countryEn: "Qatar", countryAr: "قطر", countryCode: "QA", baseWeightKg: 1, baseCost: 5.0, additionalKgCost: 3.0 },
+    { countryEn: "United Arab Emirates", countryAr: "الإمارات العربية المتحدة", countryCode: "AE", baseWeightKg: 4, baseCost: 5.0, additionalKgCost: 0.5 },
+  ];
+
+  for (let i = 0; i < waselleeRates.length; i++) {
+    const r = waselleeRates[i];
+    await prisma.waselleeInternationalRate.upsert({
+      where: { countryCode: r.countryCode },
+      update: {},
+      create: { ...r, isActive: true, sortOrder: i },
+    });
+  }
+
+  console.log("✅ Wasellee international rates created");
+
+  // ── Wasellee Settings (WhatsApp/WAHA + contact info) ────────
+  const existingWaselleeSettings = await prisma.waselleeSettings.findFirst();
+  if (!existingWaselleeSettings) {
+    await prisma.waselleeSettings.create({
+      data: {
+        companyNameEn: "Wasellee",
+        companyNameAr: "وصلي",
+        brandNameEn: "LO Express",
+        website: "www.wasellee.om",
+        instagram: "@wlo.express",
+        bousherOfficePhone: "74186126",
+        bousherContactPhone: "76977795",
+        bousherDriverPhone: "94700211",
+        isNotifyEnabled: false, // enable once WAHA base URL/API key are set in /admin/shipping
+      },
+    });
+  }
+
+  console.log("✅ Wasellee settings created");
   console.log("\n✨ Database seeded successfully!");
   console.log("\n📋 Accounts:");
   console.log("   Admin:    admin@haladresses.com    / Admin@12345");

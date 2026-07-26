@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
 import { updateOrderSchema } from "@/lib/validations/order";
+import { buildWaselleeManualWhatsAppLink } from "@/lib/wasellee";
 import type { Prisma } from "@prisma/client";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -22,13 +23,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           },
         },
         payments: { orderBy: { createdAt: "desc" } },
+        waselleeBranch: true,
       },
     });
 
     if (!order) return notFound("Order");
     if (!isAdminRole(user.role) && order.userId !== user.id) return forbidden();
 
-    return ok(order);
+    const payment = order.payments[0]?.method;
+    const waselleeManualWhatsAppLink =
+      order.shippingMethod === "WASELLEE" && order.waselleeBranch
+        ? await buildWaselleeManualWhatsAppLink(order, order.waselleeBranch, payment || "CASH_ON_DELIVERY")
+        : null;
+
+    return ok({ ...order, waselleeManualWhatsAppLink });
   } catch (e) {
     return serverError(e);
   }

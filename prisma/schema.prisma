@@ -68,6 +68,16 @@ enum AttributeType {
   BOOLEAN
 }
 
+enum ShippingMethod {
+  STANDARD
+  WASELLEE
+}
+
+enum WaselleeDeliveryType {
+  HOME_DELIVERY
+  OFFICE_PICKUP
+}
+
 // ─────────────────────────────────────────────
 // USERS & AUTH
 // ─────────────────────────────────────────────
@@ -250,6 +260,13 @@ model Order {
   notes           String?       @db.Text
   shippingAddress Json
 
+  shippingMethod       ShippingMethod        @default(STANDARD)
+  waselleeDeliveryType WaselleeDeliveryType?
+  waselleeBranchId     String?
+  waselleeBranch       WaselleeBranch?       @relation(fields: [waselleeBranchId], references: [id])
+  whatsappNotifiedAt   DateTime?
+  whatsappNotifyError  String?               @db.Text
+
   user     User?       @relation(fields: [userId], references: [id])
   items    OrderItem[]
   payments Payment[]
@@ -259,6 +276,7 @@ model Order {
 
   @@index([userId])
   @@index([orderNumber])
+  @@index([waselleeBranchId])
   @@map("orders")
 }
 
@@ -299,6 +317,70 @@ model Payment {
 
   @@index([orderId])
   @@map("payments")
+}
+
+// ─────────────────────────────────────────────
+// WASELLEE SHIPPING
+// ─────────────────────────────────────────────
+
+model WaselleeBranch {
+  id               String   @id @default(cuid())
+  cityEn           String
+  cityAr           String
+  regionEn         String
+  regionAr         String
+  phone            String
+  homeDeliveryCost Decimal  @default(0) @db.Decimal(10, 3)
+  officePickupCost Decimal  @default(0) @db.Decimal(10, 3)
+  isActive         Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  orders Order[]
+
+  @@index([regionEn])
+  @@map("wasellee_branches")
+}
+
+model WaselleeInternationalRate {
+  id               String   @id @default(cuid())
+  countryEn        String
+  countryAr        String
+  countryCode      String   @unique
+  baseWeightKg     Decimal  @default(1) @db.Decimal(6, 2)
+  baseCost         Decimal  @db.Decimal(10, 3)
+  additionalKgCost Decimal  @db.Decimal(10, 3)
+  isActive         Boolean  @default(true)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("wasellee_international_rates")
+}
+
+// Singleton row (application reads/creates the first record) holding the
+// WhatsApp send configuration. Deliberately DB-backed instead of env vars so
+// it is fully editable from the admin Shipping settings screen. Contains a
+// secret (wahaApiKey) — only ever exposed through admin-authenticated routes.
+model WaselleeSettings {
+  id                  String   @id @default(cuid())
+  isNotifyEnabled     Boolean  @default(false)
+  companyNameEn       String   @default("Wasellee")
+  companyNameAr       String   @default("وصلي")
+  brandNameEn         String   @default("LO Express")
+  website             String?
+  instagram           String?
+  bousherOfficePhone  String   @default("74186126")
+  bousherContactPhone String?
+  bousherDriverPhone  String?
+  notifyChatId        String? // overrides the derived chat id, e.g. 96874186126@c.us
+  wahaBaseUrl         String?
+  wahaApiKey          String?
+  wahaSession         String   @default("default")
+  updatedAt           DateTime @updatedAt
+
+  @@map("wasellee_settings")
 }
 
 // ─────────────────────────────────────────────

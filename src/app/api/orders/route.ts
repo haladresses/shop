@@ -4,6 +4,7 @@ import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
 import { ok, paginated, error, unauthorized, serverError } from "@/lib/api/response";
 import { createOrderSchema } from "@/lib/validations/order";
 import { generateOrderNumber } from "@/lib/utils";
+import { calculateWaselleeCost, sendWaselleeOrderNotification } from "@/lib/wasellee";
 
 export async function GET(req: NextRequest) {
   try {
@@ -40,6 +41,7 @@ export async function GET(req: NextRequest) {
           user: { select: { nameEn: true, email: true } },
           items: { include: { product: { select: { nameEn: true, nameAr: true } } } },
           payments: { orderBy: { createdAt: "desc" }, take: 1 },
+          waselleeBranch: true,
         },
       }),
       prisma.order.count({ where }),
@@ -58,7 +60,26 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) return error(parsed.error.issues[0].message);
 
     const sessionUser = await getAuthFromRequest(req);
-    const { items, shippingAddress, couponCode, notes, paymentMethod } = parsed.data;
+    const {
+      items,
+      shippingAddress,
+      couponCode,
+      notes,
+      paymentMethod,
+      shippingMethod,
+      waselleeDeliveryType,
+      waselleeBranchId,
+    } = parsed.data;
+
+    let waselleeBranch = null;
+    if (shippingMethod === "WASELLEE") {
+      waselleeBranch = await prisma.waselleeBranch.findUnique({
+        where: { id: waselleeBranchId },
+      });
+      if (!waselleeBranch || !waselleeBranch.isActive) {
+        return error("Selected Wasellee branch is not available");
+      }
+    }
 
     let discount = 0;
     if (couponCode) {
@@ -109,7 +130,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const shippingCost = subtotal >= 10 ? 0 : 1.5; // Free shipping over 10 OMR
+    // Shipping cost is always computed server-side — never trust a client-submitted price.
+    const shippingCost =
+      shippingMethod === "WASELLEE" && waselleeBranch
+        ? calculateWaselleeCost(waselleeBranch, waselleeDeliveryType!)
+        : subtotal >= 10
+        ? 0
+        : 1.5; // Free shipping over 10 OMR
     const total = subtotal + shippingCost - discount;
 
     const order = await prisma.order.create({
@@ -125,6 +152,9 @@ export async function POST(req: NextRequest) {
         couponCode: couponCode || null,
         notes,
         shippingAddress,
+        shippingMethod: shippingMethod as never,
+        waselleeDeliveryType: (waselleeDeliveryType as never) || null,
+        waselleeBranchId: waselleeBranch?.id || null,
         items: { create: orderItemsData },
         payments: {
           create: {
@@ -137,6 +167,7 @@ export async function POST(req: NextRequest) {
       include: {
         items: true,
         payments: true,
+        waselleeBranch: true,
       },
     });
 
@@ -145,6 +176,18 @@ export async function POST(req: NextRequest) {
         where: { code: couponCode.toUpperCase() },
         data: { usedCount: { increment: 1 } },
       }).catch(() => {});
+    }
+
+    if (order.shippingMethod === "WASELLEE" && order.waselleeBranch) {
+      const result = await sendWaselleeOrderNotification(order, order.waselleeBranch, paymentMethod);
+      await prisma.order
+        .update({
+          where: { id: order.id },
+          data: result.ok
+            ? { whatsappNotifiedAt: new Date(), whatsappNotifyError: null }
+            : { whatsappNotifyError: result.error },
+        })
+        .catch(() => {});
     }
 
     return ok(order, 201);

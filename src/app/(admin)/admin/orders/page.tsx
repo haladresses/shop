@@ -5,6 +5,7 @@ import {
   LuSearch, LuChevronLeft, LuChevronRight, LuEye, LuShoppingBag,
   LuClock, LuTruck, LuCircleCheck, LuWallet, LuUser, LuMapPin, LuPhone,
   LuMail, LuPackage, LuTriangleAlert, LuSave, LuReceipt, LuBan,
+  LuMessageCircle, LuRefreshCw, LuExternalLink,
 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
 
@@ -36,6 +37,13 @@ type Payment = {
   createdAt?: string;
 };
 
+type WaselleeBranch = {
+  id: string;
+  cityEn: string;
+  cityAr: string;
+  phone: string;
+};
+
 type Order = {
   id: string;
   orderNumber: string;
@@ -54,6 +62,12 @@ type Order = {
   user?: { nameEn?: string | null; nameAr?: string | null; email?: string; phone?: string | null } | null;
   items: OrderItem[];
   payments: Payment[];
+  shippingMethod?: string;
+  waselleeDeliveryType?: string | null;
+  waselleeBranch?: WaselleeBranch | null;
+  whatsappNotifiedAt?: string | null;
+  whatsappNotifyError?: string | null;
+  waselleeManualWhatsAppLink?: string | null;
 };
 
 type Stats = {
@@ -102,6 +116,8 @@ function OrdersView() {
   const [notesDraft, setNotesDraft] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
+  const [notifyingWasellee, setNotifyingWasellee] = useState(false);
+  const [notifyError, setNotifyError] = useState("");
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -135,6 +151,7 @@ function OrdersView() {
       setNotesDraft(base.notes || "");
     }
     setConfirmStatus(null);
+    setNotifyError("");
     setDetailLoading(true);
     const res = await fetch(`/api/orders/${id}`);
     const data = await res.json();
@@ -206,6 +223,23 @@ function OrdersView() {
       loadStats();
     }
     setUpdating(false);
+  };
+
+  const resendWasellee = async () => {
+    if (!selected) return;
+    setNotifyingWasellee(true);
+    setNotifyError("");
+    const res = await fetch(`/api/orders/${selected.id}/notify-wasellee`, { method: "POST" });
+    const data = await res.json();
+    if (data.success) {
+      setSelected((prev) =>
+        prev ? { ...prev, whatsappNotifiedAt: data.data.whatsappNotifiedAt, whatsappNotifyError: null } : null
+      );
+    } else {
+      setNotifyError(data.error || "Failed to send");
+      setSelected((prev) => (prev ? { ...prev, whatsappNotifyError: data.error } : null));
+    }
+    setNotifyingWasellee(false);
   };
 
   const saveNotes = async () => {
@@ -426,6 +460,67 @@ function OrdersView() {
                 )}
               </div>
             </div>
+
+            {/* Wasellee shipping */}
+            {selected.shippingMethod === "WASELLEE" && (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-5">
+                <p className="text-xs font-semibold text-emerald-700 uppercase mb-2 flex items-center gap-1.5">
+                  <LuTruck size={13} /> Wasellee (LO Express)
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-700 mb-3">
+                  <p>
+                    <span className="text-slate-500">Delivery type: </span>
+                    <span className="font-medium">
+                      {selected.waselleeDeliveryType === "OFFICE_PICKUP" ? "Office Pickup" : "Home Delivery"}
+                    </span>
+                  </p>
+                  {selected.waselleeBranch && (
+                    <p>
+                      <span className="text-slate-500">Branch: </span>
+                      <span className="font-medium">{selected.waselleeBranch.cityEn}</span>{" "}
+                      <span className="font-mono text-slate-500">({selected.waselleeBranch.phone})</span>
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-1.5 text-sm">
+                    {selected.whatsappNotifiedAt ? (
+                      <span className="text-emerald-700 flex items-center gap-1">
+                        <LuCircleCheck size={14} /> Sent {fmtDate(selected.whatsappNotifiedAt)}
+                      </span>
+                    ) : (
+                      <span className="text-red-600 flex items-center gap-1">
+                        <LuTriangleAlert size={14} />
+                        {selected.whatsappNotifyError || "Not sent yet"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={resendWasellee}
+                      disabled={notifyingWasellee}
+                      className="admin-btn admin-btn-secondary text-xs py-1 disabled:opacity-40"
+                    >
+                      {notifyingWasellee ? <span className="spinner !w-3.5 !h-3.5 !border-2" /> : <LuRefreshCw size={13} />}
+                      {selected.whatsappNotifiedAt ? "Resend" : "Send"} via WAHA
+                    </button>
+                    {selected.waselleeManualWhatsAppLink && (
+                      <a
+                        href={selected.waselleeManualWhatsAppLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="admin-btn admin-btn-secondary text-xs py-1"
+                      >
+                        <LuMessageCircle size={13} /> Open in WhatsApp <LuExternalLink size={11} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+                {notifyError && <p className="text-xs text-red-600 mt-2">{notifyError}</p>}
+              </div>
+            )}
 
             {/* Items */}
             <div className="mb-5">

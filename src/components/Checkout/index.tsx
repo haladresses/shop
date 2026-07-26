@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "../Common/Breadcrumb";
 import { useAppSelector, AppDispatch } from "@/redux/store";
@@ -11,6 +11,20 @@ import {
 import { useLanguage } from "@/app/context/LanguageContext";
 
 type PaymentMethod = "CASH_ON_DELIVERY" | "BANK_TRANSFER" | "CARD";
+type ShippingMethod = "STANDARD" | "WASELLEE";
+type WaselleeDeliveryType = "HOME_DELIVERY" | "OFFICE_PICKUP";
+
+type WaselleeBranch = {
+  id: string;
+  cityEn: string;
+  cityAr: string;
+  regionEn: string;
+  regionAr: string;
+  phone: string;
+  homeDeliveryCost: number;
+  officePickupCost: number;
+  isActive: boolean;
+};
 
 const FREE_SHIPPING_THRESHOLD = 10;
 const SHIPPING_COST = 1.5;
@@ -24,8 +38,42 @@ const Checkout = () => {
 
   const cartItems = useAppSelector((state) => state.cartReducer.items);
   const subtotal = useAppSelector(selectTotalPrice);
+
+  const [branches, setBranches] = useState<WaselleeBranch[]>([]);
+  const [shippingMethod, setShippingMethod] = useState<ShippingMethod>("STANDARD");
+  const [waselleeDeliveryType, setWaselleeDeliveryType] =
+    useState<WaselleeDeliveryType>("HOME_DELIVERY");
+  const [waselleeBranchId, setWaselleeBranchId] = useState("");
+
+  useEffect(() => {
+    fetch("/api/wasellee/branches")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) setBranches(d.data.filter((b: WaselleeBranch) => b.isActive));
+      })
+      .catch(() => {});
+  }, []);
+
+  const branchesByRegion = useMemo(() => {
+    const groups: Record<string, WaselleeBranch[]> = {};
+    for (const b of branches) {
+      (groups[isArabic ? b.regionAr : b.regionEn] ||= []).push(b);
+    }
+    return groups;
+  }, [branches, isArabic]);
+
+  const selectedBranch = branches.find((b) => b.id === waselleeBranchId) || null;
+
   const shippingCost =
-    subtotal >= FREE_SHIPPING_THRESHOLD || subtotal === 0 ? 0 : SHIPPING_COST;
+    shippingMethod === "WASELLEE"
+      ? selectedBranch
+        ? waselleeDeliveryType === "OFFICE_PICKUP"
+          ? selectedBranch.officePickupCost
+          : selectedBranch.homeDeliveryCost
+        : 0
+      : subtotal >= FREE_SHIPPING_THRESHOLD || subtotal === 0
+      ? 0
+      : SHIPPING_COST;
   const total = subtotal + shippingCost;
 
   const [form, setForm] = useState({
@@ -59,6 +107,16 @@ const Checkout = () => {
       return;
     }
 
+    if (shippingMethod === "WASELLEE" && !waselleeBranchId) {
+      setError(
+        t(
+          "Please choose a Wasellee branch/city.",
+          "الرجاء اختيار فرع/مدينة وصلي."
+        )
+      );
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/orders", {
@@ -73,7 +131,10 @@ const Checkout = () => {
           shippingAddress: {
             nameEn: form.nameEn,
             phone: form.phone,
-            city: form.city,
+            city:
+              shippingMethod === "WASELLEE" && selectedBranch
+                ? selectedBranch.cityEn
+                : form.city,
             area: form.area || undefined,
             street: form.street || undefined,
             buildingNo: form.buildingNo || undefined,
@@ -82,6 +143,10 @@ const Checkout = () => {
           couponCode: form.couponCode || undefined,
           notes: form.notes || undefined,
           paymentMethod,
+          shippingMethod,
+          ...(shippingMethod === "WASELLEE"
+            ? { waselleeDeliveryType, waselleeBranchId }
+            : {}),
           guestName: form.nameEn,
           guestEmail: form.email,
         }),
@@ -170,36 +235,38 @@ const Checkout = () => {
                     />
                   </div>
 
-                  <div className="flex flex-col lg:flex-row gap-5 mb-5">
-                    <div className="w-full">
-                      <label htmlFor="city" className="block mb-2.5">
-                        {t("City", "المدينة")}{" "}
-                        <span className="text-red">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="city"
-                        id="city"
-                        required
-                        value={form.city}
-                        onChange={handleChange}
-                        className={inputClass}
-                      />
+                  {shippingMethod === "STANDARD" && (
+                    <div className="flex flex-col lg:flex-row gap-5 mb-5">
+                      <div className="w-full">
+                        <label htmlFor="city" className="block mb-2.5">
+                          {t("City", "المدينة")}{" "}
+                          <span className="text-red">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          name="city"
+                          id="city"
+                          required
+                          value={form.city}
+                          onChange={handleChange}
+                          className={inputClass}
+                        />
+                      </div>
+                      <div className="w-full">
+                        <label htmlFor="area" className="block mb-2.5">
+                          {t("Area", "المنطقة")}
+                        </label>
+                        <input
+                          type="text"
+                          name="area"
+                          id="area"
+                          value={form.area}
+                          onChange={handleChange}
+                          className={inputClass}
+                        />
+                      </div>
                     </div>
-                    <div className="w-full">
-                      <label htmlFor="area" className="block mb-2.5">
-                        {t("Area", "المنطقة")}
-                      </label>
-                      <input
-                        type="text"
-                        name="area"
-                        id="area"
-                        value={form.area}
-                        onChange={handleChange}
-                        className={inputClass}
-                      />
-                    </div>
-                  </div>
+                  )}
 
                   <div className="flex flex-col lg:flex-row gap-5 mb-5">
                     <div className="w-full">
@@ -247,6 +314,144 @@ const Checkout = () => {
                       className={inputClass}
                     ></textarea>
                   </div>
+                </div>
+
+                {/* Shipping method box */}
+                <div className="bg-white shadow-1 rounded-[10px] mt-7.5 p-4 sm:p-8.5">
+                  <h2 className="font-medium text-dark text-xl sm:text-2xl mb-5.5">
+                    {t("Shipping Method", "طريقة الشحن")}
+                  </h2>
+
+                  <div className="flex flex-col gap-3 mb-5">
+                    {(
+                      [
+                        ["STANDARD", t("Standard Delivery", "التوصيل العادي")],
+                        ["WASELLEE", t("Wasellee (LO Express)", "وصلي (LO Express)")],
+                      ] as [ShippingMethod, string][]
+                    ).map(([value, label]) => (
+                      <label
+                        key={value}
+                        className="flex cursor-pointer select-none items-center gap-4"
+                      >
+                        <input
+                          type="radio"
+                          name="shippingMethod"
+                          value={value}
+                          checked={shippingMethod === value}
+                          onChange={() => setShippingMethod(value)}
+                          className="sr-only"
+                        />
+                        <span
+                          className={`flex h-4 w-4 items-center justify-center rounded-full flex-shrink-0 ${
+                            shippingMethod === value
+                              ? "border-4 border-blue"
+                              : "border border-gray-4"
+                          }`}
+                        />
+                        <span
+                          className={`rounded-md border-[0.5px] py-3.5 px-5 w-full ease-out duration-200 ${
+                            shippingMethod === value
+                              ? "border-transparent bg-gray-2"
+                              : "border-gray-4 shadow-1"
+                          }`}
+                        >
+                          {label}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+
+                  {shippingMethod === "WASELLEE" && (
+                    <div className="space-y-5">
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        {(
+                          [
+                            [
+                              "HOME_DELIVERY",
+                              t("Home Delivery", "التوصيل لباب المنزل"),
+                            ],
+                            [
+                              "OFFICE_PICKUP",
+                              t("Pickup from Branch", "الاستلام من الفرع"),
+                            ],
+                          ] as [WaselleeDeliveryType, string][]
+                        ).map(([value, label]) => (
+                          <label
+                            key={value}
+                            className="flex cursor-pointer select-none items-center gap-3 flex-1"
+                          >
+                            <input
+                              type="radio"
+                              name="waselleeDeliveryType"
+                              value={value}
+                              checked={waselleeDeliveryType === value}
+                              onChange={() => setWaselleeDeliveryType(value)}
+                              className="sr-only"
+                            />
+                            <span
+                              className={`flex h-4 w-4 items-center justify-center rounded-full flex-shrink-0 ${
+                                waselleeDeliveryType === value
+                                  ? "border-4 border-blue"
+                                  : "border border-gray-4"
+                              }`}
+                            />
+                            <span
+                              className={`rounded-md border-[0.5px] py-3 px-4 w-full text-sm ease-out duration-200 ${
+                                waselleeDeliveryType === value
+                                  ? "border-transparent bg-gray-2"
+                                  : "border-gray-4 shadow-1"
+                              }`}
+                            >
+                              {label}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+
+                      <div>
+                        <label htmlFor="waselleeBranchId" className="block mb-2.5">
+                          {t("Wasellee City / Branch", "مدينة / فرع وصلي")}{" "}
+                          <span className="text-red">*</span>
+                        </label>
+                        <select
+                          id="waselleeBranchId"
+                          name="waselleeBranchId"
+                          required={shippingMethod === "WASELLEE"}
+                          value={waselleeBranchId}
+                          onChange={(e) => setWaselleeBranchId(e.target.value)}
+                          className={inputClass}
+                        >
+                          <option value="">
+                            {t("Select a city/branch...", "اختر مدينة/فرع...")}
+                          </option>
+                          {Object.entries(branchesByRegion).map(([region, list]) => (
+                            <optgroup key={region} label={region}>
+                              {list.map((b) => (
+                                <option key={b.id} value={b.id}>
+                                  {isArabic ? b.cityAr : b.cityEn}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                      </div>
+
+                      {selectedBranch && waselleeDeliveryType === "OFFICE_PICKUP" && (
+                        <div className="rounded-md bg-blue-light-5 border border-blue-light-4 px-4 py-3 text-sm text-dark">
+                          <p className="font-medium mb-1">
+                            {t(
+                              "You will collect your package from this Wasellee office:",
+                              "سوف تستلم طردك من مكتب وصلي التالي:"
+                            )}
+                          </p>
+                          <p>
+                            {isArabic ? selectedBranch.cityAr : selectedBranch.cityEn} —{" "}
+                            <span dir="ltr">{selectedBranch.phone}</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
