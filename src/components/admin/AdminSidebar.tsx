@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
@@ -85,8 +86,8 @@ export default function AdminSidebar({ mobileOpen = false, onClose }: AdminSideb
         <div className="flex items-center justify-between px-4 py-5 border-b border-slate-700/60">
           {!collapsed && (
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center shadow-lg">
-                <LuShirt className="text-white text-lg" />
+              <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shadow-lg p-1">
+                <Image src="/logo.svg" alt="Hala Dresses" width={28} height={28} />
               </div>
               <div>
                 <h1 className="text-white font-bold text-base leading-tight">Hala Dresses</h1>

@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { LuUndo2 } from "react-icons/lu";
+import AdminModal from "@/components/admin/AdminModal";
 
 type Payment = {
   id: string;
@@ -9,6 +11,7 @@ type Payment = {
   transactionId?: string;
   createdAt: string;
   order: {
+    id: string;
     orderNumber: string;
     user?: { nameEn?: string; email: string } | null;
   };
@@ -32,6 +35,9 @@ export default function PaymentsPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ totalRevenue: 0, pendingAmount: 0, paidCount: 0 });
+  const [refundTarget, setRefundTarget] = useState<Payment | null>(null);
+  const [refunding, setRefunding] = useState(false);
+  const [refundError, setRefundError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -41,12 +47,13 @@ export default function PaymentsPage() {
     if (data.success) {
       const allPayments: Payment[] = [];
       data.data.forEach((order: {
+        id: string;
         payments: Payment[];
         orderNumber: string;
         user?: { nameEn?: string; email: string } | null;
       }) => {
         order.payments.forEach((p: Payment) => {
-          allPayments.push({ ...p, order: { orderNumber: order.orderNumber, user: order.user } });
+          allPayments.push({ ...p, order: { id: order.id, orderNumber: order.orderNumber, user: order.user } });
         });
       });
       setPayments(allPayments);
@@ -64,6 +71,21 @@ export default function PaymentsPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  const confirmRefund = async () => {
+    if (!refundTarget) return;
+    setRefunding(true);
+    setRefundError("");
+    const res = await fetch(`/api/orders/${refundTarget.order.id}/thawani-refund`, { method: "POST" });
+    const data = await res.json();
+    if (!data.success) {
+      setRefundError(data.error || "Could not process the refund.");
+    } else {
+      setRefundTarget(null);
+      load();
+    }
+    setRefunding(false);
+  };
 
   return (
     <div className="space-y-4">
@@ -96,6 +118,7 @@ export default function PaymentsPage() {
                   <th>Status</th>
                   <th>Transaction ID</th>
                   <th>Date</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -108,10 +131,22 @@ export default function PaymentsPage() {
                     <td><span className={`badge ${statusColors[p.status] || "badge-unpaid"}`}>{p.status}</span></td>
                     <td className="font-mono text-xs text-slate-400">{p.transactionId || "—"}</td>
                     <td className="text-slate-500 text-sm">{new Date(p.createdAt).toLocaleDateString()}</td>
+                    <td>
+                      {p.method === "THAWANI" && p.status === "PAID" && (
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => { setRefundError(""); setRefundTarget(p); }}
+                            className="admin-btn admin-btn-secondary text-xs py-1 text-red-600 hover:bg-red-50"
+                          >
+                            <LuUndo2 size={13} /> Refund
+                          </button>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {payments.length === 0 && (
-                  <tr><td colSpan={7} className="text-center py-8 text-slate-400">No payments yet</td></tr>
+                  <tr><td colSpan={8} className="text-center py-8 text-slate-400">No payments yet</td></tr>
                 )}
               </tbody>
             </table>
@@ -121,6 +156,32 @@ export default function PaymentsPage() {
           Total: {total} payments
         </div>
       </div>
+
+      <AdminModal
+        open={!!refundTarget}
+        onClose={() => setRefundTarget(null)}
+        className="!max-w-md"
+        title="Refund this payment?"
+        footer={
+          <>
+            <button onClick={() => setRefundTarget(null)} className="admin-btn admin-btn-secondary">Cancel</button>
+            <button onClick={confirmRefund} disabled={refunding} className="admin-btn admin-btn-danger disabled:opacity-40">
+              {refunding ? <span className="spinner !w-4 !h-4 !border-2" /> : <LuUndo2 size={15} />} Confirm Refund
+            </button>
+          </>
+        }
+      >
+        <div className="text-center">
+          {refundError && (
+            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-4 text-left">{refundError}</p>
+          )}
+          <p className="text-sm text-slate-500">
+            Order <span className="font-mono font-medium">{refundTarget?.order.orderNumber}</span> — refunding{" "}
+            <span className="font-medium">{refundTarget ? Number(refundTarget.amount).toFixed(3) : ""} OMR</span> via
+            Thawani. This cannot be undone.
+          </p>
+        </div>
+      </AdminModal>
     </div>
   );
 }

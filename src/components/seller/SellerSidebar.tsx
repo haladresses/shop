@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 const navItems = [
@@ -26,8 +27,8 @@ export default function SellerSidebar() {
     <aside className="seller-sidebar w-60 flex flex-col">
       <div className="px-5 py-5 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-sky-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">
-            S
+          <div className="w-9 h-9 bg-white rounded-xl flex items-center justify-center shadow-lg p-1">
+            <Image src="/logo.svg" alt="Hala Dresses" width={28} height={28} />
           </div>
           <div>
             <h1 className="text-white font-bold text-sm">Hala Dresses</h1>

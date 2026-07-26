@@ -10,7 +10,7 @@ import {
 } from "@/redux/features/cart-slice";
 import { useLanguage } from "@/app/context/LanguageContext";
 
-type PaymentMethod = "CASH_ON_DELIVERY" | "BANK_TRANSFER" | "CARD";
+type PaymentMethod = "CASH_ON_DELIVERY" | "BANK_TRANSFER" | "THAWANI";
 type ShippingMethod = "STANDARD" | "WASELLEE";
 type WaselleeDeliveryType = "HOME_DELIVERY" | "OFFICE_PICKUP";
 
@@ -161,7 +161,27 @@ const Checkout = () => {
         );
         return;
       }
+
+      const orderId = data.data.id;
       dispatch(removeAllItemsFromCart());
+
+      if (paymentMethod === "THAWANI") {
+        const sessionRes = await fetch("/api/payments/thawani/create-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderId }),
+        });
+        const sessionData = await sessionRes.json();
+        if (sessionData.success) {
+          window.location.href = sessionData.data.redirectUrl;
+          return;
+        }
+        // The order was placed but the Thawani session failed to start —
+        // send the customer to the payment-status page, which offers a retry.
+        router.push(`/payment/thawani/callback?orderId=${orderId}`);
+        return;
+      }
+
       router.push("/mail-success");
     } catch {
       setError(
@@ -557,7 +577,7 @@ const Checkout = () => {
                           "BANK_TRANSFER",
                           t("Direct bank transfer", "تحويل بنكي مباشر"),
                         ],
-                        ["CARD", t("Credit / Debit card", "بطاقة ائتمان / خصم")],
+                        ["THAWANI", t("Pay with Card (Thawani)", "الدفع بالبطاقة (ثواني)")],
                       ] as [PaymentMethod, string][]
                     ).map(([value, label]) => (
                       <label

@@ -137,7 +137,7 @@ const Header = () => {
 
           {/* Logo */}
           <Link href="/" className="flex-shrink-0">
-            <Image src="/images/logo/logo.svg" alt="Hala Dresses" width={40} height={40} priority />
+            <Image src="/logo.svg" alt="Hala Dresses" width={40} height={40} priority />
           </Link>
 
           {/* Search — hidden on mobile, visible md+ */}

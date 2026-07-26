@@ -46,6 +46,7 @@ const Footer = () => {
         {/* <!-- footer menu start --> */}
         <div className={`grid grid-cols-2 gap-x-6 gap-y-10 pt-12 sm:pt-16 xl:pt-22.5 pb-10 xl:pb-15 xl:grid-cols-12 xl:gap-x-8 ${isArabic ? "text-right" : ""}`}>
           <div className="col-span-2 xl:col-span-4 xl:max-w-[330px]">
+            <Image src="/logo.svg" alt={copy.brandHeading} width={48} height={48} className="mb-4" />
             <h2 className="mb-7.5 text-custom-1 font-medium text-dark">
               {copy.brandHeading}
             </h2>
