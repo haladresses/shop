@@ -21,8 +21,9 @@ type WaselleeBranch = {
   regionEn: string;
   regionAr: string;
   phone: string;
-  homeDeliveryCost: number;
-  officePickupCost: number;
+  // Prisma Decimal fields serialize as strings over JSON.
+  homeDeliveryCost: number | string;
+  officePickupCost: number | string;
   isActive: boolean;
 };
 
@@ -67,9 +68,11 @@ const Checkout = () => {
   const shippingCost =
     shippingMethod === "WASELLEE"
       ? selectedBranch
-        ? waselleeDeliveryType === "OFFICE_PICKUP"
-          ? selectedBranch.officePickupCost
-          : selectedBranch.homeDeliveryCost
+        ? Number(
+            waselleeDeliveryType === "OFFICE_PICKUP"
+              ? selectedBranch.officePickupCost
+              : selectedBranch.homeDeliveryCost
+          )
         : 0
       : subtotal >= FREE_SHIPPING_THRESHOLD || subtotal === 0
       ? 0
