@@ -111,3 +111,17 @@ export async function fetchTestimonials(signal?: AbortSignal): Promise<Testimoni
     return DEFAULT_TESTIMONIALS;
   }
 }
+
+import type { Testimonial } from "@/types/testimonial";
+
+/** Resolve a bilingual testimonial item into the localized shape used by the UI. */
+export function mapTestimonial(item: TestimonialItem, language: "en" | "ar"): Testimonial {
+  const isArabic = language === "ar";
+  return {
+    review: (isArabic ? item.reviewAr : item.reviewEn) || item.reviewEn || item.reviewAr,
+    authorName: (isArabic ? item.authorNameAr : item.authorNameEn) || item.authorNameEn || item.authorNameAr,
+    authorRole: (isArabic ? item.authorRoleAr : item.authorRoleEn) || item.authorRoleEn || item.authorRoleAr,
+    authorImg: item.authorImg,
+    rating: item.rating,
+  };
+}

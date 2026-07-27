@@ -1,20 +1,54 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Breadcrumb from "../Common/Breadcrumb";
 import { useLanguage } from "@/app/context/LanguageContext";
 
+type StoreInfo = {
+  nameEn: string;
+  nameAr: string;
+  phone: string;
+  address: string;
+};
+
+const DEFAULT_STORE_INFO: StoreInfo = {
+  nameEn: "Hala Dresses Retail Team",
+  nameAr: "فريق هلا دريسز",
+  phone: "+968 9944 0312",
+  address: "Bousher, Muscat, Oman",
+};
+
 const Contact = () => {
-  const supportPhone = "+968 9944 0312";
   const { isArabic } = useLanguage();
+  const [store, setStore] = useState<StoreInfo>(DEFAULT_STORE_INFO);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/settings?group=general", { signal: controller.signal })
+      .then((r) => r.json())
+      .then((d) => {
+        if (!d.success) return;
+        const map = d.data as Record<string, unknown>;
+        setStore({
+          nameEn: String(map.store_name_en ?? DEFAULT_STORE_INFO.nameEn),
+          nameAr: String(map.store_name_ar ?? DEFAULT_STORE_INFO.nameAr),
+          phone: String(map.store_phone ?? DEFAULT_STORE_INFO.phone),
+          address: String(map.store_address ?? DEFAULT_STORE_INFO.address),
+        });
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
+
+  const supportPhone = store.phone;
   const copy = isArabic
     ? {
         breadcrumbTitle: "اتصل بنا",
         breadcrumbPage: "اتصل بنا",
         heading: "تواصلي مع هلا دريسز",
-        name: "الاسم: فريق هلا دريسز",
+        name: `الاسم: ${store.nameAr}`,
         supportPhoneLabel: "الهاتف:",
-        address: "العنوان: بوشر، مسقط، عمان",
+        address: `العنوان: ${store.address}`,
         firstName: "الاسم الأول",
         firstNamePlaceholder: "اكتبي اسمك الأول",
         lastName: "اسم العائلة",
@@ -31,9 +65,9 @@ const Contact = () => {
         breadcrumbTitle: "Contact",
         breadcrumbPage: "contact",
         heading: "Contact Hala Dresses",
-        name: "Name: Hala Dresses Retail Team",
+        name: `Name: ${store.nameEn}`,
         supportPhoneLabel: "Phone:",
-        address: "Address: Bousher, Muscat, Oman",
+        address: `Address: ${store.address}`,
         firstName: "First Name",
         firstNamePlaceholder: "Your first name",
         lastName: "Last Name",

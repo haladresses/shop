@@ -1,19 +1,26 @@
 "use client";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { fetchCountdown, normalizeCountdown, CountdownConfig } from "@/lib/countdown";
 
 const CounDown = () => {
   const { isArabic } = useLanguage();
+  const [config, setConfig] = useState<CountdownConfig>(() => normalizeCountdown(null));
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
 
-  const deadline = useMemo(
-    () => new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).getTime(),
-    [],
-  );
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchCountdown(controller.signal)
+      .then(setConfig)
+      .catch(() => setConfig(normalizeCountdown(null)));
+    return () => controller.abort();
+  }, []);
+
+  const deadline = new Date(config.endsAt).getTime();
 
   const getTime = useCallback(() => {
     const time = Math.max(deadline - Date.now(), 0);
@@ -29,7 +36,9 @@ const CounDown = () => {
     const interval = setInterval(getTime, 1000);
 
     return () => clearInterval(interval);
-  }, [deadline]);
+  }, [getTime]);
+
+  if (!config.enabled) return null;
 
   return (
     <section className="overflow-hidden py-14 sm:py-20">
@@ -41,11 +50,11 @@ const CounDown = () => {
             }`}
           >
             <span className="block font-medium text-custom-1 text-blue mb-2.5">
-              {isArabic ? "لا تفوتيه" : "Don’t Miss!!"}
+              {isArabic ? config.eyebrowAr : config.eyebrowEn}
             </span>
 
             <h2 className="font-bold text-dark text-xl lg:text-heading-4 xl:text-heading-3 mb-3">
-              {isArabic ? "العرض ينتهي قريباً." : "This offer ends soon."}
+              {isArabic ? config.titleAr : config.titleEn}
             </h2>
 
             {/* <!-- Countdown timer --> */}
@@ -53,15 +62,10 @@ const CounDown = () => {
               className={`flex flex-wrap gap-3 sm:gap-6 mt-6 ${
                 isArabic ? "justify-end" : "justify-start"
               }`}
-              x-data="timer()"
-              x-init="countdown()"
             >
               {/* <!-- timer day --> */}
               <div>
-                <span
-                  className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2"
-                  x-text="days"
-                >
+                <span className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2">
                   {" "}
                   {days < 10 ? "0" + days : days}{" "}
                 </span>
@@ -72,10 +76,7 @@ const CounDown = () => {
 
               {/* <!-- timer hours --> */}
               <div>
-                <span
-                  className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2"
-                  x-text="hours"
-                >
+                <span className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2">
                   {" "}
                   {hours < 10 ? "0" + hours : hours}{" "}
                 </span>
@@ -86,10 +87,7 @@ const CounDown = () => {
 
               {/* <!-- timer minutes --> */}
               <div>
-                <span
-                  className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2"
-                  x-text="minutes"
-                >
+                <span className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2">
                   {minutes < 10 ? "0" + minutes : minutes}{" "}
                 </span>
                 <span className="block text-custom-sm text-dark text-center">
@@ -99,10 +97,7 @@ const CounDown = () => {
 
               {/* <!-- timer seconds --> */}
               <div>
-                <span
-                  className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2"
-                  x-text="seconds"
-                >
+                <span className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2">
                   {seconds < 10 ? "0" + seconds : seconds}{" "}
                 </span>
                 <span className="block text-custom-sm text-dark text-center">
@@ -113,29 +108,31 @@ const CounDown = () => {
             {/* <!-- Countdown timer ends --> */}
 
             <a
-              href="/shop"
+              href={config.href}
               className="inline-flex font-medium text-custom-sm text-white bg-blue py-3 px-9.5 rounded-md ease-out duration-200 hover:bg-blue-dark mt-7.5"
             >
-              {isArabic ? "احجزي إطلالتك" : "Reserve Your Look"}
+              {isArabic ? config.ctaAr : config.ctaEn}
             </a>
           </div>
 
-          <div
-            className={`hidden lg:block absolute bottom-0 -z-1 ${
-              isArabic ? "left-0" : "right-0"
-            }`}
-            style={{ width: 480, height: "100%" }}
-          >
-            <div className="relative w-full h-full">
-              <Image
-                src="/images/products/burgundy-tulle-rose-gown-1.jpg"
-                alt="featured product"
-                fill
-                className="object-cover object-top"
-                sizes="480px"
-              />
+          {config.image && (
+            <div
+              className={`hidden lg:block absolute bottom-0 -z-1 ${
+                isArabic ? "left-0" : "right-0"
+              }`}
+              style={{ width: 480, height: "100%" }}
+            >
+              <div className="relative w-full h-full">
+                <Image
+                  src={config.image}
+                  alt="featured product"
+                  fill
+                  className="object-cover object-top"
+                  sizes="480px"
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>

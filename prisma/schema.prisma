@@ -499,6 +499,21 @@ model Wishlist {
 }
 
 // ─────────────────────────────────────────────
+// NEWSLETTER
+// ─────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  isActive  Boolean  @default(true)
+  source    String? // e.g. "homepage", "shop-details"
+  language  String? // "en" | "ar", locale the subscriber signed up in
+  createdAt DateTime @default(now())
+
+  @@map("newsletter_subscribers")
+}
+
+// ─────────────────────────────────────────────
 // SETTINGS
 // ─────────────────────────────────────────────
 

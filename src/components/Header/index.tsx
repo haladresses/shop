@@ -8,7 +8,6 @@ import { useSelector } from "react-redux";
 import { selectTotalPrice } from "@/redux/features/cart-slice";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { getMenuData } from "./menuData";
 import { fetchCategories, StoreCategory } from "@/lib/storefront";
 import { fetchNavigation, mapNavToMenu, DEFAULT_NAV_ITEMS } from "@/lib/navigation";
 import CustomSelect from "./CustomSelect";

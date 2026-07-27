@@ -6,36 +6,9 @@ const SingleItem = ({ testimonial }: { testimonial: Testimonial }) => {
   return (
     <div className="shadow-testimonial bg-white rounded-[10px] py-7.5 px-4 sm:px-8.5 m-1">
       <div className="flex items-center gap-1 mb-5">
-        <Image
-          src="/images/icons/icon-star.svg"
-          alt="star icon"
-          width={15}
-          height={15}
-        />
-        <Image
-          src="/images/icons/icon-star.svg"
-          alt="star icon"
-          width={15}
-          height={15}
-        />
-        <Image
-          src="/images/icons/icon-star.svg"
-          alt="star icon"
-          width={15}
-          height={15}
-        />
-        <Image
-          src="/images/icons/icon-star.svg"
-          alt="star icon"
-          width={15}
-          height={15}
-        />
-        <Image
-          src="/images/icons/icon-star.svg"
-          alt="star icon"
-          width={15}
-          height={15}
-        />
+        {Array.from({ length: Math.max(1, Math.min(5, testimonial.rating || 5)) }).map((_, i) => (
+          <Image key={i} src="/images/icons/icon-star.svg" alt="star icon" width={15} height={15} />
+        ))}
       </div>
 
       <p className="text-dark mb-6">{testimonial.review}</p>

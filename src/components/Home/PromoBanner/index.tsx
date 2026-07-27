@@ -1,40 +1,29 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/app/context/LanguageContext";
-
-const tiles = [
-  {
-    image: "/images/hero/seed-promo-women.jpg",
-    href: "/shop?category=womens-dresses",
-    eyebrowEn: "Women's Edit",
-    eyebrowAr: "تشكيلة النساء",
-    titleEn: "Everyday elegance",
-    titleAr: "أناقة يومية",
-    ctaEn: "Shop Women",
-    ctaAr: "تسوقي تشكيلة النساء",
-  },
-  {
-    image: "/images/hero/seed-promo-girls.jpg",
-    href: "/shop?category=girls-dresses",
-    eyebrowEn: "Girls' Edit",
-    eyebrowAr: "تشكيلة البنات",
-    titleEn: "Party-ready & playful",
-    titleAr: "إطلالات مرحة للمناسبات",
-    ctaEn: "Shop Girls",
-    ctaAr: "تسوقي تشكيلة البنات",
-  },
-];
+import { fetchPromoBanner, DEFAULT_PROMO_TILES, PromoTile } from "@/lib/promoBanner";
 
 const PromoBanner = () => {
   const { isArabic } = useLanguage();
+  const [tiles, setTiles] = useState<PromoTile[]>(DEFAULT_PROMO_TILES);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchPromoBanner(controller.signal)
+      .then(setTiles)
+      .catch(() => setTiles(DEFAULT_PROMO_TILES));
+    return () => controller.abort();
+  }, []);
+
+  if (tiles.length === 0) return null;
 
   return (
     <section className="overflow-hidden py-14 sm:py-20">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-7.5">
+        <div className={`grid grid-cols-1 gap-5 sm:gap-7.5 ${tiles.length > 1 ? "sm:grid-cols-2" : ""}`}>
           {tiles.map((tile, key) => (
             <Link
               key={key}

@@ -21,6 +21,11 @@ import {
   LuChevronLeft,
   LuChevronRight,
   LuX,
+  LuGalleryHorizontalEnd,
+  LuTimer,
+  LuQuote,
+  LuMail,
+  LuMenu,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
 
@@ -44,6 +49,11 @@ const navItems: NavItem[] = [
   { href: "/admin/shipping", label: "Shipping", icon: LuTruck, color: "text-blue-400" },
   { href: "/admin/reviews", label: "Reviews", icon: LuStar, color: "text-yellow-400" },
   { href: "/admin/hero", label: "Homepage Hero", icon: LuImage, color: "text-cyan-400" },
+  { href: "/admin/promo-banner", label: "Promo Banner", icon: LuGalleryHorizontalEnd, color: "text-fuchsia-400" },
+  { href: "/admin/countdown", label: "Countdown Deal", icon: LuTimer, color: "text-red-400" },
+  { href: "/admin/testimonials", label: "Testimonials", icon: LuQuote, color: "text-lime-400" },
+  { href: "/admin/newsletter", label: "Newsletter", icon: LuMail, color: "text-teal-300" },
+  { href: "/admin/navigation", label: "Navigation Menu", icon: LuMenu, color: "text-indigo-400" },
   { href: "/admin/settings", label: "Settings", icon: LuSettings, color: "text-slate-300" },
 ];
 

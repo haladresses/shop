@@ -3,4 +3,5 @@ export type Testimonial = {
   authorName: string;
   authorRole: string;
   authorImg: string;
+  rating: number;
 };

@@ -1,35 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { fetchNewsletter, DEFAULT_NEWSLETTER_CONFIG, NewsletterConfig } from "@/lib/newsletter";
 
 const Newsletter = () => {
-  const { isArabic } = useLanguage();
+  const { isArabic, language } = useLanguage();
+  const pathname = usePathname();
   const [email, setEmail] = useState("");
-  const copy = isArabic
-    ? {
-        title: "انضمي إلى دائرة هلا",
-        description:
-          "احصلي على تحديثات أحدث وصولات النساء والأطفال، والتنزيلات، وأخبار المتجر من مسقط.",
-        placeholder: "أدخلي بريدك الإلكتروني لأحدث الوصولات",
-        cta: "اشتركي الآن",
-        success: "شكراً لاشتراكك! ترقبي أحدث العروض قريباً.",
-      }
-    : {
-        title: "Join the Hala Circle",
-        description:
-          "Get updates on women's and kids' new arrivals, sale announcements, and store news from Muscat.",
-        placeholder: "Enter your email for new arrivals",
-        cta: "Stay Updated",
-        success: "Thanks for subscribing! Watch your inbox for new arrivals.",
-      };
+  const [submitting, setSubmitting] = useState(false);
+  const [config, setConfig] = useState<NewsletterConfig>(DEFAULT_NEWSLETTER_CONFIG);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchNewsletter(controller.signal)
+      .then(setConfig)
+      .catch(() => setConfig(DEFAULT_NEWSLETTER_CONFIG));
+    return () => controller.abort();
+  }, []);
+
+  const copy = {
+    title: isArabic ? config.titleAr : config.titleEn,
+    description: isArabic ? config.descriptionAr : config.descriptionEn,
+    placeholder: isArabic ? config.placeholderAr : config.placeholderEn,
+    cta: isArabic ? config.ctaAr : config.ctaEn,
+    success: isArabic ? config.successAr : config.successEn,
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
-    toast.success(copy.success);
-    setEmail("");
+    if (!email.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), language, source: pathname || "unknown" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(copy.success);
+        setEmail("");
+      } else {
+        toast.error(data.error || (isArabic ? "حدث خطأ ما، حاولي مرة أخرى." : "Something went wrong, please try again."));
+      }
+    } catch {
+      toast.error(isArabic ? "حدث خطأ ما، حاولي مرة أخرى." : "Something went wrong, please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -66,9 +87,10 @@ const Newsletter = () => {
                   />
                   <button
                     type="submit"
-                    className="inline-flex justify-center py-3 px-7 text-blue bg-white font-semibold rounded-md ease-out duration-200 hover:bg-white/90 whitespace-nowrap"
+                    disabled={submitting}
+                    className="inline-flex justify-center py-3 px-7 text-blue bg-white font-semibold rounded-md ease-out duration-200 hover:bg-white/90 whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    {copy.cta}
+                    {submitting ? (isArabic ? "جارٍ الإرسال..." : "Sending...") : copy.cta}
                   </button>
                 </div>
               </form>

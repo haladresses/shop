@@ -1,9 +1,9 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { useCallback, useRef } from "react";
-import { getTestimonialsData } from "./testimonialsData";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { fetchTestimonials, mapTestimonial, DEFAULT_TESTIMONIALS, TestimonialItem } from "@/lib/testimonials";
 
 // Import Swiper styles
 import "swiper/css/navigation";
@@ -13,6 +13,15 @@ import SingleItem from "./SingleItem";
 const Testimonials = () => {
   const { language, isArabic } = useLanguage();
   const sliderRef = useRef(null);
+  const [items, setItems] = useState<TestimonialItem[]>(DEFAULT_TESTIMONIALS);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchTestimonials(controller.signal)
+      .then(setItems)
+      .catch(() => setItems(DEFAULT_TESTIMONIALS));
+    return () => controller.abort();
+  }, []);
 
   const handlePrev = useCallback(() => {
     if (!sliderRef.current) return;
@@ -23,6 +32,8 @@ const Testimonials = () => {
     if (!sliderRef.current) return;
     sliderRef.current.swiper.slideNext();
   }, []);
+
+  if (items.length === 0) return null;
 
   return (
     <section className="overflow-hidden pt-4 pb-16.5">
@@ -106,9 +117,9 @@ const Testimonials = () => {
                 },
               }}
             >
-              {getTestimonialsData(language).map((item, key) => (
+              {items.map((item, key) => (
                 <SwiperSlide key={key}>
-                  <SingleItem testimonial={item} />
+                  <SingleItem testimonial={mapTestimonial(item, language)} />
                 </SwiperSlide>
               ))}
             </Swiper>
