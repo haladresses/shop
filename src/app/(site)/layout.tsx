@@ -62,7 +62,11 @@ export default function RootLayout({
               <CartModalProvider>
                 <ModalProvider>
                   <PreviewSliderProvider>
-                    <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
+                    <Toaster
+                      position="top-center"
+                      containerStyle={{ top: 90, zIndex: 999999 }}
+                      toastOptions={{ duration: 3000, style: { zIndex: 999999 } }}
+                    />
                     <Header />
                     {children}
 
