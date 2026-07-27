@@ -32,9 +32,9 @@ const CounDown = () => {
   }, [deadline]);
 
   return (
-    <section className="overflow-hidden py-20">
+    <section className="overflow-hidden py-14 sm:py-20">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
-        <div className="relative overflow-hidden z-1 rounded-lg bg-[#D0E9F3] p-4 sm:p-7.5 lg:p-10 xl:p-15">
+        <div className="relative overflow-hidden z-1 rounded-2xl bg-gradient-to-br from-[#F3E3D9] to-[#EAD3E6] p-5 sm:p-7.5 lg:p-10 xl:p-15">
           <div
             className={`relative z-10 max-w-[422px] w-full ${
               isArabic ? "text-right lg:ml-auto" : "lg:mr-auto"
@@ -50,7 +50,7 @@ const CounDown = () => {
 
             {/* <!-- Countdown timer --> */}
             <div
-              className={`flex flex-wrap gap-6 mt-6 ${
+              className={`flex flex-wrap gap-3 sm:gap-6 mt-6 ${
                 isArabic ? "justify-end" : "justify-start"
               }`}
               x-data="timer()"
@@ -128,7 +128,7 @@ const CounDown = () => {
           >
             <div className="relative w-full h-full">
               <Image
-                src="/images/products/p4.webp"
+                src="/images/products/burgundy-tulle-rose-gown-1.jpg"
                 alt="featured product"
                 fill
                 className="object-cover object-top"

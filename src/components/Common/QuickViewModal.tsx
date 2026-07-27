@@ -8,16 +8,20 @@ import { useDispatch } from "react-redux";
 import Image from "next/image";
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { updateproductDetails } from "@/redux/features/product-details";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const QuickViewModal = () => {
   const { isModalOpen, closeModal } = useModalContext();
   const { openPreviewModal } = usePreviewSlider();
+  const { isArabic } = useLanguage();
+  const currency = isArabic ? "ر.ع." : "OMR";
   const [quantity, setQuantity] = useState(1);
 
   const dispatch = useDispatch<AppDispatch>();
 
   // get the product data
   const product = useAppSelector((state) => state.quickViewReducer.value);
+  const hasDiscount = product.discountedPrice < product.price;
 
   const [activePreview, setActivePreview] = useState(0);
 
@@ -267,8 +271,7 @@ const QuickViewModal = () => {
                   </div>
 
                   <span>
-                    <span className="font-medium text-dark"> 4.7 Rating </span>
-                    <span className="text-dark-2"> (5 reviews) </span>
+                    <span className="text-dark-2"> ({product.reviews} {isArabic ? "تقييم" : "reviews"}) </span>
                   </span>
                 </div>
 
@@ -314,11 +317,13 @@ const QuickViewModal = () => {
 
                   <span className="flex items-center gap-2">
                     <span className="font-semibold text-dark text-xl xl:text-heading-4">
-                      ${product.discountedPrice}
+                      {product.discountedPrice.toFixed(3)} {currency}
                     </span>
-                    <span className="font-medium text-dark-4 text-lg xl:text-2xl line-through">
-                      ${product.price}
-                    </span>
+                    {hasDiscount && (
+                      <span className="font-medium text-dark-4 text-lg xl:text-2xl line-through">
+                        {product.price.toFixed(3)} {currency}
+                      </span>
+                    )}
                   </span>
                 </div>
 

@@ -43,18 +43,27 @@ const SingleGridItem = ({ item }: { item: Product }) => {
     );
   };
 
+  const hasDiscount = item.discountedPrice < item.price;
+
   return (
-    <div className="group rounded-lg bg-white shadow-2 p-4">
-      <div className="relative overflow-hidden rounded-lg bg-[#FAFBFC] aspect-square mb-4">
+    <div className="group rounded-xl bg-white shadow-1 ring-1 ring-blue/10 p-3 sm:p-4 ease-out duration-200 hover:shadow-3 hover:ring-blue/20 hover:-translate-y-0.5">
+      <div className="relative overflow-hidden rounded-lg bg-[#FAFBFC] aspect-square mb-3 sm:mb-4">
+        {hasDiscount && (
+          <span className="absolute top-2.5 left-2.5 z-10 rounded-full bg-red text-white text-2xs font-semibold px-2.5 py-1">
+            Sale
+          </span>
+        )}
         <Image
           src={item.imgs.previews[0]}
           alt=""
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-cover"
         />
 
-        <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
+        <div className="absolute left-0 bottom-0 w-full">
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-dark/40 to-transparent sm:hidden" />
+          <div className="relative flex items-center justify-center gap-2 sm:gap-2.5 pb-2.5 sm:pb-5 translate-y-0 sm:translate-y-full ease-linear duration-200 sm:group-hover:translate-y-0">
           <button
             onClick={() => {
               openModal();
@@ -62,7 +71,7 @@ const SingleGridItem = ({ item }: { item: Product }) => {
             }}
             id="newOne"
             aria-label="button for quick view"
-            className="flex items-center justify-center w-9 h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-blue"
+            className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-blue"
           >
             <svg
               className="fill-current"
@@ -89,16 +98,20 @@ const SingleGridItem = ({ item }: { item: Product }) => {
 
           <button
             onClick={() => handleAddToCart()}
-            className="inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark"
+            className="inline-flex items-center gap-1.5 font-medium text-xs sm:text-custom-sm py-[7px] px-3.5 sm:px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark"
           >
-            Add to cart
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="sm:hidden">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="hidden sm:inline">Add to cart</span>
+            <span className="sm:hidden">Add</span>
           </button>
 
           <button
             onClick={() => handleItemToWishList()}
             aria-label="button for favorite select"
             id="favOne"
-            className="flex items-center justify-center w-9 h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-blue"
+            className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-blue"
           >
             <svg
               className="fill-current"
@@ -116,6 +129,7 @@ const SingleGridItem = ({ item }: { item: Product }) => {
               />
             </svg>
           </button>
+          </div>
         </div>
       </div>
 
@@ -160,9 +174,11 @@ const SingleGridItem = ({ item }: { item: Product }) => {
         <Link href={item.slug ? `/shop-details?slug=${item.slug}` : "/shop-details"}> {item.title} </Link>
       </h3>
 
-      <span className="flex items-center gap-2 font-medium text-lg">
+      <span className="flex items-center gap-2 font-medium text-base sm:text-lg">
         <span className="text-dark">{item.discountedPrice.toFixed(3)} {currency}</span>
-        <span className="text-dark-4 line-through">{item.price.toFixed(3)} {currency}</span>
+        {hasDiscount && (
+          <span className="text-dark-4 text-sm line-through">{item.price.toFixed(3)} {currency}</span>
+        )}
       </span>
     </div>
   );

@@ -25,7 +25,7 @@ const Testimonials = () => {
   }, []);
 
   return (
-    <section className="overflow-hidden pb-16.5">
+    <section className="overflow-hidden pt-4 pb-16.5">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
         <div className="">
           <div className="swiper testimonial-carousel common-carousel p-5">

@@ -17,6 +17,9 @@ export async function GET(req: NextRequest) {
     const categorySlug = sp.get("category") || "";
     const isActive = sp.get("isActive");
     const sellerId = sp.get("sellerId") || "";
+    const isFeatured = sp.get("isFeatured");
+    const isNew = sp.get("isNew");
+    const isBestSeller = sp.get("isBestSeller");
 
     const where = {
       ...(search && {
@@ -30,6 +33,9 @@ export async function GET(req: NextRequest) {
       ...(categorySlug && { category: { slug: categorySlug } }),
       ...(isActive !== null && isActive !== "" && { isActive: isActive === "true" }),
       ...(sellerId && { sellerId }),
+      ...(isFeatured !== null && isFeatured !== "" && { isFeatured: isFeatured === "true" }),
+      ...(isNew !== null && isNew !== "" && { isNew: isNew === "true" }),
+      ...(isBestSeller !== null && isBestSeller !== "" && { isBestSeller: isBestSeller === "true" }),
     };
 
     const [products, total] = await Promise.all([

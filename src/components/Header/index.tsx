@@ -10,6 +10,7 @@ import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { getMenuData } from "./menuData";
 import { fetchCategories, StoreCategory } from "@/lib/storefront";
+import { fetchNavigation, mapNavToMenu, DEFAULT_NAV_ITEMS } from "@/lib/navigation";
 import CustomSelect from "./CustomSelect";
 import Dropdown from "./Dropdown";
 import LanguageDropdown from "./LanguageDropdown";
@@ -19,13 +20,20 @@ const Header = () => {
   const [sticky, setSticky] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [dbCategories, setDbCategories] = useState<StoreCategory[]>([]);
+  const [navItems, setNavItems] = useState(DEFAULT_NAV_ITEMS);
   const [user, setUser] = useState<{ nameEn?: string | null; nameAr?: string | null; email: string; role: string } | null>(null);
   const { openCartModal } = useCartModalContext();
   const { language, isArabic } = useLanguage();
   const router = useRouter();
   const cartItems = useAppSelector((s) => s.cartReducer.items);
   const totalPrice = useSelector(selectTotalPrice);
-  const menuData = getMenuData(language);
+  const menuData = mapNavToMenu(navItems, language);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchNavigation(controller.signal).then(setNavItems).catch(() => setNavItems(DEFAULT_NAV_ITEMS));
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setSticky(window.scrollY >= 60);

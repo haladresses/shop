@@ -42,11 +42,11 @@ const Categories = () => {
   }, []);
 
   return (
-    <section className="overflow-hidden pt-17.5">
-      <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0 pb-15 border-b border-gray-3">
+    <section className="overflow-hidden pt-12 sm:pt-17.5">
+      <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0 pb-10 sm:pb-15 border-b border-gray-3">
         <div className="swiper categories-carousel common-carousel">
           {/* <!-- section title --> */}
-          <div className="mb-10 flex items-center justify-between">
+          <div className="mb-6 sm:mb-10 flex items-center justify-between">
             <div>
               <span className={`flex items-center gap-2.5 font-medium text-dark mb-1.5 ${isArabic ? "flex-row-reverse" : ""}`}>
                 <svg
@@ -134,18 +134,24 @@ const Categories = () => {
             ref={sliderRef}
             dir={isArabic ? "rtl" : "ltr"}
             slidesPerView={6}
+            spaceBetween={16}
             breakpoints={{
-              // when window width is >= 640px
               0: {
-                slidesPerView: 2,
+                slidesPerView: 3,
+                spaceBetween: 12,
+              },
+              480: {
+                slidesPerView: 3,
+                spaceBetween: 16,
+              },
+              640: {
+                slidesPerView: 4,
               },
               1000: {
-                slidesPerView: 4,
-                // spaceBetween: 4,
+                slidesPerView: 5,
               },
-              // when window width is >= 768px
               1200: {
-                slidesPerView: 6,
+                slidesPerView: 7,
               },
             }}
           >

@@ -13,9 +13,15 @@ const NewArrival = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchProducts({ pageSize: 8, language, signal: controller.signal })
+    fetchProducts({ pageSize: 8, language, isNew: true, signal: controller.signal })
       .then((res) => {
-        setProducts(res.products.length ? res.products : getShopData(language));
+        if (res.products.length >= 4) {
+          setProducts(res.products);
+          return;
+        }
+        return fetchProducts({ pageSize: 8, language, signal: controller.signal }).then((all) =>
+          setProducts(all.products.length ? all.products : getShopData(language))
+        );
       })
       .catch(() => setProducts(getShopData(language)));
     return () => controller.abort();

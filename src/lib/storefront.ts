@@ -89,6 +89,9 @@ type FetchProductsParams = {
   categoryId?: string;
   category?: string;
   language?: "en" | "ar";
+  isFeatured?: boolean;
+  isNew?: boolean;
+  isBestSeller?: boolean;
   signal?: AbortSignal;
 };
 
@@ -111,6 +114,9 @@ export async function fetchProducts(
     categoryId = "",
     category = "",
     language = "en",
+    isFeatured,
+    isNew,
+    isBestSeller,
     signal,
   } = params;
 
@@ -122,6 +128,9 @@ export async function fetchProducts(
   if (search) query.set("search", search);
   if (categoryId) query.set("categoryId", categoryId);
   if (category) query.set("category", category);
+  if (isFeatured !== undefined) query.set("isFeatured", String(isFeatured));
+  if (isNew !== undefined) query.set("isNew", String(isNew));
+  if (isBestSeller !== undefined) query.set("isBestSeller", String(isBestSeller));
 
   const res = await fetch(`/api/products?${query.toString()}`, { signal });
   const json = await res.json();

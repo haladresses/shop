@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { Toaster } from "react-hot-toast";
 import "../css/euclid-circular-a-font.css";
 import "../css/style.css";
 import Header from "../../components/Header";
@@ -61,6 +62,7 @@ export default function RootLayout({
               <CartModalProvider>
                 <ModalProvider>
                   <PreviewSliderProvider>
+                    <Toaster position="top-center" toastOptions={{ duration: 3000 }} />
                     <Header />
                     {children}
 

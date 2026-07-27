@@ -476,7 +476,7 @@ const ShopDetails = () => {
         </div>
       </section>
 
-      <RecentlyViewdItems />
+      <RecentlyViewdItems categorySlug={api.category?.slug} excludeId={api.id} />
       <Newsletter />
     </>
   );

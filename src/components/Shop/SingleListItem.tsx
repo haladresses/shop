@@ -43,26 +43,35 @@ const SingleListItem = ({ item }: { item: Product }) => {
     );
   };
 
+  const hasDiscount = item.discountedPrice < item.price;
+
   return (
-    <div className="group rounded-lg bg-white shadow-1">
+    <div className="group rounded-xl bg-white shadow-1 ring-1 ring-blue/10 overflow-hidden ease-out duration-200 hover:shadow-3 hover:ring-blue/20">
       <div className="flex">
-        <div className="relative overflow-hidden bg-[#F6F7FB] max-w-[270px] w-full sm:min-h-[270px] aspect-square sm:aspect-auto">
+        <div className="relative overflow-hidden bg-[#F6F7FB] max-w-[140px] xsm:max-w-[200px] sm:max-w-[270px] w-full sm:min-h-[270px] aspect-square sm:aspect-auto">
+          {hasDiscount && (
+            <span className="absolute top-2 left-2 z-10 rounded-full bg-red text-white text-2xs font-semibold px-2 py-0.5 sm:px-2.5 sm:py-1">
+              Sale
+            </span>
+          )}
           <Image
             src={item.imgs.previews[0]}
             alt=""
             fill
-            sizes="(max-width: 640px) 100vw, 250px"
+            sizes="(max-width: 640px) 40vw, 250px"
             className="object-cover"
           />
 
-          <div className="absolute left-0 bottom-0 translate-y-full w-full flex items-center justify-center gap-2.5 pb-5 ease-linear duration-200 group-hover:translate-y-0">
+          <div className="absolute left-0 bottom-0 w-full">
+            <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-dark/40 to-transparent sm:hidden" />
+            <div className="relative flex items-center justify-center gap-1.5 sm:gap-2.5 pb-2 sm:pb-5 translate-y-0 sm:translate-y-full ease-linear duration-200 sm:group-hover:translate-y-0">
             <button
               onClick={() => {
                 openModal();
                 handleQuickViewUpdate();
               }}
               aria-label="button for quick view"
-              className="flex items-center justify-center w-9 h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-blue"
+              className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-blue"
             >
               <svg
                 className="fill-current"
@@ -89,15 +98,19 @@ const SingleListItem = ({ item }: { item: Product }) => {
 
             <button
               onClick={() => handleAddToCart()}
-              className="inline-flex font-medium text-custom-sm py-[7px] px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark"
+              className="inline-flex items-center gap-1 font-medium text-2xs sm:text-custom-sm py-1.5 sm:py-[7px] px-2.5 sm:px-5 rounded-[5px] bg-blue text-white ease-out duration-200 hover:bg-blue-dark"
             >
-              Add to cart
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="sm:hidden">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4H6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span className="hidden sm:inline">Add to cart</span>
+              <span className="sm:hidden">Add</span>
             </button>
 
             <button
               onClick={() => handleItemToWishList()}
               aria-label="button for favorite select"
-              className="flex items-center justify-center w-9 h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-blue"
+              className="flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-[5px] shadow-1 ease-out duration-200 text-dark bg-white hover:text-blue"
             >
               <svg
                 className="fill-current"
@@ -115,18 +128,21 @@ const SingleListItem = ({ item }: { item: Product }) => {
                 />
               </svg>
             </button>
+            </div>
           </div>
         </div>
 
-        <div className="w-full flex flex-col gap-5 sm:flex-row sm:items-center justify-center sm:justify-between py-5 px-4 sm:px-7.5 lg:pl-11 lg:pr-12">
-          <div>
-            <h3 className="font-medium text-dark ease-out duration-200 hover:text-blue mb-1.5">
+        <div className="w-full flex flex-col gap-2 sm:gap-5 sm:flex-row sm:items-center justify-center sm:justify-between py-3 sm:py-5 px-3 sm:px-7.5 lg:pl-11 lg:pr-12 min-w-0">
+          <div className="min-w-0">
+            <h3 className="font-medium text-sm sm:text-base text-dark ease-out duration-200 hover:text-blue mb-1 sm:mb-1.5 line-clamp-2">
               <Link href={item.slug ? `/shop-details?slug=${item.slug}` : "/shop-details"}> {item.title} </Link>
             </h3>
 
-            <span className="flex items-center gap-2 font-medium text-lg">
+            <span className="flex items-center gap-2 font-medium text-sm sm:text-lg">
               <span className="text-dark">{item.discountedPrice.toFixed(3)} {currency}</span>
-              <span className="text-dark-4 line-through">{item.price.toFixed(3)} {currency}</span>
+              {hasDiscount && (
+                <span className="text-dark-4 text-xs sm:text-sm line-through">{item.price.toFixed(3)} {currency}</span>
+              )}
             </span>
           </div>
 

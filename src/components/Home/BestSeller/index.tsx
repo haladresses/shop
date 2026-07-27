@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import SingleItem from "./SingleItem";
+import ProductItem from "@/components/Common/ProductItem";
 import Image from "next/image";
 import Link from "next/link";
 import { getShopData } from "@/components/Shop/shopData";
@@ -14,9 +14,15 @@ const BestSeller = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchProducts({ pageSize: 6, language, signal: controller.signal })
+    fetchProducts({ pageSize: 6, language, isBestSeller: true, signal: controller.signal })
       .then((res) => {
-        setProducts(res.products.length ? res.products : getShopData(language));
+        if (res.products.length >= 3) {
+          setProducts(res.products);
+          return;
+        }
+        return fetchProducts({ pageSize: 6, language, signal: controller.signal }).then((all) =>
+          setProducts(all.products.length ? all.products : getShopData(language))
+        );
       })
       .catch(() => setProducts(getShopData(language)));
     return () => controller.abort();
@@ -27,7 +33,7 @@ const BestSeller = () => {
     : { eyebrow: "This Month", title: "Best Sellers", viewAll: "View All" };
 
   return (
-    <section className="overflow-hidden">
+    <section className="overflow-hidden py-14 sm:py-20">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
         <div className={`mb-10 flex items-center justify-between ${isArabic ? "flex-row-reverse" : ""}`}>
           <div className={isArabic ? "text-right" : ""}>
@@ -46,9 +52,9 @@ const BestSeller = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-7.5 gap-y-9">
           {products.map((item, key) => (
-            <SingleItem item={item} key={key} />
+            <ProductItem item={item} key={key} />
           ))}
         </div>
 
