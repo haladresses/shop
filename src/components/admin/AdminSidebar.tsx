@@ -26,6 +26,7 @@ import {
   LuQuote,
   LuMail,
   LuMenu,
+  LuScale,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
 
@@ -53,6 +54,7 @@ const navItems: NavItem[] = [
   { href: "/admin/countdown", label: "Countdown Deal", icon: LuTimer, color: "text-red-400" },
   { href: "/admin/testimonials", label: "Testimonials", icon: LuQuote, color: "text-lime-400" },
   { href: "/admin/newsletter", label: "Newsletter", icon: LuMail, color: "text-teal-300" },
+  { href: "/admin/legal-pages", label: "Legal Pages", icon: LuScale, color: "text-amber-300" },
   { href: "/admin/navigation", label: "Navigation Menu", icon: LuMenu, color: "text-indigo-400" },
   { href: "/admin/settings", label: "Settings", icon: LuSettings, color: "text-slate-300" },
 ];
