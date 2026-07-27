@@ -27,27 +27,45 @@ const Newsletter = () => {
     placeholder: isArabic ? config.placeholderAr : config.placeholderEn,
     cta: isArabic ? config.ctaAr : config.ctaEn,
     success: isArabic ? config.successAr : config.successEn,
+    alreadySubscribed: isArabic ? config.alreadySubscribedAr : config.alreadySubscribedEn,
+    invalidEmail: isArabic ? config.invalidEmailAr : config.invalidEmailEn,
+    genericError: isArabic ? config.errorAr : config.errorEn,
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || submitting) return;
+    const trimmed = email.trim();
+    if (!trimmed || submitting) return;
+
+    // Basic client-side check so an obviously malformed address gets an
+    // immediate, friendly response before hitting the network.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+      toast.error(copy.invalidEmail);
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), language, source: pathname || "unknown" }),
+        body: JSON.stringify({ email: trimmed, language, source: pathname || "unknown" }),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(copy.success);
+        if (data.data?.alreadyActive) {
+          toast(copy.alreadySubscribed, { icon: "💌" });
+        } else {
+          toast.success(copy.success);
+        }
         setEmail("");
+      } else if (data.error === "invalid_email") {
+        toast.error(copy.invalidEmail);
       } else {
-        toast.error(data.error || (isArabic ? "حدث خطأ ما، حاولي مرة أخرى." : "Something went wrong, please try again."));
+        toast.error(copy.genericError);
       }
     } catch {
-      toast.error(isArabic ? "حدث خطأ ما، حاولي مرة أخرى." : "Something went wrong, please try again.");
+      toast.error(copy.genericError);
     } finally {
       setSubmitting(false);
     }

@@ -144,7 +144,17 @@ export default function NewsletterAdminPage() {
                 <Field label="Button Text (Arabic)" rtl value={config.ctaAr} onChange={(v) => setConfig((c) => ({ ...c, ctaAr: v }))} />
                 <Field label="Success Message (English)" value={config.successEn} onChange={(v) => setConfig((c) => ({ ...c, successEn: v }))} />
                 <Field label="Success Message (Arabic)" rtl value={config.successAr} onChange={(v) => setConfig((c) => ({ ...c, successAr: v }))} />
+                <Field label="Already Subscribed Message (English)" value={config.alreadySubscribedEn} onChange={(v) => setConfig((c) => ({ ...c, alreadySubscribedEn: v }))} />
+                <Field label="Already Subscribed Message (Arabic)" rtl value={config.alreadySubscribedAr} onChange={(v) => setConfig((c) => ({ ...c, alreadySubscribedAr: v }))} />
+                <Field label="Invalid Email Message (English)" value={config.invalidEmailEn} onChange={(v) => setConfig((c) => ({ ...c, invalidEmailEn: v }))} />
+                <Field label="Invalid Email Message (Arabic)" rtl value={config.invalidEmailAr} onChange={(v) => setConfig((c) => ({ ...c, invalidEmailAr: v }))} />
+                <Field label="Generic Error Message (English)" value={config.errorEn} onChange={(v) => setConfig((c) => ({ ...c, errorEn: v }))} />
+                <Field label="Generic Error Message (Arabic)" rtl value={config.errorAr} onChange={(v) => setConfig((c) => ({ ...c, errorAr: v }))} />
               </div>
+
+              <p className="text-xs text-slate-400">
+                Tip: the &ldquo;Already Subscribed&rdquo; message is shown when someone submits an email that is already an active subscriber — useful for reassuring them without revealing account details.
+              </p>
 
               <div className="flex items-center gap-3 sticky bottom-0 bg-slate-50 py-3">
                 <button onClick={save} disabled={saving} className="admin-btn admin-btn-primary px-8">

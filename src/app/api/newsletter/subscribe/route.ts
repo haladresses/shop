@@ -11,17 +11,20 @@ const subscribeSchema = z.object({
 
 /**
  * Public endpoint used by the storefront newsletter form (homepage + product
- * detail pages). Re-subscribing with the same email reactivates it instead
- * of erroring, so the form never has to reveal whether an address already
- * exists.
+ * detail pages). Distinguishes three outcomes so the UI can show the right
+ * message: brand-new subscriber, reactivated (was previously unsubscribed),
+ * or already an active subscriber (duplicate submission).
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const parsed = subscribeSchema.safeParse(body);
-    if (!parsed.success) return error(parsed.error.issues[0].message);
+    if (!parsed.success) return error("invalid_email");
 
     const { email, source, language } = parsed.data;
+
+    const existing = await prisma.newsletterSubscriber.findUnique({ where: { email } });
+    const alreadyActive = existing?.isActive === true;
 
     await prisma.newsletterSubscriber.upsert({
       where: { email },
@@ -29,7 +32,7 @@ export async function POST(req: NextRequest) {
       create: { email, source, language, isActive: true },
     });
 
-    return ok({ message: "Subscribed" }, 201);
+    return ok({ isNew: !existing, alreadyActive }, existing ? 200 : 201);
   } catch (e) {
     return serverError(e);
   }

@@ -9,6 +9,12 @@ export type NewsletterConfig = {
   ctaAr: string;
   successEn: string;
   successAr: string;
+  alreadySubscribedEn: string;
+  alreadySubscribedAr: string;
+  invalidEmailEn: string;
+  invalidEmailAr: string;
+  errorEn: string;
+  errorAr: string;
 };
 
 export const DEFAULT_NEWSLETTER_CONFIG: NewsletterConfig = {
@@ -22,6 +28,12 @@ export const DEFAULT_NEWSLETTER_CONFIG: NewsletterConfig = {
   ctaAr: "اشتركي الآن",
   successEn: "Thanks for subscribing! Watch your inbox for new arrivals.",
   successAr: "شكراً لاشتراكك! ترقبي أحدث العروض قريباً.",
+  alreadySubscribedEn: "You're already subscribed — we've got you covered!",
+  alreadySubscribedAr: "أنتِ مشتركة بالفعل في نشرتنا البريدية!",
+  invalidEmailEn: "Please enter a valid email address.",
+  invalidEmailAr: "يرجى إدخال بريد إلكتروني صحيح.",
+  errorEn: "Something went wrong, please try again.",
+  errorAr: "حدث خطأ ما، حاولي مرة أخرى.",
 };
 
 export const NEWSLETTER_CONFIG_KEY = "newsletter_config";
@@ -45,6 +57,12 @@ export function normalizeNewsletter(raw: unknown): NewsletterConfig {
     ctaAr: str(o.ctaAr, d.ctaAr),
     successEn: str(o.successEn, d.successEn),
     successAr: str(o.successAr, d.successAr),
+    alreadySubscribedEn: str(o.alreadySubscribedEn, d.alreadySubscribedEn),
+    alreadySubscribedAr: str(o.alreadySubscribedAr, d.alreadySubscribedAr),
+    invalidEmailEn: str(o.invalidEmailEn, d.invalidEmailEn),
+    invalidEmailAr: str(o.invalidEmailAr, d.invalidEmailAr),
+    errorEn: str(o.errorEn, d.errorEn),
+    errorAr: str(o.errorAr, d.errorAr),
   };
 }
 
