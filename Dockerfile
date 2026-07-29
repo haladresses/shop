@@ -3,9 +3,12 @@
 # ─────────────────────────────────────────────────────────────
 # Base image (Node 20 on Alpine). openssl & libc6-compat are
 # required by the Prisma query engine on Alpine/musl.
+# postgresql16-client provides pg_dump/psql (matching the
+# postgres:16-alpine service in docker-compose.yml) used by the
+# admin panel's database backup/restore feature.
 # ─────────────────────────────────────────────────────────────
 FROM node:20-alpine AS base
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache libc6-compat openssl postgresql16-client
 
 # ─────────────────────────────────────────────────────────────
 # Stage 1: install dependencies (with dev deps – needed for the
@@ -67,9 +70,9 @@ COPY --from=builder /app/next.config.js ./next.config.js
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
-# Ensure the upload target exists and is writable by the app user.
+# Ensure the upload/backup targets exist and are writable by the app user.
 RUN chmod +x ./docker-entrypoint.sh \
-    && mkdir -p ./public/images/products \
+    && mkdir -p ./public/images/products ./backups \
     && chown -R nextjs:nodejs /app
 
 USER nextjs

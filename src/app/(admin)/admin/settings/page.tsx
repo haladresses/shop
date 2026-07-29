@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { LuCheck } from "react-icons/lu";
 import FooterSettings from "@/components/admin/FooterSettings";
+import BackupSettings from "@/components/admin/BackupSettings";
 
 const DEFAULT_SETTINGS = [
   { key: "store_name_en", group: "general", labelEn: "Store Name (English)", type: "string", defaultValue: "Hala Dresses" },
@@ -21,7 +22,7 @@ const DEFAULT_SETTINGS = [
   { key: "whatsapp_number", group: "social", labelEn: "WhatsApp Number", type: "string", defaultValue: "" },
 ];
 
-const groups = ["general", "shipping", "checkout", "notifications", "social", "footer"];
+const groups = ["general", "shipping", "checkout", "notifications", "social", "footer", "backup"];
 
 export default function SettingsPage() {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -80,6 +81,8 @@ export default function SettingsPage() {
 
       {activeGroup === "footer" ? (
         <FooterSettings />
+      ) : activeGroup === "backup" ? (
+        <BackupSettings />
       ) : (
         <>
           <div className="admin-card p-6">

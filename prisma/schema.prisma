@@ -103,6 +103,7 @@ model User {
   sessions      Session[]
   products      Product[]      @relation("SellerProducts")
   auditLogs     AuditLog[]
+  backups       Backup[]
 
   @@map("users")
 }
@@ -571,4 +572,37 @@ model AuditLog {
 
   @@index([userId])
   @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────
+// BACKUPS
+// ─────────────────────────────────────────────
+
+enum BackupType {
+  MANUAL
+  SCHEDULED
+}
+
+enum BackupStatus {
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+model Backup {
+  id            String       @id @default(cuid())
+  filename      String       @unique
+  sizeBytes     BigInt?
+  type          BackupType   @default(MANUAL)
+  status        BackupStatus @default(IN_PROGRESS)
+  includesFiles Boolean      @default(true)
+  errorMessage  String?
+  createdById   String?
+  createdAt     DateTime     @default(now())
+  completedAt   DateTime?
+
+  createdBy User? @relation(fields: [createdById], references: [id])
+
+  @@index([createdAt])
+  @@map("backups")
 }

@@ -15,3 +15,4 @@ SERVER
 .idea
 coverage
 .DS_Store
+backups
