@@ -60,6 +60,7 @@ RUN addgroup --system --gid 1001 nodejs \
 # App artifacts + everything needed to run `next start` and
 # `prisma db push` / `prisma db seed` at container startup.
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/public/images/products ./seed-assets/products
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
