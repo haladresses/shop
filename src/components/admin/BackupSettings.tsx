@@ -84,6 +84,7 @@ export default function BackupSettings() {
   const [confirmText, setConfirmText] = useState("");
   const [restoring, setRestoring] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const normalizedConfirmText = confirmText.trim().toUpperCase();
 
   const isSuperAdmin = role === "SUPER_ADMIN";
 
@@ -153,10 +154,12 @@ export default function BackupSettings() {
 
   const openRestore = (target: RestoreTarget) => {
     setRestoreTarget(target);
-    setRestoreFile(null);
+    if (target !== "upload") {
+      setRestoreFile(null);
+    }
     setConfirmText("");
     setRestoreFilesToo(true);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (target !== "upload" && fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const closeRestore = () => {
@@ -165,14 +168,14 @@ export default function BackupSettings() {
   };
 
   const runRestore = async () => {
-    if (confirmText !== "RESTORE" || !restoreTarget) return;
+    if (normalizedConfirmText !== "RESTORE" || !restoreTarget) return;
     if (restoreTarget === "upload" && !restoreFile) return;
 
     setRestoring(true);
     setMessage(null);
     try {
       const formData = new FormData();
-      formData.set("confirm", confirmText);
+      formData.set("confirm", normalizedConfirmText);
       formData.set("restoreFiles", String(restoreFilesToo));
       if (restoreTarget === "upload" && restoreFile) {
         formData.set("file", restoreFile);
@@ -432,7 +435,7 @@ export default function BackupSettings() {
             </button>
             <button
               onClick={runRestore}
-              disabled={confirmText !== "RESTORE" || restoring || (restoreTarget === "upload" && !restoreFile)}
+              disabled={normalizedConfirmText !== "RESTORE" || restoring || (restoreTarget === "upload" && !restoreFile)}
               className="admin-btn bg-red-600 hover:bg-red-700 text-white disabled:opacity-50"
             >
               <LuHardDriveDownload size={16} className="inline mr-1.5 -mt-0.5" />
