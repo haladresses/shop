@@ -68,10 +68,11 @@ COPY --from=builder /app/next.config.js ./next.config.js
 # tsconfig.json is needed by `prisma db seed` (ts-node reads the seed tsconfig,
 # which extends this root config).
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY docker-init.sh ./docker-init.sh
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
 # Ensure the upload/backup targets exist and are writable by the app user.
-RUN chmod +x ./docker-entrypoint.sh \
+RUN chmod +x ./docker-entrypoint.sh ./docker-init.sh \
     && mkdir -p ./public/images/products ./backups \
     && chown -R nextjs:nodejs /app
 

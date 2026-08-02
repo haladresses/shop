@@ -4,10 +4,10 @@ services:
     image: postgres:16-alpine
     container_name: hala-postgres
     restart: unless-stopped
-    # Not published to the host/internet; the app reaches it over
-    # the internal Docker network only.
-    expose:
-      - "5432"
+    # Publish the DB on loopback for local Prisma/Next.js access while
+    # keeping it off public interfaces on the server.
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5434}:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -19,6 +19,27 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - hala-network
+
+  # ── Database Init / Seed ─────────────────────────────────────
+  init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://hala-dresses.com}
+        NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Hala Dresses}
+    container_name: hala-init
+    restart: "no"
+    entrypoint: ["./docker-init.sh"]
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-haladresses}?schema=public
+      RUN_SEED: ${RUN_SEED:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - hala-network
 
@@ -44,8 +65,7 @@ services:
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://hala-dresses.com}
       NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Hala Dresses}
 
-      # Set to "true" on the very first deploy to create the admin user
-      # and demo data, then remove/set back to false.
+      # The init service reads this before the app starts.
       RUN_SEED: ${RUN_SEED:-false}
 
       # ── nginx-proxy / letsencrypt-companion (reverse proxy) ──
@@ -62,8 +82,8 @@ services:
       # (Settings → Backup) so they survive container restarts/redeploys.
       - backups-data:/app/backups
     depends_on:
-      postgres:
-        condition: service_healthy
+      init:
+        condition: service_completed_successfully
     networks:
       - hala-network
       - proxy
