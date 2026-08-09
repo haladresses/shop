@@ -1,24 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   LuArrowRight,
   LuBookOpen,
   LuChevronDown,
-  LuChevronRight,
   LuCircleCheckBig,
   LuCompass,
+  LuImage,
   LuLifeBuoy,
   LuLightbulb,
   LuLink,
   LuListChecks,
   LuLock,
+  LuMaximize2,
   LuMessageCircleQuestion,
   LuSearch,
   LuShieldCheck,
   LuSparkles,
-  LuTag,
   LuTriangleAlert,
   LuX,
 } from "react-icons/lu";
@@ -60,23 +61,13 @@ const CATEGORY_META: Record<AdminHelpTopic["category"], { eyebrow: string; descr
 
 const CATEGORY_ORDER: AdminHelpTopic["category"][] = ["Operations", "Catalog", "Content", "Platform"];
 
-const LEVEL_META: Record<AdminHelpLevel, { label: string; className: string; helper: string }> = {
-  Core: {
-    label: "Core",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
-    helper: "Everyday workflow every operator should master.",
-  },
-  Advanced: {
-    label: "Advanced",
-    className: "border-sky-200 bg-sky-50 text-sky-700",
-    helper: "Deeper capability that rewards a careful hand.",
-  },
-  Sensitive: {
-    label: "Sensitive",
-    className: "border-amber-200 bg-amber-50 text-amber-700",
-    helper: "Impacts money, access, or live storefront behavior — change with care.",
-  },
-};
+/** Maps an admin section href to its captured screenshot in /public/admin-help/screenshots. */
+function screenshotForHref(href: string): string {
+  const slug = href === "/admin" ? "dashboard" : href.replace(/^\/admin\//, "");
+  return `/admin-help/screenshots/${slug}.png`;
+}
+
+type PreviewState = { src: string; alt: string; href: string } | null;
 
 type TopicTab = "overview" | "steps" | "guidance" | "cautions";
 
@@ -91,6 +82,25 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<AdminHelpTopic["category"] | "all">("all");
   const [level, setLevel] = useState<AdminHelpLevel | "all">("all");
+  const [preview, setPreview] = useState<PreviewState>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!preview) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPreview(null);
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [preview]);
 
   const titleByHref = useMemo(() => {
     const map = new Map<string, string>();
@@ -323,32 +333,17 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
             return (
               <section key={group.category} id={`category-${group.category}`} className="scroll-mt-24 space-y-4">
                 <div className="rounded-[28px] border border-slate-200 bg-white px-6 py-5">
-                  <div className="flex flex-wrap items-end justify-between gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                        <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
-                        <span>{meta.eyebrow}</span>
-                      </div>
-                      <div>
-                        <h2 className="text-2xl font-semibold tracking-tight text-slate-900">{group.category}</h2>
-                        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{meta.description}</p>
-                      </div>
-                    </div>
-                    <div className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700">
-                      {group.items.length} guides
-                    </div>
+                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
+                    <span>{meta.eyebrow}</span>
                   </div>
+                  <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900">{group.category}</h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{meta.description}</p>
                 </div>
 
                 <div className="space-y-4">
-                  {group.items.map(({ topic, navMeta }, index) => (
-                    <TopicCard
-                      key={topic.href}
-                      topic={topic}
-                      index={index}
-                      navMeta={navMeta}
-                      titleByHref={titleByHref}
-                    />
+                  {group.items.map(({ topic, navMeta }) => (
+                    <TopicCard key={topic.href} topic={topic} navMeta={navMeta} titleByHref={titleByHref} onPreview={setPreview} />
                   ))}
                 </div>
               </section>
@@ -394,6 +389,59 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
           </Link>
         </div>
       </section>
+
+      {/* Screenshot lightbox (portaled to body to escape the admin scroll container) */}
+      {mounted && preview
+        ? createPortal(
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label={preview.alt}
+              onClick={() => setPreview(null)}
+              className="help-lightbox-backdrop fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-md sm:p-6"
+            >
+              <div
+                onClick={(e) => e.stopPropagation()}
+                className="help-lightbox-panel flex max-h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl"
+              >
+                <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+                  <div className="flex min-w-0 items-center gap-3 text-white">
+                    <span className="hidden shrink-0 items-center gap-1.5 sm:flex">
+                      <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                    </span>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold">{preview.alt}</div>
+                      <div className="truncate text-xs text-slate-400">{preview.href}</div>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <Link
+                      href={preview.href}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/20"
+                    >
+                      <LuArrowRight size={13} /> Open section
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setPreview(null)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+                      aria-label="Close preview"
+                    >
+                      <LuX size={18} />
+                    </button>
+                  </div>
+                </div>
+                <div className="min-h-0 flex-1 overflow-auto bg-slate-950/40 p-3 sm:p-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={preview.src} alt={preview.alt} className="mx-auto h-auto w-full rounded-lg" />
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
@@ -427,59 +475,36 @@ function FilterPill({
 
 function TopicCard({
   topic,
-  index,
   navMeta,
   titleByHref,
+  onPreview,
 }: {
   topic: AdminHelpTopic;
-  index: number;
   navMeta: ReturnType<typeof ADMIN_NAVIGATION_META_BY_HREF.get>;
   titleByHref: Map<string, string>;
+  onPreview: (preview: PreviewState) => void;
 }) {
   const [tab, setTab] = useState<TopicTab>("overview");
+  const [imgOk, setImgOk] = useState(true);
   const TopicIcon = navMeta?.icon;
-  const levelMeta = LEVEL_META[topic.level];
+  const screenshot = screenshotForHref(topic.href);
 
   return (
     <article className="admin-card group border border-slate-200 p-6 transition-colors duration-200 hover:border-slate-300">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 flex-1 space-y-3">
+        <div className="min-w-0 flex-1 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-slate-900 px-2 text-xs font-semibold text-white">
-              {String(index + 1).padStart(2, "0")}
-            </span>
             {TopicIcon ? (
               <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-50 transition-colors duration-200 group-hover:bg-white">
                 <TopicIcon size={19} className={navMeta?.color ?? "text-slate-500"} />
               </span>
             ) : null}
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{topic.category}</span>
-            <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${levelMeta.className}`}
-              title={levelMeta.helper}
-            >
-              {topic.level === "Sensitive" ? <LuTriangleAlert size={11} /> : null}
-              {levelMeta.label}
-            </span>
           </div>
           <div>
             <h3 className="text-xl font-semibold tracking-tight text-slate-900">{topic.title}</h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{topic.summary}</p>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {topic.tags.map((tagItem) => (
-              <span
-                key={tagItem}
-                className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-600"
-              >
-                <LuTag size={10} className="text-slate-400" />
-                {tagItem}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="shrink-0">
           <Link
             href={topic.href}
             className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-800"
@@ -487,6 +512,42 @@ function TopicCard({
             Open section <LuArrowRight size={14} />
           </Link>
         </div>
+
+        {/* Live screenshot preview */}
+        {imgOk ? (
+          <button
+            type="button"
+            onClick={() => onPreview({ src: screenshot, alt: `${topic.title} screen`, href: topic.href })}
+            className="group/preview relative w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 text-left shadow-sm transition-shadow duration-200 hover:shadow-md lg:w-[360px]"
+            title="Click to enlarge"
+          >
+            <div className="flex items-center gap-1.5 border-b border-slate-200 bg-slate-50 px-3 py-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-300" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
+              <span className="ml-2 truncate text-[11px] text-slate-400">{topic.href}</span>
+            </div>
+            <div className="relative aspect-[16/10] overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={screenshot}
+                alt={`${topic.title} screen preview`}
+                loading="lazy"
+                onError={() => setImgOk(false)}
+                className="absolute inset-0 h-full w-full object-cover object-top"
+              />
+              <div className="absolute inset-0 flex items-end justify-end bg-gradient-to-t from-slate-900/25 to-transparent p-2 opacity-0 transition-opacity duration-200 group-hover/preview:opacity-100">
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
+                  <LuMaximize2 size={12} /> Enlarge
+                </span>
+              </div>
+            </div>
+          </button>
+        ) : (
+          <div className="flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-xs text-slate-400 lg:w-[360px]">
+            <LuImage size={16} /> Preview unavailable
+          </div>
+        )}
       </div>
 
       {/* Tabs */}

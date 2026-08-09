@@ -256,3 +256,29 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Help Center screenshot lightbox */
+@keyframes helpLightboxBackdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes helpLightboxPanelIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.help-lightbox-backdrop {
+  animation: helpLightboxBackdropIn 0.18s ease-out;
+}
+
+.help-lightbox-panel {
+  animation: helpLightboxPanelIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help-lightbox-backdrop,
+  .help-lightbox-panel {
+    animation: none;
+  }
+}
