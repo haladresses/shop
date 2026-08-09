@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { LuUndo2 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
+import PaymentGatewaySettings from "@/components/admin/PaymentGatewaySettings";
 
 type Payment = {
   id: string;
@@ -31,6 +32,7 @@ const methodLabels: Record<string, string> = {
 };
 
 export default function PaymentsPage() {
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -41,36 +43,26 @@ export default function PaymentsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    // Get orders with payments
-    const res = await fetch("/api/orders?pageSize=50");
+    const res = await fetch("/api/admin/payments");
     const data = await res.json();
     if (data.success) {
-      const allPayments: Payment[] = [];
-      data.data.forEach((order: {
-        id: string;
-        payments: Payment[];
-        orderNumber: string;
-        user?: { nameEn?: string; email: string } | null;
-      }) => {
-        order.payments.forEach((p: Payment) => {
-          allPayments.push({ ...p, order: { id: order.id, orderNumber: order.orderNumber, user: order.user } });
-        });
-      });
-      setPayments(allPayments);
-      setTotal(allPayments.length);
-
-      const paid = allPayments.filter((p) => p.status === "PAID");
-      const unpaid = allPayments.filter((p) => p.status === "UNPAID");
-      setStats({
-        totalRevenue: paid.reduce((s, p) => s + Number(p.amount), 0),
-        pendingAmount: unpaid.reduce((s, p) => s + Number(p.amount), 0),
-        paidCount: paid.length,
-      });
+      setPayments(data.data.payments);
+      setTotal(data.data.total);
+      setStats(data.data.stats);
     }
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setPermissions(data.data.permissions || []);
+      })
+      .catch(() => undefined);
+  }, []);
 
   const confirmRefund = async () => {
     if (!refundTarget) return;
@@ -89,6 +81,8 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-4">
+      {permissions.includes("admin.payments.manage") && <PaymentGatewaySettings />}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="stat-card">

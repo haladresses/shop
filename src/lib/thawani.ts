@@ -1,15 +1,5 @@
 import prisma from "@/lib/db";
-
-const THAWANI_UAT_BASE = "https://uatcheckout.thawani.om";
-const THAWANI_PROD_BASE = "https://checkout.thawani.om";
-
-function getThawaniConfig() {
-  const secretKey = process.env.THAWANI_SECRET_KEY;
-  const publishableKey = process.env.THAWANI_PUBLISHABLE_KEY;
-  const mode = process.env.THAWANI_MODE === "production" ? "production" : "uat";
-  const baseUrl = mode === "production" ? THAWANI_PROD_BASE : THAWANI_UAT_BASE;
-  return { secretKey, publishableKey, mode, baseUrl };
-}
+import { getThawaniBaseUrl, getThawaniSettings } from "@/lib/paymentGateway";
 
 type ThawaniEnvelope<T> = {
   success: boolean;
@@ -33,10 +23,12 @@ async function thawaniRequest<T>(
   path: string,
   body?: Record<string, unknown>
 ): Promise<ThawaniEnvelope<T>> {
-  const { secretKey, baseUrl } = getThawaniConfig();
+  const { secretKey, mode } = await getThawaniSettings();
   if (!secretKey) {
-    return { success: false, code: 0, description: "Thawani is not configured (THAWANI_SECRET_KEY missing)" };
+    return { success: false, code: 0, description: "Thawani is not configured (secret key missing in admin settings)." };
   }
+
+  const baseUrl = getThawaniBaseUrl(mode);
 
   const res = await fetch(`${baseUrl}${path}`, {
     method,
@@ -66,6 +58,11 @@ export async function createCheckoutSession(params: {
   cancelUrl: string;
   metadata?: Record<string, string>;
 }) {
+  const { enabled } = await getThawaniSettings();
+  if (!enabled) {
+    return { success: false, code: 0, description: "Thawani payments are disabled in admin settings." };
+  }
+
   const unitAmount = Math.round(params.amountOMR * 1000);
   return thawaniRequest<ThawaniSessionData>("POST", "/api/v1/checkout/session", {
     client_reference_id: params.orderNumber,
@@ -81,8 +78,10 @@ export async function retrieveSession(sessionId: string) {
   return thawaniRequest<ThawaniSessionData>("GET", `/api/v1/checkout/session/${sessionId}`);
 }
 
-export function buildCheckoutRedirectUrl(sessionId: string) {
-  const { baseUrl, publishableKey } = getThawaniConfig();
+export async function buildCheckoutRedirectUrl(sessionId: string) {
+  const { mode, publishableKey } = await getThawaniSettings();
+  const baseUrl = getThawaniBaseUrl(mode);
+  if (!publishableKey) return `${baseUrl}/pay/${sessionId}`;
   return `${baseUrl}/pay/${sessionId}?key=${publishableKey}`;
 }
 

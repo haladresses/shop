@@ -4,64 +4,14 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  LuLayoutDashboard,
-  LuPackage,
-  LuShirt,
-  LuTags,
-  LuWarehouse,
-  LuUsers,
-  LuCreditCard,
-  LuTicket,
-  LuStar,
-  LuSettings,
   LuStore,
-  LuImage,
-  LuTruck,
   LuLogOut,
   LuChevronLeft,
   LuChevronRight,
   LuX,
-  LuGalleryHorizontalEnd,
-  LuTimer,
-  LuQuote,
-  LuMail,
-  LuMenu,
-  LuScale,
-  LuShield,
 } from "react-icons/lu";
-import type { IconType } from "react-icons";
 import { ADMIN_NAV_ITEMS } from "@/lib/permissions";
-
-type NavItem = {
-  href: string;
-  label: string;
-  permission: string;
-  icon: IconType;
-  color: string;
-  exact?: boolean;
-};
-
-const navItems: NavItem[] = [
-  { href: "/admin", label: "Dashboard", permission: "admin.dashboard.view", icon: LuLayoutDashboard, color: "text-sky-400", exact: true },
-  { href: "/admin/orders", label: "Orders", permission: "admin.orders.view", icon: LuPackage, color: "text-amber-400" },
-  { href: "/admin/products", label: "Products", permission: "admin.products.view", icon: LuShirt, color: "text-rose-400" },
-  { href: "/admin/categories", label: "Categories", permission: "admin.categories.view", icon: LuTags, color: "text-emerald-400" },
-  { href: "/admin/inventory", label: "Inventory", permission: "admin.inventory.view", icon: LuWarehouse, color: "text-orange-400" },
-  { href: "/admin/users", label: "Users", permission: "admin.users.view", icon: LuUsers, color: "text-violet-400" },
-  { href: "/admin/payments", label: "Payments", permission: "admin.payments.view", icon: LuCreditCard, color: "text-green-400" },
-  { href: "/admin/coupons", label: "Coupons", permission: "admin.coupons.view", icon: LuTicket, color: "text-pink-400" },
-  { href: "/admin/shipping", label: "Shipping", permission: "admin.shipping.view", icon: LuTruck, color: "text-blue-400" },
-  { href: "/admin/reviews", label: "Reviews", permission: "admin.reviews.view", icon: LuStar, color: "text-yellow-400" },
-  { href: "/admin/hero", label: "Homepage Hero", permission: "admin.hero.manage", icon: LuImage, color: "text-cyan-400" },
-  { href: "/admin/promo-banner", label: "Promo Banner", permission: "admin.promo.manage", icon: LuGalleryHorizontalEnd, color: "text-fuchsia-400" },
-  { href: "/admin/countdown", label: "Countdown Deal", permission: "admin.countdown.manage", icon: LuTimer, color: "text-red-400" },
-  { href: "/admin/testimonials", label: "Testimonials", permission: "admin.testimonials.manage", icon: LuQuote, color: "text-lime-400" },
-  { href: "/admin/newsletter", label: "Newsletter", permission: "admin.newsletter.view", icon: LuMail, color: "text-teal-300" },
-  { href: "/admin/legal-pages", label: "Legal Pages", permission: "admin.legal.manage", icon: LuScale, color: "text-amber-300" },
-  { href: "/admin/navigation", label: "Navigation Menu", permission: "admin.navigation.manage", icon: LuMenu, color: "text-indigo-400" },
-  { href: "/admin/settings", label: "Settings", permission: "admin.settings.manage", icon: LuSettings, color: "text-slate-300" },
-  { href: "/admin/roles", label: "Roles", permission: "admin.roles.view", icon: LuShield, color: "text-purple-300" },
-];
+import { ADMIN_NAVIGATION_META, ADMIN_NAVIGATION_SECTION_ORDER } from "@/lib/adminNavigationMeta";
 
 type AdminSidebarProps = {
   mobileOpen?: boolean;
@@ -133,19 +83,33 @@ export default function AdminSidebar({ mobileOpen = false, onClose, permissions 
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
-          {navItems.filter((item) => allowedKeys.has(item.permission)).map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.href, item.exact);
+          {ADMIN_NAVIGATION_SECTION_ORDER.map((section) => {
+            const items = ADMIN_NAVIGATION_META.filter((item) => item.section === section && allowedKeys.has(item.permission));
+            if (items.length === 0) return null;
+
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`admin-nav-link ${active ? "active" : ""} ${collapsed ? "lg:justify-center" : ""}`}
-                title={collapsed ? item.label : undefined}
-              >
-                <Icon size={19} className={`flex-shrink-0 ${item.color}`} />
-                <span className={collapsed ? "lg:hidden" : ""}>{item.label}</span>
-              </Link>
+              <div key={section} className="space-y-1.5">
+                {!collapsed && (
+                  <div className="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                    {section}
+                  </div>
+                )}
+                {items.map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item.href, item.exact);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`admin-nav-link ${active ? "active" : ""} ${collapsed ? "lg:justify-center" : ""}`}
+                      title={collapsed ? item.label : undefined}
+                    >
+                      <Icon size={19} className={`flex-shrink-0 ${item.color}`} />
+                      <span className={collapsed ? "lg:hidden" : ""}>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>

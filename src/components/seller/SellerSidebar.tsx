@@ -5,12 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { SELLER_NAV_ITEMS } from "@/lib/permissions";
 
 const navItems = [
-  { href: "/seller", label: "Dashboard", icon: "📊", permission: "seller.dashboard.view", exact: true },
-  { href: "/seller/products", label: "My Products", icon: "👗", permission: "seller.products.view" },
-  { href: "/seller/orders", label: "Orders", icon: "📦", permission: "seller.orders.view" },
-  { href: "/seller/inventory", label: "Inventory", icon: "🏪", permission: "seller.inventory.view" },
-  { href: "/seller/analytics", label: "Analytics", icon: "📈", permission: "seller.analytics.view" },
+  { href: "/seller", label: "Dashboard", section: "Overview", icon: "📊", permission: "seller.dashboard.view", exact: true },
+  { href: "/seller/orders", label: "Orders", section: "Operations", icon: "📦", permission: "seller.orders.view" },
+  { href: "/seller/products", label: "My Products", section: "Catalog", icon: "👗", permission: "seller.products.view" },
+  { href: "/seller/inventory", label: "Inventory", section: "Catalog", icon: "🏪", permission: "seller.inventory.view" },
+  { href: "/seller/analytics", label: "Analytics", section: "Performance", icon: "📈", permission: "seller.analytics.view" },
 ];
+
+const navSections = ["Overview", "Operations", "Catalog", "Performance"] as const;
 
 export default function SellerSidebar({ permissions = [] }: { permissions?: string[] }) {
   const pathname = usePathname();
@@ -40,16 +42,28 @@ export default function SellerSidebar({ permissions = [] }: { permissions?: stri
       </div>
 
       <nav className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-4 space-y-1">
-        {navItems.filter((item) => allowedKeys.has(item.permission)).map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`seller-nav-link ${isActive(item.href, item.exact) ? "active" : ""}`}
-          >
-            <span className="text-lg">{item.icon}</span>
-            <span>{item.label}</span>
-          </Link>
-        ))}
+        {navSections.map((section) => {
+          const items = navItems.filter((item) => item.section === section && allowedKeys.has(item.permission));
+          if (items.length === 0) return null;
+
+          return (
+            <div key={section} className="space-y-1.5">
+              <div className="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-200/50">
+                {section}
+              </div>
+              {items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`seller-nav-link ${isActive(item.href, item.exact) ? "active" : ""}`}
+                >
+                  <span className="text-lg">{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          );
+        })}
       </nav>
 
       <div className="shrink-0 px-3 py-4 border-t border-white/10 space-y-1">

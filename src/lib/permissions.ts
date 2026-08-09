@@ -53,6 +53,7 @@ export const ADMIN_NAV_ITEMS: NavPermissionItem[] = [
   { href: "/admin/legal-pages", label: "Legal Pages", permission: "admin.legal.manage" },
   { href: "/admin/navigation", label: "Navigation Menu", permission: "admin.navigation.manage" },
   { href: "/admin/settings", label: "Settings", permission: "admin.settings.manage" },
+  { href: "/admin/help", label: "Help", permission: "admin.help.view" },
   { href: "/admin/roles", label: "Roles", permission: "admin.roles.view" },
 ];
 
@@ -80,6 +81,7 @@ export const PERMISSION_CATALOG: PermissionDefinition[] = [
   { key: "admin.users.assign_roles", label: "Assign Roles", description: "Change a user's role.", area: "admin", group: "Users" },
   { key: "admin.users.delete", label: "Delete Users", description: "Delete user accounts.", area: "admin", group: "Users" },
   { key: "admin.payments.view", label: "View Payments", description: "Access payment and refund screens.", area: "admin", group: "Payments" },
+  { key: "admin.payments.manage", label: "Manage Payment Gateway", description: "Change payment gateway configuration and other payment controls.", area: "admin", group: "Payments" },
   { key: "admin.coupons.view", label: "View Coupons", description: "See coupon lists and status.", area: "admin", group: "Marketing" },
   { key: "admin.coupons.manage", label: "Manage Coupons", description: "Create and update discount coupons.", area: "admin", group: "Marketing" },
   { key: "admin.shipping.view", label: "View Shipping", description: "Access shipping settings and Wasellee data.", area: "admin", group: "Shipping" },
@@ -95,6 +97,7 @@ export const PERMISSION_CATALOG: PermissionDefinition[] = [
   { key: "admin.legal.manage", label: "Manage Legal Pages", description: "Edit legal pages and policies.", area: "admin", group: "Content" },
   { key: "admin.navigation.manage", label: "Manage Navigation", description: "Edit header and footer navigation.", area: "admin", group: "Content" },
   { key: "admin.settings.manage", label: "Manage Settings", description: "Update store-wide settings.", area: "admin", group: "Settings" },
+  { key: "admin.help.view", label: "View Help Center", description: "Open the permission-aware admin help center.", area: "admin", group: "Help & Onboarding" },
   { key: "admin.backups.view", label: "View Backups", description: "See backup history and download archives.", area: "admin", group: "Backups" },
   { key: "admin.backups.create", label: "Create Backups", description: "Create manual backups.", area: "admin", group: "Backups" },
   { key: "admin.backups.schedule", label: "Manage Backup Schedule", description: "Change automatic backup schedule settings.", area: "admin", group: "Backups" },
@@ -133,6 +136,7 @@ const DEFAULT_ROLE_PERMISSIONS: Record<Role, string[]> = {
     "admin.users.manage",
     "admin.users.assign_roles",
     "admin.payments.view",
+    "admin.payments.manage",
     "admin.coupons.view",
     "admin.coupons.manage",
     "admin.shipping.view",
@@ -148,6 +152,7 @@ const DEFAULT_ROLE_PERMISSIONS: Record<Role, string[]> = {
     "admin.legal.manage",
     "admin.navigation.manage",
     "admin.settings.manage",
+    "admin.help.view",
     "admin.backups.view",
     "admin.backups.create",
     "admin.backups.schedule",
@@ -176,6 +181,7 @@ const DEFAULT_ROLE_PERMISSIONS: Record<Role, string[]> = {
     "admin.reviews.view",
     "admin.reviews.manage",
     "admin.newsletter.view",
+    "admin.help.view",
     "admin.backups.view",
   ],
   [Role.SELLER]: [

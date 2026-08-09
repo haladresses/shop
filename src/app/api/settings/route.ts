@@ -2,12 +2,25 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
 import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
+import { ROLE_PERMISSIONS_SETTING_KEY } from "@/lib/permissions";
+import { THAWANI_SETTINGS_KEY } from "@/lib/paymentGateway";
 
 export async function GET(req: NextRequest) {
   try {
     const group = req.nextUrl.searchParams.get("group") || "";
+    const user = await getAuthFromRequest(req);
+    const canManageSettings = user ? await userHasPermission(user, "admin.settings.manage") : false;
+
+    if (["payments", "security"].includes(group) && !canManageSettings) {
+      return forbidden();
+    }
+
     const settings = await prisma.setting.findMany({
-      where: group ? { group } : {},
+      where: group
+        ? { group }
+        : canManageSettings
+          ? {}
+          : { NOT: { key: { in: [ROLE_PERMISSIONS_SETTING_KEY, THAWANI_SETTINGS_KEY] } } },
       orderBy: [{ group: "asc" }, { key: "asc" }],
     });
 

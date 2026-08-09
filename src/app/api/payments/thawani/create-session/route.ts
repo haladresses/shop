@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       data: { transactionId: result.data.session_id, gatewayResponse: result.data as never },
     });
 
-    return ok({ redirectUrl: buildCheckoutRedirectUrl(result.data.session_id) });
+    return ok({ redirectUrl: await buildCheckoutRedirectUrl(result.data.session_id) });
   } catch (e) {
     return serverError(e);
   }
