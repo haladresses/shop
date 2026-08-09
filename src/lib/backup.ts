@@ -9,7 +9,35 @@ import prisma from "@/lib/db";
 
 export const BACKUP_DIR = path.join(process.cwd(), "backups");
 export const UPLOADS_DIR = path.join(process.cwd(), "public", "images", "products");
+export const BUNDLED_PRODUCT_IMAGES_DIR = path.join(process.cwd(), "seed-assets", "products");
 export const DEFAULT_RETENTION = 10;
+
+async function pathExists(targetPath: string): Promise<boolean> {
+  try {
+    await fsp.access(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function mergeDirectoryInto(sourceDir: string, targetDir: string): Promise<boolean> {
+  if (!(await pathExists(sourceDir))) return false;
+
+  await fsp.mkdir(targetDir, { recursive: true });
+  await fsp.cp(sourceDir, targetDir, { recursive: true, force: true });
+  return true;
+}
+
+async function buildProductImagesSnapshot(targetDir: string): Promise<boolean> {
+  const bundledCopied = await mergeDirectoryInto(BUNDLED_PRODUCT_IMAGES_DIR, targetDir);
+  const uploadsCopied = await mergeDirectoryInto(UPLOADS_DIR, targetDir);
+  return bundledCopied || uploadsCopied;
+}
+
+async function restoreBundledProductImages(): Promise<void> {
+  await mergeDirectoryInto(BUNDLED_PRODUCT_IMAGES_DIR, UPLOADS_DIR);
+}
 
 function commandExists(cmd: string): boolean {
   const lookup = process.platform === "win32" ? "where.exe" : "which";
@@ -217,11 +245,7 @@ export async function createBackup(opts: {
     );
 
     // 2. Copy uploaded product/media files (the only writable, non-git directory).
-    let includesFiles = false;
-    if (fs.existsSync(UPLOADS_DIR)) {
-      await fsp.cp(UPLOADS_DIR, path.join(workDir, "uploads"), { recursive: true });
-      includesFiles = true;
-    }
+    const includesFiles = await buildProductImagesSnapshot(path.join(workDir, "uploads"));
 
     await fsp.writeFile(
       path.join(workDir, "manifest.json"),
@@ -311,6 +335,9 @@ export async function restoreBackup(
       await fsp.rm(UPLOADS_DIR, { recursive: true, force: true }).catch(() => {});
       await fsp.mkdir(UPLOADS_DIR, { recursive: true });
       await fsp.cp(uploadsSrc, UPLOADS_DIR, { recursive: true });
+      await restoreBundledProductImages();
+    } else if (opts.restoreFiles !== false) {
+      await restoreBundledProductImages();
     }
   } finally {
     await fsp.rm(workDir, { recursive: true, force: true }).catch(() => {});
