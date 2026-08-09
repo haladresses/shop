@@ -1,7 +1,7 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getAuthFromRequest, userHasAnyPermission, userHasPermission } from "@/lib/auth";
-import { ok, paginated, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
+import { ok, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { slugify } from "@/lib/utils";
 import { productSchema } from "@/lib/validations/product";
 import { Prisma } from "@prisma/client";
@@ -20,8 +20,11 @@ export async function GET(req: NextRequest) {
     const isFeatured = sp.get("isFeatured");
     const isNew = sp.get("isNew");
     const isBestSeller = sp.get("isBestSeller");
+    const minPrice = sp.get("minPrice");
+    const maxPrice = sp.get("maxPrice");
 
-    const where = {
+    // Filters shared by the product query and the price-bounds aggregate.
+    const baseWhere: Prisma.ProductWhereInput = {
       ...(search && {
         OR: [
           { nameEn: { contains: search, mode: "insensitive" as const } },
@@ -38,7 +41,19 @@ export async function GET(req: NextRequest) {
       ...(isBestSeller !== null && isBestSeller !== "" && { isBestSeller: isBestSeller === "true" }),
     };
 
-    const [products, total] = await Promise.all([
+    const priceFilter: Prisma.ProductWhereInput =
+      minPrice || maxPrice
+        ? {
+            basePrice: {
+              ...(minPrice ? { gte: Number(minPrice) } : {}),
+              ...(maxPrice ? { lte: Number(maxPrice) } : {}),
+            },
+          }
+        : {};
+
+    const where: Prisma.ProductWhereInput = { ...baseWhere, ...priceFilter };
+
+    const [products, total, bounds] = await Promise.all([
       prisma.product.findMany({
         where,
         skip,
@@ -51,9 +66,25 @@ export async function GET(req: NextRequest) {
         },
       }),
       prisma.product.count({ where }),
+      // Price range across the category/search (ignores the current price selection).
+      prisma.product.aggregate({ where: baseWhere, _min: { basePrice: true }, _max: { basePrice: true } }),
     ]);
 
-    return paginated(products, { page, pageSize, total });
+    const priceMin = bounds._min.basePrice != null ? Number(bounds._min.basePrice) : null;
+    const priceMax = bounds._max.basePrice != null ? Number(bounds._max.basePrice) : null;
+
+    return NextResponse.json({
+      success: true,
+      data: products,
+      meta: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+        priceMin,
+        priceMax,
+      },
+    });
   } catch (e) {
     return serverError(e);
   }

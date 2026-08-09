@@ -20,7 +20,7 @@ const PAGE_SIZE = 12;
 const ShopWithSidebarContent = () => {
   const [productStyle, setProductStyle] = useState("grid");
   const [productSidebar, setProductSidebar] = useState(false);
-  const [stickyMenu, setStickyMenu] = useState(false);
+  const [, setStickyMenu] = useState(false);
   const { isArabic, language } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -31,11 +31,26 @@ const ShopWithSidebarContent = () => {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [priceBounds, setPriceBounds] = useState<{ min: number; max: number } | null>(null);
+  const [priceValue, setPriceValue] = useState<{ from: number; to: number } | null>(null);
+  const [appliedPrice, setAppliedPrice] = useState<{ from: number; to: number } | null>(null);
 
-  // reset to first page whenever the category filter changes
+  // reset to first page (and clear the price filter) whenever the category changes
   useEffect(() => {
     setPage(1);
+    setPriceValue(null);
+    setAppliedPrice(null);
   }, [activeCategory]);
+
+  // debounce the live slider value before applying it as a filter
+  useEffect(() => {
+    if (!priceValue) return;
+    const t = setTimeout(() => {
+      setAppliedPrice(priceValue);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [priceValue]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -45,16 +60,23 @@ const ShopWithSidebarContent = () => {
       pageSize: PAGE_SIZE,
       category: activeCategory,
       language,
+      minPrice: appliedPrice?.from,
+      maxPrice: appliedPrice?.to,
       signal: controller.signal,
     })
       .then((res) => {
-        const list = res.products.length ? res.products : !activeCategory && page === 1 ? shopData : [];
+        const list = res.products.length ? res.products : !activeCategory && page === 1 && !appliedPrice ? shopData : [];
         setProducts(list);
         setTotal(res.total || list.length);
         setTotalPages(Math.max(1, res.totalPages || 1));
+        if (res.priceMin != null && res.priceMax != null) {
+          const min = Math.floor(res.priceMin);
+          const max = Math.ceil(res.priceMax);
+          setPriceBounds((prev) => (prev && prev.min === min && prev.max === max ? prev : { min, max }));
+        }
       })
       .catch(() => {
-        if (!activeCategory && page === 1) {
+        if (!activeCategory && page === 1 && !appliedPrice) {
           setProducts(shopData);
           setTotal(shopData.length);
           setTotalPages(1);
@@ -64,7 +86,7 @@ const ShopWithSidebarContent = () => {
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [language, page, activeCategory]);
+  }, [language, page, activeCategory, appliedPrice]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -197,7 +219,11 @@ const ShopWithSidebarContent = () => {
                       <p className="font-medium text-dark">{isArabic ? "الفلاتر:" : "Filters:"}</p>
                       <button
                         type="button"
-                        onClick={() => selectCategory("")}
+                        onClick={() => {
+                          setPriceValue(null);
+                          setAppliedPrice(null);
+                          selectCategory("");
+                        }}
                         className="text-blue hover:underline"
                       >
                         {isArabic ? "مسح الكل" : "Clean All"}
@@ -223,7 +249,14 @@ const ShopWithSidebarContent = () => {
                   <ColorsDropdwon />
 
                   {/* // <!-- price range box --> */}
-                  <PriceDropdown />
+                  <PriceDropdown
+                    title={isArabic ? "السعر" : "Price"}
+                    currency={isArabic ? "ر.ع." : "OMR"}
+                    min={priceBounds?.min ?? 0}
+                    max={priceBounds?.max ?? 100}
+                    value={priceValue ?? { from: priceBounds?.min ?? 0, to: priceBounds?.max ?? 100 }}
+                    onChange={(from, to) => setPriceValue({ from, to })}
+                  />
                 </div>
               </form>
             </div>
