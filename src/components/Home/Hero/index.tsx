@@ -5,7 +5,7 @@ import HeroFeature from "./HeroFeature";
 
 const Hero = () => {
   return (
-    <section className="relative overflow-hidden pb-12 lg:pb-16 pt-24 xl:pt-[104px] bg-gradient-to-b from-[#FBF3EF] via-[#F7EDE7] to-white">
+    <section className="relative overflow-hidden pb-12 lg:pb-16 pt-24 xl:pt-[150px] bg-gradient-to-b from-[#FBF3EF] via-[#F7EDE7] to-white">
       {/* decorative accents */}
       <div aria-hidden className="pointer-events-none absolute -top-16 -left-20 w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-blue/10 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute top-24 -right-16 w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-yellow/20 blur-3xl" />
