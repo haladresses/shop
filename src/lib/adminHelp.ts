@@ -1,11 +1,34 @@
+export type AdminHelpLevel = "Core" | "Advanced" | "Sensitive";
+
 export type AdminHelpTopic = {
   title: string;
   href: string;
   permission: string;
   category: "Operations" | "Catalog" | "Content" | "Platform";
+  level: AdminHelpLevel;
   summary: string;
+  /** Short keyword chips used for search and quick scanning. */
+  tags: string[];
   outcomes: string[];
   guidance: string[];
+  /** Ordered, do-this-then-that workflow for the most common task. */
+  steps: string[];
+  /** Common mistakes and risky actions to avoid. */
+  cautions: string[];
+  /** Hrefs of related admin sections that pair well with this one. */
+  related: string[];
+};
+
+export type AdminHelpQuickStart = {
+  title: string;
+  description: string;
+  href: string;
+  steps: string[];
+};
+
+export type AdminHelpFaq = {
+  question: string;
+  answer: string;
 };
 
 export type AdminHelpTopicArabic = {
@@ -31,6 +54,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Treat the dashboard as a triage surface, not the place to do the actual edits.",
       "If numbers look wrong, verify order payment status and stock movements before changing catalog data.",
     ],
+    level: "Core",
+    tags: ["KPIs", "triage", "trends", "alerts"],
+    steps: [
+      "Open the dashboard at the start of each shift.",
+      "Scan the sales, orders, and customer trend tiles for anomalies.",
+      "Check pending orders and low-stock alerts.",
+      "Click into the affected order or product to take action.",
+    ],
+    cautions: [
+      "Numbers here are a summary — never edit catalog data straight from a trend spike.",
+      "A metric that looks off is usually a payment or stock sync delay, not bad data.",
+    ],
+    related: ["/admin/orders", "/admin/inventory"],
   },
   {
     title: "Orders",
@@ -47,6 +83,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Only move orders to delivered after payment and shipment state are both confirmed.",
       "For guest orders, verify the shipping address and contact number before dispatch actions.",
     ],
+    level: "Core",
+    tags: ["lifecycle", "fulfillment", "refunds", "shipping"],
+    steps: [
+      "Search the order by number, customer name, or phone.",
+      "Verify payment status and review the line items.",
+      "Confirm the shipping address and selected method.",
+      "Advance the status only when payment and shipment are both confirmed.",
+    ],
+    cautions: [
+      "Never mark an order delivered before payment has cleared.",
+      "Double-check guest order contact details before any dispatch action.",
+    ],
+    related: ["/admin/payments", "/admin/shipping", "/admin/users"],
   },
   {
     title: "Payments",
@@ -63,6 +112,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Gateway settings are sensitive; only users with payment management permission should change them.",
       "When switching between UAT and production, confirm the publishable and secret keys belong to the same environment.",
     ],
+    level: "Sensitive",
+    tags: ["Thawani", "refunds", "gateway", "API keys"],
+    steps: [
+      "Locate the payment record from the related order.",
+      "Confirm the state: paid, unpaid, failed, or refunded.",
+      "Trigger a supported refund only after operational approval.",
+      "For gateway config, set the mode first, then paste matching keys.",
+    ],
+    cautions: [
+      "Gateway keys are secrets — restrict changes to payment managers.",
+      "Never mix UAT and production credentials in the same configuration.",
+    ],
+    related: ["/admin/orders", "/admin/settings"],
   },
   {
     title: "Shipping",
@@ -79,6 +141,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Branch and rate changes directly affect checkout calculations, so verify before saving.",
       "Operational messaging credentials should be treated as secrets and changed only by trusted admins.",
     ],
+    level: "Sensitive",
+    tags: ["Wasellee", "branches", "rates", "checkout"],
+    steps: [
+      "Open the shipping configuration screen.",
+      "Edit branch availability and delivery costs.",
+      "Update international rate cards where required.",
+      "Save, then re-run a test checkout to confirm the calculations.",
+    ],
+    cautions: [
+      "Rate and branch edits change live checkout totals — verify before saving.",
+      "Treat Wasellee credentials as secrets, not ordinary settings.",
+    ],
+    related: ["/admin/orders", "/admin/settings"],
   },
   {
     title: "Coupons",
@@ -95,6 +170,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Validate the economic impact of large discounts before activation.",
       "Use clear naming conventions for coupon codes so support staff can identify campaigns quickly.",
     ],
+    level: "Core",
+    tags: ["discounts", "campaigns", "limits", "expiry"],
+    steps: [
+      "Create a coupon with a clear, memorable code.",
+      "Choose a fixed or percentage discount.",
+      "Set the order threshold, expiry date, and usage cap.",
+      "Review the active list before the campaign goes live.",
+    ],
+    cautions: [
+      "Model the financial impact of large discounts before activating.",
+      "Avoid overlapping codes that can stack in unexpected ways.",
+    ],
+    related: ["/admin/orders", "/admin/promo-banner"],
   },
   {
     title: "Users",
@@ -111,6 +199,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Changing a role has immediate impact across menus, pages, and protected APIs.",
       "Use deactivation instead of deletion when the account may still be referenced operationally.",
     ],
+    level: "Sensitive",
+    tags: ["accounts", "roles", "RBAC", "access"],
+    steps: [
+      "Search for the existing account or create a new one.",
+      "Set the profile and contact details.",
+      "Assign the role that matches their responsibilities.",
+      "Deactivate rather than delete when in doubt.",
+    ],
+    cautions: [
+      "Role changes take effect immediately across menus and protected APIs.",
+      "Prefer deactivation over deletion for accounts still referenced by orders.",
+    ],
+    related: ["/admin/roles"],
   },
   {
     title: "Products",
@@ -127,6 +228,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Publish only after images, pricing, SKU structure, and inventory have all been checked.",
       "When changing category, review attributes immediately because category-specific fields can shift.",
     ],
+    level: "Core",
+    tags: ["catalog", "media", "variants", "attributes"],
+    steps: [
+      "Create a new product or open an existing one.",
+      "Fill in the title, pricing, SKU, and images.",
+      "Configure variants and the category-specific attributes.",
+      "Publish only after every field has been verified.",
+    ],
+    cautions: [
+      "Changing the category can shift required attributes — re-check them.",
+      "Do not publish a product with missing images or inventory.",
+    ],
+    related: ["/admin/categories", "/admin/inventory", "/admin/reviews"],
   },
   {
     title: "Categories",
@@ -143,6 +257,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Do not delete categories that still contain products or child categories without a migration plan.",
       "Keep attribute keys stable once products depend on them.",
     ],
+    level: "Core",
+    tags: ["taxonomy", "attributes", "navigation", "filters"],
+    steps: [
+      "Build the parent and child category trees.",
+      "Define attributes such as material, color, or size.",
+      "Set the sort order and visibility for each node.",
+      "Confirm products map to the correct categories.",
+    ],
+    cautions: [
+      "Do not delete categories with products or children without a migration plan.",
+      "Keep attribute keys stable once products depend on them.",
+    ],
+    related: ["/admin/products", "/admin/navigation"],
   },
   {
     title: "Inventory",
@@ -159,6 +286,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Inventory corrections should follow a business reason so future audits stay understandable.",
       "Always verify the variant you are editing; many product issues come from adjusting the wrong size or color.",
     ],
+    level: "Core",
+    tags: ["stock", "variants", "low-stock", "adjustments"],
+    steps: [
+      "Find the product and open its variant list.",
+      "Confirm you are editing the correct size and color.",
+      "Record the adjustment with a clear business reason.",
+      "Cross-check the resulting availability on the product page.",
+    ],
+    cautions: [
+      "Most stock errors come from editing the wrong variant.",
+      "Every correction should carry an auditable reason.",
+    ],
+    related: ["/admin/products"],
   },
   {
     title: "Reviews",
@@ -175,6 +315,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Moderation should follow a consistent policy so review trust is not undermined.",
       "If a review indicates a product issue, route it to catalog or operations instead of only hiding it.",
     ],
+    level: "Core",
+    tags: ["moderation", "trust", "spam", "quality"],
+    steps: [
+      "Open the pending review queue.",
+      "Read each review against the moderation policy.",
+      "Approve or reject it consistently.",
+      "Route genuine product issues to catalog or operations.",
+    ],
+    cautions: [
+      "Inconsistent moderation erodes trust in the review system.",
+      "Hiding a review does not fix the underlying product problem.",
+    ],
+    related: ["/admin/products"],
   },
   {
     title: "Homepage Hero",
@@ -191,6 +344,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Keep copy concise and outcome-driven so the hero remains readable on mobile.",
       "Check image crop behavior after major design changes.",
     ],
+    level: "Core",
+    tags: ["homepage", "campaign", "imagery", "CTA"],
+    steps: [
+      "Open the homepage hero editor.",
+      "Update the headline, call to action, and imagery.",
+      "Preview the result on both mobile and desktop.",
+      "Coordinate timing with the promo and countdown modules.",
+    ],
+    cautions: [
+      "Keep copy short so the hero stays readable on mobile.",
+      "Re-check image cropping after any major design change.",
+    ],
+    related: ["/admin/promo-banner", "/admin/countdown"],
   },
   {
     title: "Promo Banner",
@@ -207,6 +373,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Use concise copy because this area competes with the rest of the page for attention.",
       "Confirm expiry or replacement timing with the campaign owner.",
     ],
+    level: "Core",
+    tags: ["banner", "offers", "announcements", "campaign"],
+    steps: [
+      "Open the promo banner editor.",
+      "Write concise, single-focus offer messaging.",
+      "Publish and confirm the placement on the storefront.",
+      "Schedule its replacement or removal.",
+    ],
+    cautions: [
+      "Long copy competes with the rest of the page for attention.",
+      "Confirm expiry timing with the campaign owner.",
+    ],
+    related: ["/admin/hero", "/admin/coupons"],
   },
   {
     title: "Countdown Deal",
@@ -223,6 +402,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Always verify the target end time in the intended timezone.",
       "Remove expired messaging promptly to avoid trust issues.",
     ],
+    level: "Core",
+    tags: ["urgency", "timer", "seasonal", "conversion"],
+    steps: [
+      "Open the countdown deal configuration.",
+      "Set the offer details and the target end time.",
+      "Verify the timezone before saving.",
+      "Pair it with matching product emphasis on the homepage.",
+    ],
+    cautions: [
+      "Always confirm the end time in the intended timezone.",
+      "Remove expired countdowns promptly to protect trust.",
+    ],
+    related: ["/admin/hero", "/admin/promo-banner"],
   },
   {
     title: "Testimonials",
@@ -239,6 +431,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Keep testimonials believable and attributable.",
       "Review localization quality if both language fields are used.",
     ],
+    level: "Core",
+    tags: ["social-proof", "trust", "content", "ordering"],
+    steps: [
+      "Open testimonials management.",
+      "Add or edit the quote, attribution, and display order.",
+      "Check localization if both language fields are used.",
+      "Save and preview the result on the storefront.",
+    ],
+    cautions: [
+      "Keep testimonials believable and clearly attributable.",
+      "Review translation quality before publishing.",
+    ],
+    related: ["/admin/hero"],
   },
   {
     title: "Newsletter",
@@ -255,6 +460,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Treat subscriber data as customer data and handle exports carefully.",
       "Operational cleanup should be deliberate so reporting remains meaningful.",
     ],
+    level: "Core",
+    tags: ["subscribers", "capture", "audience", "export"],
+    steps: [
+      "Open the newsletter dashboard.",
+      "Review subscriber lists and acquisition activity.",
+      "Export audiences carefully when required.",
+      "Confirm capture is working on the storefront.",
+    ],
+    cautions: [
+      "Subscriber data is customer data — handle exports carefully.",
+      "Keep cleanup deliberate so reporting stays meaningful.",
+    ],
+    related: ["/admin/settings"],
   },
   {
     title: "Legal Pages",
@@ -271,6 +489,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Coordinate legal wording changes with business owners before publishing.",
       "When store operations change, revisit refund and privacy policies immediately.",
     ],
+    level: "Sensitive",
+    tags: ["policies", "terms", "compliance", "refunds"],
+    steps: [
+      "Open the legal page you need to change.",
+      "Edit the policy, terms, or disclosure text.",
+      "Align the wording with real payment, shipping, and return behavior.",
+      "Publish after a business-owner review.",
+    ],
+    cautions: [
+      "Coordinate legal wording with decision-makers before publishing.",
+      "Revisit refund and privacy policies whenever operations change.",
+    ],
+    related: ["/admin/settings", "/admin/payments"],
   },
   {
     title: "Navigation Menu",
@@ -287,6 +518,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "After changing links, verify the destination pages exist and are visible.",
       "Avoid overloading top-level navigation with too many competing options.",
     ],
+    level: "Core",
+    tags: ["header", "footer", "links", "merchandising"],
+    steps: [
+      "Open the navigation menu editor.",
+      "Add, reorder, or remove links.",
+      "Verify each destination exists and is visible.",
+      "Keep the top level focused on priorities.",
+    ],
+    cautions: [
+      "Broken links damage navigation trust — test every destination.",
+      "Avoid overloading the top level with competing options.",
+    ],
+    related: ["/admin/categories"],
   },
   {
     title: "Settings",
@@ -303,6 +547,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Store-wide settings can affect multiple pages at once, so verify broad impact before saving.",
       "Use the dedicated Payments and Shipping sections for secret or integration-specific configuration.",
     ],
+    level: "Sensitive",
+    tags: ["store-wide", "contact", "footer", "backup"],
+    steps: [
+      "Open store settings.",
+      "Update contact, checkout, or footer values.",
+      "Review the broad impact of the change.",
+      "Save, then spot-check the affected pages.",
+    ],
+    cautions: [
+      "Store-wide settings can change many pages at once.",
+      "Use Payments and Shipping for secret integration configuration.",
+    ],
+    related: ["/admin/payments", "/admin/shipping"],
   },
   {
     title: "Roles & Permissions",
@@ -319,6 +576,19 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Permission changes take effect immediately for protected areas.",
       "Review Help topics and real workflows together when designing new access patterns.",
     ],
+    level: "Sensitive",
+    tags: ["RBAC", "access", "delegation", "audit"],
+    steps: [
+      "Open Roles & Permissions.",
+      "Select the role you want to adjust.",
+      "Open or restrict specific sections and actions.",
+      "Audit the effective access before finishing.",
+    ],
+    cautions: [
+      "Permission changes apply immediately to protected areas.",
+      "Design access against real workflows, not assumptions.",
+    ],
+    related: ["/admin/users", "/admin/help"],
   },
   {
     title: "Help Center",
@@ -335,6 +605,99 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "If a section is missing here, the role likely does not have permission to open it.",
       "Use this page together with Roles & Permissions to design role-specific admin experiences.",
     ],
+    level: "Core",
+    tags: ["onboarding", "guidance", "permissions", "reference"],
+    steps: [
+      "Open the Help Center.",
+      "Search or filter to the section you need.",
+      "Follow its steps, guidance, and cautions.",
+      "Pair it with Roles & Permissions when designing roles.",
+    ],
+    cautions: [
+      "A missing section usually means the role lacks permission.",
+      "Use alongside Roles & Permissions to shape each role's experience.",
+    ],
+    related: ["/admin/roles"],
+  },
+];
+
+export const ADMIN_HELP_QUICK_START: AdminHelpQuickStart[] = [
+  {
+    title: "Onboard a new operator",
+    description: "Give a new team member a safe, focused start on their first day.",
+    href: "/admin",
+    steps: [
+      "Create their account under Users and assign the right role.",
+      "Confirm they only see the sections their role allows.",
+      "Point them to the Dashboard for daily triage.",
+      "Ask them to read the guides for each section they own.",
+    ],
+  },
+  {
+    title: "Process an order end to end",
+    description: "Take an order from placement to delivery without slips.",
+    href: "/admin/orders",
+    steps: [
+      "Verify the payment has cleared under Payments.",
+      "Confirm the shipping address and method.",
+      "Dispatch and update the shipping status.",
+      "Mark delivered only once payment and shipment are confirmed.",
+    ],
+  },
+  {
+    title: "Launch a homepage campaign",
+    description: "Coordinate the storefront surfaces for a promotion.",
+    href: "/admin/hero",
+    steps: [
+      "Update the Homepage Hero with the campaign message.",
+      "Add a Promo Banner for the supporting offer.",
+      "Schedule a Countdown Deal for urgency.",
+      "Create matching Coupons and verify the discount math.",
+    ],
+  },
+  {
+    title: "Publish a new product",
+    description: "Add a product that is complete and correctly categorized.",
+    href: "/admin/products",
+    steps: [
+      "Confirm the category and its attributes exist.",
+      "Create the product with images, pricing, and SKU.",
+      "Set variant inventory under Inventory.",
+      "Publish only after every field is verified.",
+    ],
+  },
+];
+
+export const ADMIN_HELP_FAQ: AdminHelpFaq[] = [
+  {
+    question: "Why can't I see a section that a colleague can?",
+    answer:
+      "The Help Center and the admin menu are filtered by permission. If a section is missing, your role does not currently have access to it. Ask an administrator to review your role under Roles & Permissions.",
+  },
+  {
+    question: "Do permission changes take effect immediately?",
+    answer:
+      "Yes. Once a role is updated under Roles & Permissions, the change applies right away to menus, pages, and protected APIs. Refresh the page to see the updated navigation.",
+  },
+  {
+    question: "Where do I change payment or shipping credentials?",
+    answer:
+      "Sensitive integration keys live in the dedicated Payments and Shipping sections, not in general Settings. Only users with the matching management permission should edit them, and UAT and production keys must never be mixed.",
+  },
+  {
+    question: "How should I remove a user who has left?",
+    answer:
+      "Prefer deactivation over deletion when the account may still be referenced by past orders or operational records. Deletion is only safe when nothing depends on the account.",
+  },
+  {
+    question: "What is the difference between the guidance and cautions on a guide?",
+    answer:
+      "Guidance describes the recommended way to operate a section. Cautions call out the common mistakes and risky actions that cause the most support issues, so review both before acting.",
+  },
+  {
+    question: "Can I edit the storefront without a code deployment?",
+    answer:
+      "Yes. Content surfaces such as the Hero, Promo Banner, Countdown, Testimonials, Navigation, and Legal Pages are all editable from the admin without releasing new code.",
   },
 ];
 
