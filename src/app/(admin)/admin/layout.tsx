@@ -24,6 +24,7 @@ const pageTitles: Record<string, string> = {
   "/admin/coupons": "Coupons",
   "/admin/reviews": "Reviews",
   "/admin/hero": "Homepage Hero",
+  "/admin/contact": "Contact",
   "/admin/help": "Help Center",
   "/admin/roles": "Roles & Permissions",
   "/admin/settings": "Settings",

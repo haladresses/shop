@@ -214,6 +214,35 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
     related: ["/admin/roles"],
   },
   {
+    title: "Contact Us",
+    href: "/admin/contact",
+    permission: "admin.contact.view",
+    category: "Operations",
+    level: "Core",
+    summary: "Read and manage storefront contact messages, and keep the public contact details accurate across the whole site.",
+    tags: ["messages", "inbox", "contact info", "support"],
+    outcomes: [
+      "Read every message sent from the storefront contact form.",
+      "Mark messages as read, archive them, or delete them.",
+      "Edit the public phone, WhatsApp, email, address, and Instagram used across the site.",
+    ],
+    guidance: [
+      "Triage new messages promptly and archive them once handled to keep the inbox clean.",
+      "Contact details you edit here update the storefront Contact page and footer instantly.",
+    ],
+    steps: [
+      "Open the Inbox tab and filter by New to see unhandled messages.",
+      "Reach the customer by phone, WhatsApp, or email, then mark the message read.",
+      "Archive or delete messages you no longer need.",
+      "Use the Contact details tab to update the public phone, address, and social links.",
+    ],
+    cautions: [
+      "Deleting a message is permanent — archive instead when unsure.",
+      "Contact details here are public and site-wide; double-check before saving.",
+    ],
+    related: ["/admin/users", "/admin/settings"],
+  },
+  {
     title: "Products",
     href: "/admin/products",
     permission: "admin.products.view",
@@ -947,6 +976,19 @@ export const ADMIN_HELP_ARABIC: Record<string, AdminHelpTopicArabic> = {
     guidance: [
       "تغييرات الصلاحيات تُطبّق فوراً على المناطق المحمية.",
       "راجع Help وسير العمل الفعلي معاً عند تصميم أنماط وصول جديدة.",
+    ],
+  },
+  "/admin/contact": {
+    title: "اتصل بنا",
+    summary: "اقرأ وأدر رسائل نموذج التواصل من المتجر، وحافظ على دقة بيانات التواصل العامة عبر الموقع.",
+    outcomes: [
+      "قراءة كل رسالة مرسلة من نموذج التواصل في المتجر.",
+      "تعليم الرسائل كمقروءة أو أرشفتها أو حذفها.",
+      "تعديل الهاتف والواتساب والبريد والعنوان والانستغرام المعروضة في الموقع.",
+    ],
+    guidance: [
+      "تعامل مع الرسائل الجديدة بسرعة وأرشفها بعد المعالجة لإبقاء صندوق الوارد مرتباً.",
+      "بيانات التواصل التي تعدلها هنا تُحدّث صفحة اتصل بنا والتذييل فوراً.",
     ],
   },
   "/admin/help": {
