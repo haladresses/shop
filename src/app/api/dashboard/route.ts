@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
+import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, unauthorized, forbidden, serverError } from "@/lib/api/response";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await getAuthFromRequest(req);
     if (!user) return unauthorized();
-    if (!isAdminRole(user.role)) return forbidden();
+    if (!(await userHasPermission(user, "admin.dashboard.view"))) return forbidden();
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);

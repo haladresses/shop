@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/db";
 import { verifyPassword, createSession } from "@/lib/auth";
+import { getPermissionsForRole } from "@/lib/permissions";
 import { loginSchema } from "@/lib/validations/auth";
 import { ok, error, serverError } from "@/lib/api/response";
 
@@ -20,6 +21,7 @@ export async function POST(req: NextRequest) {
     if (!valid) return error("Invalid credentials", 401);
 
     const token = await createSession(user.id);
+  const permissions = await getPermissionsForRole(user.role);
 
     const cookieStore = await cookies();
     cookieStore.set("session_token", token, {
@@ -38,6 +40,7 @@ export async function POST(req: NextRequest) {
         nameAr: user.nameAr,
         role: user.role,
         avatar: user.avatar,
+        permissions,
       },
     });
   } catch (e) {

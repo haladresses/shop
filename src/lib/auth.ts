@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import prisma from "./db";
 import { Role } from "@prisma/client";
+import { getPermissionsForRole, roleHasPermission } from "@/lib/permissions";
 
 export const SALT_ROUNDS = 12;
 
@@ -62,6 +63,13 @@ export async function getCurrentUser() {
   return getSessionUser(token);
 }
 
+export async function getCurrentUserWithPermissions() {
+  const user = await getCurrentUser();
+  if (!user) return null;
+  const permissions = await getPermissionsForRole(user.role);
+  return { ...user, permissions };
+}
+
 export async function requireAuth(allowedRoles?: Role[]) {
   const user = await getCurrentUser();
   if (!user) throw new Error("UNAUTHORIZED");
@@ -76,6 +84,20 @@ export async function getAuthFromRequest(req: NextRequest) {
 
   if (!token) return null;
   return getSessionUser(token);
+}
+
+export async function userHasPermission(user: { role: Role }, permission: string): Promise<boolean> {
+  return roleHasPermission(user.role, permission);
+}
+
+export async function userHasAnyPermission(
+  user: { role: Role },
+  permissions: string[]
+): Promise<boolean> {
+  for (const permission of permissions) {
+    if (await roleHasPermission(user.role, permission)) return true;
+  }
+  return false;
 }
 
 export function isAdminRole(role: Role): boolean {

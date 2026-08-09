@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole, hashPassword } from "@/lib/auth";
+import { getAuthFromRequest, hashPassword, userHasPermission } from "@/lib/auth";
 import { ok, paginated, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { getPaginationParams } from "@/lib/utils";
 import { Role } from "@prisma/client";
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getAuthFromRequest(req);
     if (!user) return unauthorized();
-    if (!isAdminRole(user.role)) return forbidden();
+    if (!(await userHasPermission(user, "admin.users.view"))) return forbidden();
 
     const { page, pageSize, skip } = getPaginationParams(req.nextUrl.searchParams);
     const search = req.nextUrl.searchParams.get("search") || "";
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
-    if (!isAdminRole(admin.role)) return forbidden();
+    if (!(await userHasPermission(admin, "admin.users.manage"))) return forbidden();
 
     const body = await req.json();
     const parsed = createUserSchema.safeParse(body);

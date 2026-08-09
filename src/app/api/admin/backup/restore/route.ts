@@ -4,9 +4,9 @@ import { promises as fsp } from "fs";
 import os from "os";
 import path from "path";
 import { randomUUID } from "crypto";
-import { Role, BackupStatus } from "@prisma/client";
+import { BackupStatus } from "@prisma/client";
 import prisma from "@/lib/db";
-import { getAuthFromRequest } from "@/lib/auth";
+import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { restoreBackup, BACKUP_DIR } from "@/lib/backup";
 
@@ -18,9 +18,7 @@ export async function POST(req: NextRequest) {
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
-    // Restoring overwrites the live database and files — the most destructive
-    // action in the admin panel, so it is limited to super admins only.
-    if (admin.role !== Role.SUPER_ADMIN) return forbidden();
+    if (!(await userHasPermission(admin, "admin.backups.restore"))) return forbidden();
 
     const formData = await req.formData();
     const confirm = formData.get("confirm");

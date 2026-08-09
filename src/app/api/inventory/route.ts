@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole, isSellerOrAdmin } from "@/lib/auth";
+import { getAuthFromRequest, userHasAnyPermission, userHasPermission } from "@/lib/auth";
 import { ok, paginated, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { z } from "zod";
 
@@ -8,7 +8,10 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getAuthFromRequest(req);
     if (!user) return unauthorized();
-    if (!isSellerOrAdmin(user.role)) return forbidden();
+    if (!(await userHasAnyPermission(user, ["admin.inventory.view", "seller.inventory.view"]))) {
+      return forbidden();
+    }
+    const canViewAllInventory = await userHasPermission(user, "admin.inventory.view");
 
     const sp = req.nextUrl.searchParams;
     const page = Math.max(1, parseInt(sp.get("page") || "1"));
@@ -34,7 +37,7 @@ export async function GET(req: NextRequest) {
                   nameEn: true,
                   nameAr: true,
                   sku: true,
-                  ...(isAdminRole(user.role) ? {} : { sellerId: true }),
+                  ...(canViewAllInventory ? {} : { sellerId: true }),
                 },
               },
             },
@@ -61,7 +64,9 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getAuthFromRequest(req);
     if (!user) return unauthorized();
-    if (!isSellerOrAdmin(user.role)) return forbidden();
+    if (!(await userHasAnyPermission(user, ["admin.inventory.manage", "seller.inventory.manage"]))) {
+      return forbidden();
+    }
 
     const body = await req.json();
     const parsed = adjustSchema.safeParse(body);

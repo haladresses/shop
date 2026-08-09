@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole, isSellerOrAdmin } from "@/lib/auth";
+import { getAuthFromRequest, userHasAnyPermission, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
 import { productUpdateSchema } from "@/lib/validations/product";
 import { Prisma } from "@prisma/client";
@@ -42,7 +42,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const user = await getAuthFromRequest(req);
     if (!user) return unauthorized();
-    if (!isSellerOrAdmin(user.role)) return forbidden();
+    if (!(await userHasAnyPermission(user, ["admin.products.manage", "seller.products.manage"]))) {
+      return forbidden();
+    }
 
     const { id } = await params;
     const body = await req.json();
@@ -52,7 +54,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const product = await prisma.product.findUnique({ where: { id } });
     if (!product) return notFound("Product");
 
-    if (!isAdminRole(user.role) && product.sellerId !== user.id) return forbidden();
+    if (!(await userHasPermission(user, "admin.products.manage")) && product.sellerId !== user.id) {
+      return forbidden();
+    }
 
     const { images, variants, attributes, ...scalar } = parsed.data;
 
@@ -112,13 +116,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const user = await getAuthFromRequest(req);
     if (!user) return unauthorized();
-    if (!isSellerOrAdmin(user.role)) return forbidden();
+    if (!(await userHasAnyPermission(user, ["admin.products.manage", "seller.products.manage"]))) {
+      return forbidden();
+    }
 
     const { id } = await params;
     const product = await prisma.product.findUnique({ where: { id } });
     if (!product) return notFound("Product");
 
-    if (!isAdminRole(user.role) && product.sellerId !== user.id) return forbidden();
+    if (!(await userHasPermission(user, "admin.products.manage")) && product.sellerId !== user.id) {
+      return forbidden();
+    }
 
     await prisma.product.delete({ where: { id } });
     return ok({ message: "Product deleted" });

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
+import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
 import { Role } from "@prisma/client";
 import { z } from "zod";
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
-    if (!isAdminRole(admin.role)) return forbidden();
+    if (!(await userHasPermission(admin, "admin.users.view"))) return forbidden();
 
     const { id } = await params;
     const user = await prisma.user.findUnique({
@@ -47,12 +47,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
-    if (!isAdminRole(admin.role)) return forbidden();
+    if (!(await userHasPermission(admin, "admin.users.manage"))) return forbidden();
 
     const { id } = await params;
     const body = await req.json();
     const parsed = updateSchema.safeParse(body);
     if (!parsed.success) return error(parsed.error.issues[0].message);
+
+    if (parsed.data.role && !(await userHasPermission(admin, "admin.users.assign_roles"))) {
+      return forbidden();
+    }
 
     const user = await prisma.user.update({
       where: { id },
@@ -70,7 +74,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
-    if (admin.role !== Role.SUPER_ADMIN) return forbidden();
+    if (!(await userHasPermission(admin, "admin.users.delete")) && admin.role !== Role.SUPER_ADMIN) {
+      return forbidden();
+    }
 
     const { id } = await params;
     if (id === admin.id) return error("Cannot delete your own account");

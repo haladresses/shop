@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
+import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
 import { z } from "zod";
 
@@ -35,7 +35,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
-    if (!isAdminRole(admin.role)) return forbidden();
+    if (!(await userHasPermission(admin, "admin.categories.manage"))) return forbidden();
 
     const { id } = await params;
     const body = await req.json();
@@ -55,7 +55,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
-    if (!isAdminRole(admin.role)) return forbidden();
+    if (!(await userHasPermission(admin, "admin.categories.manage"))) return forbidden();
 
     const { id } = await params;
     const hasProducts = await prisma.product.count({ where: { categoryId: id } });

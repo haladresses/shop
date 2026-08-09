@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
+import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
 import { categoryAttributesPayloadSchema } from "@/lib/validations/attribute";
 import { Prisma } from "@prisma/client";
@@ -27,7 +27,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
-    if (!isAdminRole(admin.role)) return forbidden();
+    if (!(await userHasPermission(admin, "admin.categories.manage"))) return forbidden();
 
     const { id } = await params;
     const category = await prisma.category.findUnique({ where: { id }, select: { id: true } });

@@ -20,7 +20,7 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [dbCategories, setDbCategories] = useState<StoreCategory[]>([]);
   const [navItems, setNavItems] = useState(DEFAULT_NAV_ITEMS);
-  const [user, setUser] = useState<{ nameEn?: string | null; nameAr?: string | null; email: string; role: string } | null>(null);
+  const [user, setUser] = useState<{ nameEn?: string | null; nameAr?: string | null; email: string; role: string; permissions?: string[] } | null>(null);
   const { openCartModal } = useCartModalContext();
   const { language, isArabic } = useLanguage();
   const router = useRouter();
@@ -59,10 +59,10 @@ const Header = () => {
   }, []);
 
   const dashboardHref = user
-    ? user.role === "SELLER"
-      ? "/seller"
-      : user.role === "SUPER_ADMIN" || user.role === "ADMIN" || user.role === "STAFF"
-        ? "/admin"
+    ? user.permissions?.includes("panel.admin.access")
+      ? "/admin"
+      : user.permissions?.includes("panel.seller.access")
+        ? "/seller"
         : "/my-account"
     : "/signin";
 

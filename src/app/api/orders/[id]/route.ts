@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
+import { getAuthFromRequest, userHasAnyPermission, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
 import { updateOrderSchema } from "@/lib/validations/order";
 import { buildWaselleeManualWhatsAppLink } from "@/lib/wasellee";
@@ -28,7 +28,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
 
     if (!order) return notFound("Order");
-    if (!isAdminRole(user.role) && order.userId !== user.id) return forbidden();
+    const canViewAllOrders = await userHasAnyPermission(user, ["admin.orders.view", "seller.orders.view"]);
+    if (!canViewAllOrders && order.userId !== user.id) return forbidden();
 
     const payment = order.payments[0]?.method;
     const waselleeManualWhatsAppLink =
@@ -46,7 +47,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   try {
     const user = await getAuthFromRequest(req);
     if (!user) return unauthorized();
-    if (!isAdminRole(user.role)) return forbidden();
+    if (!(await userHasAnyPermission(user, ["admin.orders.manage", "seller.orders.manage"]))) {
+      return forbidden();
+    }
 
     const { id } = await params;
     const body = await req.json();

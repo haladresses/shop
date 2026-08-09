@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole, isSellerOrAdmin } from "@/lib/auth";
+import { getAuthFromRequest, userHasAnyPermission, userHasPermission } from "@/lib/auth";
 import { ok, paginated, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { slugify } from "@/lib/utils";
 import { productSchema } from "@/lib/validations/product";
@@ -63,7 +63,10 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getAuthFromRequest(req);
     if (!user) return unauthorized();
-    if (!isSellerOrAdmin(user.role)) return forbidden();
+    if (!(await userHasAnyPermission(user, ["admin.products.manage", "seller.products.manage"]))) {
+      return forbidden();
+    }
+    const canAssignSeller = await userHasPermission(user, "admin.products.manage");
 
     const body = await req.json();
     const parsed = productSchema.safeParse(body);
@@ -82,7 +85,7 @@ export async function POST(req: NextRequest) {
         attributes: attributes && Object.keys(attributes).length
           ? (attributes as Prisma.InputJsonValue)
           : Prisma.JsonNull,
-        sellerId: isAdminRole(user.role) ? (body.sellerId || null) : user.id,
+        sellerId: canAssignSeller ? (body.sellerId || null) : user.id,
         images: {
           create: images.map((img, i) => ({
             url: img.url,

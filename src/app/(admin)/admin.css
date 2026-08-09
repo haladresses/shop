@@ -2,7 +2,8 @@
 
 .admin-sidebar {
   background: #0f172a; /* slate-900 */
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* Ensure a clean sans-serif base across the admin panel */

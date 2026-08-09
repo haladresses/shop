@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
-import { getAuthFromRequest, isSellerOrAdmin } from "@/lib/auth";
+import { getAuthFromRequest, userHasAnyPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 
 const ALLOWED_TYPES: Record<string, string> = {
@@ -18,7 +18,9 @@ export async function POST(req: NextRequest) {
   try {
     const user = await getAuthFromRequest(req);
     if (!user) return unauthorized();
-    if (!isSellerOrAdmin(user.role)) return forbidden();
+    if (!(await userHasAnyPermission(user, ["admin.products.manage", "seller.uploads.manage"]))) {
+      return forbidden();
+    }
 
     const formData = await req.formData();
     const file = formData.get("file");

@@ -1,13 +1,15 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
+import { getAuthFromRequest, userHasAnyPermission } from "@/lib/auth";
 import { ok, unauthorized, forbidden, serverError } from "@/lib/api/response";
 
 export async function GET(req: NextRequest) {
   try {
     const user = await getAuthFromRequest(req);
     if (!user) return unauthorized();
-    if (!isAdminRole(user.role)) return forbidden();
+    if (!(await userHasAnyPermission(user, ["admin.orders.view", "seller.orders.view"]))) {
+      return forbidden();
+    }
 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);

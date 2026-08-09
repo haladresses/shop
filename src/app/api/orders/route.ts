@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
+import { getAuthFromRequest, userHasAnyPermission } from "@/lib/auth";
 import { ok, paginated, error, unauthorized, serverError } from "@/lib/api/response";
 import { createOrderSchema } from "@/lib/validations/order";
 import { generateOrderNumber } from "@/lib/utils";
@@ -10,6 +10,7 @@ export async function GET(req: NextRequest) {
   try {
     const user = await getAuthFromRequest(req);
     if (!user) return unauthorized();
+    const canViewAllOrders = await userHasAnyPermission(user, ["admin.orders.view", "seller.orders.view"]);
 
     const sp = req.nextUrl.searchParams;
     const page = Math.max(1, parseInt(sp.get("page") || "1"));
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
     const search = sp.get("search") || "";
 
     const where = {
-      ...(isAdminRole(user.role) ? {} : { userId: user.id }),
+      ...(canViewAllOrders ? {} : { userId: user.id }),
       ...(status && { status: status as never }),
       ...(paymentStatus && { paymentStatus: paymentStatus as never }),
       ...(search && {

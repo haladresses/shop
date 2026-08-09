@@ -65,6 +65,7 @@ const TYPE_BADGE: Record<Backup["type"], string> = {
 
 export default function BackupSettings() {
   const [role, setRole] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [backups, setBackups] = useState<Backup[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -86,7 +87,11 @@ export default function BackupSettings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const normalizedConfirmText = confirmText.trim().toUpperCase();
 
-  const isSuperAdmin = role === "SUPER_ADMIN";
+  const canViewBackups = permissions.includes("admin.backups.view");
+  const canCreateBackups = permissions.includes("admin.backups.create");
+  const canScheduleBackups = permissions.includes("admin.backups.schedule");
+  const canRestoreBackups = permissions.includes("admin.backups.restore");
+  const canDeleteBackups = permissions.includes("admin.backups.delete");
 
   const loadAll = useCallback(async () => {
     const [meRes, backupsRes, scheduleRes] = await Promise.all([
@@ -94,7 +99,10 @@ export default function BackupSettings() {
       fetch("/api/admin/backup").then((r) => r.json()),
       fetch("/api/admin/backup/schedule").then((r) => r.json()),
     ]);
-    if (meRes.success) setRole(meRes.data.role);
+    if (meRes.success) {
+      setRole(meRes.data.role);
+      setPermissions(meRes.data.permissions || []);
+    }
     if (backupsRes.success) setBackups(backupsRes.data);
     if (scheduleRes.success) setSchedule((s) => ({ ...s, ...scheduleRes.data }));
     setLoading(false);
@@ -206,6 +214,14 @@ export default function BackupSettings() {
       </div>
     );
 
+  if (!canViewBackups) {
+    return (
+      <div className="admin-card p-6 text-sm text-amber-700 bg-amber-50 flex items-center gap-2">
+        <LuShieldAlert size={16} /> You do not have permission to access backup management.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {message && (
@@ -236,7 +252,7 @@ export default function BackupSettings() {
           </div>
           <button
             onClick={createBackup}
-            disabled={creating}
+            disabled={creating || !canCreateBackups}
             className="admin-btn admin-btn-primary inline-flex items-center gap-2 whitespace-nowrap"
           >
             <LuDatabaseBackup size={16} />
@@ -306,7 +322,7 @@ export default function BackupSettings() {
         <div className="mt-4">
           <button
             onClick={saveSchedule}
-            disabled={savingSchedule}
+            disabled={savingSchedule || !canScheduleBackups}
             className="admin-btn admin-btn-secondary"
           >
             {savingSchedule ? "Saving…" : "Save Schedule"}
@@ -321,7 +337,7 @@ export default function BackupSettings() {
           Upload a <code className="px-1 py-0.5 bg-slate-100 rounded">.tar.gz</code> backup archive
           (created by this same feature, on this or another server) to restore it.
         </p>
-        {isSuperAdmin ? (
+        {canRestoreBackups ? (
           <div className="flex flex-wrap items-center gap-3">
             <input
               ref={fileInputRef}
@@ -332,7 +348,7 @@ export default function BackupSettings() {
             />
             <button
               onClick={() => openRestore("upload")}
-              disabled={!restoreFile}
+              disabled={!restoreFile || !canRestoreBackups}
               className="admin-btn admin-btn-secondary inline-flex items-center gap-2"
             >
               <LuUpload size={16} /> Restore This File
@@ -340,7 +356,7 @@ export default function BackupSettings() {
           </div>
         ) : (
           <p className="text-sm text-amber-600 flex items-center gap-2">
-            <LuShieldAlert size={16} /> Only Super Admins can restore backups.
+            <LuShieldAlert size={16} /> You do not have permission to restore backups.
           </p>
         )}
       </div>
@@ -391,7 +407,7 @@ export default function BackupSettings() {
                             <LuDownload size={16} />
                           </a>
                         )}
-                        {isSuperAdmin && b.status === "COMPLETED" && (
+                        {canRestoreBackups && b.status === "COMPLETED" && (
                           <button
                             onClick={() => openRestore(b)}
                             className="p-2 rounded text-indigo-600 hover:bg-indigo-50"
@@ -400,7 +416,7 @@ export default function BackupSettings() {
                             <LuRotateCcw size={16} />
                           </button>
                         )}
-                        {isSuperAdmin && (
+                        {canDeleteBackups && (
                           <button
                             onClick={() => removeBackup(b.id)}
                             className="p-2 rounded text-red-500 hover:bg-red-50"

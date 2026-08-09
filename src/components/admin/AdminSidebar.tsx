@@ -27,47 +27,53 @@ import {
   LuMail,
   LuMenu,
   LuScale,
+  LuShield,
 } from "react-icons/lu";
 import type { IconType } from "react-icons";
+import { ADMIN_NAV_ITEMS } from "@/lib/permissions";
 
 type NavItem = {
   href: string;
   label: string;
+  permission: string;
   icon: IconType;
   color: string;
   exact?: boolean;
 };
 
 const navItems: NavItem[] = [
-  { href: "/admin", label: "Dashboard", icon: LuLayoutDashboard, color: "text-sky-400", exact: true },
-  { href: "/admin/orders", label: "Orders", icon: LuPackage, color: "text-amber-400" },
-  { href: "/admin/products", label: "Products", icon: LuShirt, color: "text-rose-400" },
-  { href: "/admin/categories", label: "Categories", icon: LuTags, color: "text-emerald-400" },
-  { href: "/admin/inventory", label: "Inventory", icon: LuWarehouse, color: "text-orange-400" },
-  { href: "/admin/users", label: "Users", icon: LuUsers, color: "text-violet-400" },
-  { href: "/admin/payments", label: "Payments", icon: LuCreditCard, color: "text-green-400" },
-  { href: "/admin/coupons", label: "Coupons", icon: LuTicket, color: "text-pink-400" },
-  { href: "/admin/shipping", label: "Shipping", icon: LuTruck, color: "text-blue-400" },
-  { href: "/admin/reviews", label: "Reviews", icon: LuStar, color: "text-yellow-400" },
-  { href: "/admin/hero", label: "Homepage Hero", icon: LuImage, color: "text-cyan-400" },
-  { href: "/admin/promo-banner", label: "Promo Banner", icon: LuGalleryHorizontalEnd, color: "text-fuchsia-400" },
-  { href: "/admin/countdown", label: "Countdown Deal", icon: LuTimer, color: "text-red-400" },
-  { href: "/admin/testimonials", label: "Testimonials", icon: LuQuote, color: "text-lime-400" },
-  { href: "/admin/newsletter", label: "Newsletter", icon: LuMail, color: "text-teal-300" },
-  { href: "/admin/legal-pages", label: "Legal Pages", icon: LuScale, color: "text-amber-300" },
-  { href: "/admin/navigation", label: "Navigation Menu", icon: LuMenu, color: "text-indigo-400" },
-  { href: "/admin/settings", label: "Settings", icon: LuSettings, color: "text-slate-300" },
+  { href: "/admin", label: "Dashboard", permission: "admin.dashboard.view", icon: LuLayoutDashboard, color: "text-sky-400", exact: true },
+  { href: "/admin/orders", label: "Orders", permission: "admin.orders.view", icon: LuPackage, color: "text-amber-400" },
+  { href: "/admin/products", label: "Products", permission: "admin.products.view", icon: LuShirt, color: "text-rose-400" },
+  { href: "/admin/categories", label: "Categories", permission: "admin.categories.view", icon: LuTags, color: "text-emerald-400" },
+  { href: "/admin/inventory", label: "Inventory", permission: "admin.inventory.view", icon: LuWarehouse, color: "text-orange-400" },
+  { href: "/admin/users", label: "Users", permission: "admin.users.view", icon: LuUsers, color: "text-violet-400" },
+  { href: "/admin/payments", label: "Payments", permission: "admin.payments.view", icon: LuCreditCard, color: "text-green-400" },
+  { href: "/admin/coupons", label: "Coupons", permission: "admin.coupons.view", icon: LuTicket, color: "text-pink-400" },
+  { href: "/admin/shipping", label: "Shipping", permission: "admin.shipping.view", icon: LuTruck, color: "text-blue-400" },
+  { href: "/admin/reviews", label: "Reviews", permission: "admin.reviews.view", icon: LuStar, color: "text-yellow-400" },
+  { href: "/admin/hero", label: "Homepage Hero", permission: "admin.hero.manage", icon: LuImage, color: "text-cyan-400" },
+  { href: "/admin/promo-banner", label: "Promo Banner", permission: "admin.promo.manage", icon: LuGalleryHorizontalEnd, color: "text-fuchsia-400" },
+  { href: "/admin/countdown", label: "Countdown Deal", permission: "admin.countdown.manage", icon: LuTimer, color: "text-red-400" },
+  { href: "/admin/testimonials", label: "Testimonials", permission: "admin.testimonials.manage", icon: LuQuote, color: "text-lime-400" },
+  { href: "/admin/newsletter", label: "Newsletter", permission: "admin.newsletter.view", icon: LuMail, color: "text-teal-300" },
+  { href: "/admin/legal-pages", label: "Legal Pages", permission: "admin.legal.manage", icon: LuScale, color: "text-amber-300" },
+  { href: "/admin/navigation", label: "Navigation Menu", permission: "admin.navigation.manage", icon: LuMenu, color: "text-indigo-400" },
+  { href: "/admin/settings", label: "Settings", permission: "admin.settings.manage", icon: LuSettings, color: "text-slate-300" },
+  { href: "/admin/roles", label: "Roles", permission: "admin.roles.view", icon: LuShield, color: "text-purple-300" },
 ];
 
 type AdminSidebarProps = {
   mobileOpen?: boolean;
   onClose?: () => void;
+  permissions?: string[];
 };
 
-export default function AdminSidebar({ mobileOpen = false, onClose }: AdminSidebarProps) {
+export default function AdminSidebar({ mobileOpen = false, onClose, permissions = [] }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const allowedKeys = new Set(permissions.length > 0 ? permissions : ADMIN_NAV_ITEMS.map((item) => item.permission));
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
@@ -127,7 +133,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose }: AdminSideb
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
-          {navItems.map((item) => {
+          {navItems.filter((item) => allowedKeys.has(item.permission)).map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href, item.exact);
             return (
@@ -145,7 +151,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose }: AdminSideb
         </nav>
 
         {/* Bottom */}
-        <div className="px-3 py-4 border-t border-slate-700/60 space-y-1">
+        <div className="shrink-0 px-3 py-4 border-t border-slate-700/60 space-y-1">
           <Link
             href="/"
             className={`admin-nav-link ${collapsed ? "lg:justify-center" : ""}`}

@@ -63,10 +63,10 @@ const Signin = () => {
         return;
       }
 
-      const role = data.data.user.role;
-      if (role === "SUPER_ADMIN" || role === "ADMIN" || role === "STAFF") {
+      const permissions: string[] = data.data.user.permissions || [];
+      if (permissions.includes("panel.admin.access")) {
         router.push("/admin");
-      } else if (role === "SELLER") {
+      } else if (permissions.includes("panel.seller.access")) {
         router.push("/seller");
       } else {
         router.push("/my-account");

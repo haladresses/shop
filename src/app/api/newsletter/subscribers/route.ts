@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
+import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, paginated, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 
 export async function GET(req: NextRequest) {
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
-    if (!isAdminRole(admin.role)) return forbidden();
+    if (!(await userHasPermission(admin, "admin.newsletter.view"))) return forbidden();
 
     const sp = req.nextUrl.searchParams;
     const page = Math.max(1, parseInt(sp.get("page") || "1"));
@@ -39,7 +39,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
-    if (!isAdminRole(admin.role)) return forbidden();
+    if (!(await userHasPermission(admin, "admin.newsletter.manage"))) return forbidden();
 
     const id = req.nextUrl.searchParams.get("id");
     if (!id) return error("Missing subscriber id");

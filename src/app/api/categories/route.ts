@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, isAdminRole } from "@/lib/auth";
+import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, paginated, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { slugify } from "@/lib/utils";
 import { z } from "zod";
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
-    if (!isAdminRole(admin.role)) return forbidden();
+    if (!(await userHasPermission(admin, "admin.categories.manage"))) return forbidden();
 
     const body = await req.json();
     const parsed = categorySchema.safeParse(body);
