@@ -32,6 +32,8 @@ const pageTitles: Record<string, string> = {
 
 function resolveTitle(pathname: string): string {
   if (pageTitles[pathname]) return pageTitles[pathname];
+  // Product WhatsApp reviews: /admin/products/<id>/whatsapp-reviews
+  if (/^\/admin\/products\/[^/]+\/whatsapp-reviews$/.test(pathname)) return "WhatsApp Reviews";
   // Edit product: /admin/products/<id>
   if (/^\/admin\/products\/[^/]+$/.test(pathname)) return "Edit Product";
   return "Admin";

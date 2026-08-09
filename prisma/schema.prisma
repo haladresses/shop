@@ -197,15 +197,31 @@ model Product {
 
   category   Category         @relation(fields: [categoryId], references: [id])
   seller     User?            @relation("SellerProducts", fields: [sellerId], references: [id])
-  images     ProductImage[]
-  variants   ProductVariant[]
-  orderItems OrderItem[]
-  reviews    Review[]
-  wishlist   Wishlist[]
+  images          ProductImage[]
+  variants        ProductVariant[]
+  orderItems      OrderItem[]
+  reviews         Review[]
+  wishlist        Wishlist[]
+  whatsappReviews ProductWhatsappReview[]
 
   @@index([categoryId])
   @@index([sellerId])
   @@map("products")
+}
+
+model ProductWhatsappReview {
+  id           String   @id @default(cuid())
+  productId    String
+  imageUrl     String
+  customerName String?
+  caption      String?
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_whatsapp_reviews")
 }
 
 model ProductImage {

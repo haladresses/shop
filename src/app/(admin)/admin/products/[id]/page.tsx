@@ -1,7 +1,7 @@
 "use client";
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { LuChevronLeft } from "react-icons/lu";
+import { LuChevronLeft, LuMessageSquare } from "react-icons/lu";
 import ProductForm, {
   buildProductPayload,
   type ProductFormValue,
@@ -99,12 +99,20 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
 
   return (
     <div>
-      <div className="mb-5">
-        <Link href="/admin/products" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-2">
-          <LuChevronLeft size={16} /> Back to products
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link href="/admin/products" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-2">
+            <LuChevronLeft size={16} /> Back to products
+          </Link>
+          <h1 className="text-xl font-semibold text-slate-800">Edit Product</h1>
+          <p className="text-sm text-slate-500">Update images, specifications and variants.</p>
+        </div>
+        <Link
+          href={`/admin/products/${id}/whatsapp-reviews`}
+          className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-4 py-2 text-sm font-semibold text-green-700 transition-colors hover:bg-green-100"
+        >
+          <LuMessageSquare size={16} /> WhatsApp Reviews
         </Link>
-        <h1 className="text-xl font-semibold text-slate-800">Edit Product</h1>
-        <p className="text-sm text-slate-500">Update images, specifications and variants.</p>
       </div>
 
       {loadError ? (

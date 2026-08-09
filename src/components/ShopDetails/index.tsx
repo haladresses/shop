@@ -52,7 +52,11 @@ const ShopDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeVariant, setActiveVariant] = useState<ApiProductVariant | null>(null);
   const [activeSize, setActiveSize] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<"description" | "specs" | "reviews">("description");
+  const [activeTab, setActiveTab] = useState<"description" | "specs" | "reviews" | "whatsapp">("description");
+  const [waReviews, setWaReviews] = useState<
+    { id: string; imageUrl: string; customerName: string | null; caption: string | null }[]
+  >([]);
+  const [waLightbox, setWaLightbox] = useState<string | null>(null);
 
   useEffect(() => {
     const slug = new URLSearchParams(window.location.search).get("slug");
@@ -88,6 +92,21 @@ const ShopDetails = () => {
   useEffect(() => {
     if (product) dispatch(updateproductDetails({ ...product }));
   }, [product, dispatch]);
+
+  // WhatsApp review screenshots for this product.
+  useEffect(() => {
+    if (!api?.id) return;
+    let ignore = false;
+    fetch(`/api/products/${api.id}/whatsapp-reviews`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (!ignore && d.success) setWaReviews(d.data);
+      })
+      .catch(() => {});
+    return () => {
+      ignore = true;
+    };
+  }, [api?.id]);
 
   const images = product?.imgs?.previews ?? [];
 
@@ -428,6 +447,7 @@ const ShopDetails = () => {
               ["description", isArabic ? "الوصف" : "Description"],
               ["specs", isArabic ? "المواصفات" : "Specifications"],
               ["reviews", `${isArabic ? "التقييمات" : "Reviews"} (${product.reviews})`],
+              ["whatsapp", `${isArabic ? "تقييمات واتساب" : "WhatsApp Reviews"} (${waReviews.length})`],
             ] as const).map(([id, label]) => (
               <button
                 key={id}
@@ -472,12 +492,75 @@ const ShopDetails = () => {
                   : "No reviews yet."}
               </div>
             )}
+
+            {activeTab === "whatsapp" && (
+              waReviews.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {waReviews.map((r) => (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setWaLightbox(r.imageUrl)}
+                      className="group text-left overflow-hidden rounded-xl border border-gray-3 bg-white hover:shadow-1 transition-shadow"
+                    >
+                      <div className="relative aspect-[3/4] bg-gray-1 overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={r.imageUrl}
+                          alt={r.customerName || "WhatsApp review"}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                        />
+                      </div>
+                      {(r.customerName || r.caption) && (
+                        <div className="p-2.5">
+                          {r.customerName && <div className="text-custom-sm font-medium text-dark">{r.customerName}</div>}
+                          {r.caption && <div className="mt-0.5 text-custom-xs text-dark-4 line-clamp-2">{r.caption}</div>}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-dark-4">
+                  {isArabic ? "لا توجد تقييمات واتساب بعد." : "No WhatsApp reviews yet."}
+                </p>
+              )
+            )}
           </div>
         </div>
       </section>
 
       <RecentlyViewdItems categorySlug={api.category?.slug} excludeId={api.id} />
       <Newsletter />
+
+      {/* WhatsApp review lightbox */}
+      {waLightbox && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setWaLightbox(null)}
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+        >
+          <button
+            type="button"
+            onClick={() => setWaLightbox(null)}
+            aria-label="Close"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+          >
+            <svg width="18" height="18" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1L13 13M13 1L1 13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={waLightbox}
+            alt="WhatsApp review"
+            onClick={(e) => e.stopPropagation()}
+            className="max-h-[90vh] max-w-[92vw] rounded-xl object-contain shadow-2xl"
+          />
+        </div>
+      )}
     </>
   );
 };
