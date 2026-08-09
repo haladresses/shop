@@ -87,7 +87,7 @@ const TOPIC_TABS: { id: TopicTab; label: string; icon: typeof LuBookOpen }[] = [
   { id: "cautions", label: "Cautions", icon: LuTriangleAlert },
 ];
 
-export default function HelpCenterClient({ visibleTopics, hiddenCount }: Props) {
+export default function HelpCenterClient({ visibleTopics }: Props) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<AdminHelpTopic["category"] | "all">("all");
   const [level, setLevel] = useState<AdminHelpLevel | "all">("all");
@@ -123,13 +123,6 @@ export default function HelpCenterClient({ visibleTopics, hiddenCount }: Props) 
     });
   }, [category, level, query, visibleTopics]);
 
-  const categorySummary = CATEGORY_ORDER.map((item) => ({
-    category: item,
-    count: visibleTopics.filter((topic) => topic.category === item).length,
-  })).filter((item) => item.count > 0);
-
-  const sensitiveCount = visibleTopics.filter((topic) => topic.level === "Sensitive").length;
-
   const topicsWithMeta = useMemo(
     () =>
       filteredTopics.map((topic) => ({
@@ -162,52 +155,17 @@ export default function HelpCenterClient({ visibleTopics, hiddenCount }: Props) 
       <section className="admin-card overflow-hidden border border-slate-200">
         <div className="relative px-6 py-8">
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-slate-100/70 blur-2xl" />
-          <div className="relative flex flex-wrap items-start justify-between gap-6">
-            <div className="max-w-3xl space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white">
-                <LuBookOpen size={14} /> Admin Help Center
-              </div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-                A precise, role-aware guide to running the store
-              </h1>
-              <p className="text-sm leading-6 text-slate-500">
-                Every guide explains the purpose of a section, the actions it supports, the exact steps to complete common tasks, and
-                the cautions that prevent costly mistakes. Content is filtered by permission, so you only ever see guidance for the
-                screens you can actually use.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <StatTile label="Visible guides" value={visibleTopics.length} />
-              <StatTile label="Restricted" value={hiddenCount} />
-              <StatTile label="Categories" value={categorySummary.length} />
-              <StatTile label="Sensitive" value={sensitiveCount} tone="amber" />
-            </div>
+          <div className="relative max-w-3xl space-y-3">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+              A precise, role-aware guide to running the store
+            </h1>
+            <p className="text-sm leading-6 text-slate-500">
+              Every guide explains the purpose of a section, the actions it supports, the exact steps to complete common tasks, and
+              the cautions that prevent costly mistakes. Content is filtered by permission, so you only ever see guidance for the
+              screens you can actually use.
+            </p>
           </div>
         </div>
-        {categorySummary.length > 0 ? (
-          <div className="grid gap-4 border-t border-slate-200 bg-slate-50/60 px-6 py-5 sm:grid-cols-2 lg:grid-cols-4">
-            {categorySummary.map((item) => {
-              const meta = CATEGORY_META[item.category];
-              return (
-                <a
-                  key={item.category}
-                  href={`#category-${item.category}`}
-                  className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-4 transition-colors duration-200 hover:border-slate-300 hover:bg-slate-50"
-                >
-                  <div>
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-                      <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
-                      {item.category}
-                    </div>
-                    <div className="mt-2 text-2xl font-semibold text-slate-800">{item.count}</div>
-                    <div className="mt-0.5 text-xs text-slate-500">available guides</div>
-                  </div>
-                  <LuChevronRight size={18} className="text-slate-300 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-slate-500" />
-                </a>
-              );
-            })}
-          </div>
-        ) : null}
       </section>
 
       {/* Quick start */}
@@ -273,21 +231,22 @@ export default function HelpCenterClient({ visibleTopics, hiddenCount }: Props) 
       </section>
 
       {/* Toolbar */}
-      <section className="admin-card sticky top-3 z-20 p-5 shadow-sm">
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-          <label className="group relative block">
-            <LuSearch size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-focus-within:text-slate-700" />
+      <section className="admin-card p-4 sm:p-5">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <label className="group relative block min-w-0 flex-1">
+            <LuSearch size={16} className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-focus-within:text-slate-700" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="admin-input rounded-[20px] border-slate-200 bg-white pl-11 pr-10 transition-colors duration-200 focus:border-slate-300"
-              placeholder="Search by section, workflow, tag, or keyword"
+              style={{ paddingLeft: "3rem", paddingRight: query ? "2.25rem" : "0.875rem" }}
+              className="admin-input !rounded-full border-slate-200 bg-white transition-colors duration-200 focus:border-slate-300"
+              placeholder="Search guides"
             />
             {query ? (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                 aria-label="Clear search"
               >
                 <LuX size={14} />
@@ -295,27 +254,30 @@ export default function HelpCenterClient({ visibleTopics, hiddenCount }: Props) 
             ) : null}
           </label>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="w-28 shrink-0 sm:w-44">
             <select
               value={level}
               onChange={(e) => setLevel(e.target.value as AdminHelpLevel | "all")}
-              className="admin-input admin-select rounded-[20px] border-slate-200 bg-white transition-colors duration-200 focus:border-slate-300"
+              className="admin-input admin-select w-full !rounded-full border-slate-200 bg-white transition-colors duration-200 focus:border-slate-300"
             >
               <option value="all">All levels</option>
               <option value="Core">Core</option>
               <option value="Advanced">Advanced</option>
               <option value="Sensitive">Sensitive</option>
             </select>
-            {hasFilters ? (
-              <button
-                type="button"
-                onClick={resetFilters}
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-900"
-              >
-                <LuX size={13} /> Reset
-              </button>
-            ) : null}
           </div>
+
+          {hasFilters ? (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-900"
+              aria-label="Reset filters"
+              title="Reset filters"
+            >
+              <LuX size={16} />
+            </button>
+          ) : null}
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -432,16 +394,6 @@ export default function HelpCenterClient({ visibleTopics, hiddenCount }: Props) 
           </Link>
         </div>
       </section>
-    </div>
-  );
-}
-
-function StatTile({ label, value, tone = "slate" }: { label: string; value: number; tone?: "slate" | "amber" }) {
-  const toneClass = tone === "amber" ? "text-amber-600" : "text-slate-900";
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-      <div className="text-slate-500">{label}</div>
-      <div className={`mt-1 text-2xl font-semibold ${toneClass}`}>{value}</div>
     </div>
   );
 }
