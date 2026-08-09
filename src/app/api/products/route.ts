@@ -22,8 +22,10 @@ export async function GET(req: NextRequest) {
     const isBestSeller = sp.get("isBestSeller");
     const minPrice = sp.get("minPrice");
     const maxPrice = sp.get("maxPrice");
+    const sizes = (sp.get("sizes") || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const colors = (sp.get("colors") || "").split(",").map((s) => s.trim()).filter(Boolean);
 
-    // Filters shared by the product query and the price-bounds aggregate.
+    // Filters shared by the product query and the facet/price-bounds aggregates.
     const baseWhere: Prisma.ProductWhereInput = {
       ...(search && {
         OR: [
@@ -51,9 +53,18 @@ export async function GET(req: NextRequest) {
           }
         : {};
 
-    const where: Prisma.ProductWhereInput = { ...baseWhere, ...priceFilter };
+    // Size/color live on variants; a product matches if it has an active variant for each.
+    const variantConds: Prisma.ProductWhereInput[] = [];
+    if (sizes.length) variantConds.push({ variants: { some: { isActive: true, size: { in: sizes } } } });
+    if (colors.length) variantConds.push({ variants: { some: { isActive: true, color: { in: colors } } } });
 
-    const [products, total, bounds] = await Promise.all([
+    const where: Prisma.ProductWhereInput = {
+      ...baseWhere,
+      ...priceFilter,
+      ...(variantConds.length ? { AND: variantConds } : {}),
+    };
+
+    const [products, total, bounds, facetVariants] = await Promise.all([
       prisma.product.findMany({
         where,
         skip,
@@ -66,12 +77,31 @@ export async function GET(req: NextRequest) {
         },
       }),
       prisma.product.count({ where }),
-      // Price range across the category/search (ignores the current price selection).
+      // Price range across the category/search (ignores the current price/size/color selection).
       prisma.product.aggregate({ where: baseWhere, _min: { basePrice: true }, _max: { basePrice: true } }),
+      // Available sizes/colors for the current category/search.
+      prisma.productVariant.findMany({
+        where: { isActive: true, product: baseWhere },
+        select: { size: true, color: true, colorHex: true },
+      }),
     ]);
 
     const priceMin = bounds._min.basePrice != null ? Number(bounds._min.basePrice) : null;
     const priceMax = bounds._max.basePrice != null ? Number(bounds._max.basePrice) : null;
+
+    const SIZE_RANK: Record<string, number> = { XS: 1, S: 2, M: 3, L: 4, XL: 5, XXL: 6 };
+    const facetSizes = Array.from(new Set(facetVariants.map((v) => v.size).filter((s): s is string => !!s))).sort(
+      (a, b) => {
+        const ra = SIZE_RANK[a] ?? 50;
+        const rb = SIZE_RANK[b] ?? 50;
+        return ra !== rb ? ra - rb : a.localeCompare(b);
+      },
+    );
+    const colorMap = new Map<string, string | null>();
+    for (const v of facetVariants) {
+      if (v.color && !colorMap.has(v.color)) colorMap.set(v.color, v.colorHex ?? null);
+    }
+    const facetColors = Array.from(colorMap.entries()).map(([value, hex]) => ({ value, hex }));
 
     return NextResponse.json({
       success: true,
@@ -83,6 +113,8 @@ export async function GET(req: NextRequest) {
         totalPages: Math.ceil(total / pageSize),
         priceMin,
         priceMax,
+        sizes: facetSizes,
+        colors: facetColors,
       },
     });
   } catch (e) {

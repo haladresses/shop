@@ -4,7 +4,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Breadcrumb from "../Common/Breadcrumb";
 import CustomSelect from "./CustomSelect";
 import CategoryDropdown from "./CategoryDropdown";
-import GenderDropdown from "./GenderDropdown";
 import SizeDropdown from "./SizeDropdown";
 import ColorsDropdwon from "./ColorsDropdwon";
 import PriceDropdown from "./PriceDropdown";
@@ -34,13 +33,37 @@ const ShopWithSidebarContent = () => {
   const [priceBounds, setPriceBounds] = useState<{ min: number; max: number } | null>(null);
   const [priceValue, setPriceValue] = useState<{ from: number; to: number } | null>(null);
   const [appliedPrice, setAppliedPrice] = useState<{ from: number; to: number } | null>(null);
+  const [sizeOptions, setSizeOptions] = useState<string[]>([]);
+  const [colorOptions, setColorOptions] = useState<{ value: string; hex: string | null }[]>([]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
 
-  // reset to first page (and clear the price filter) whenever the category changes
+  // reset to first page (and clear filters) whenever the category changes
   useEffect(() => {
     setPage(1);
     setPriceValue(null);
     setAppliedPrice(null);
+    setSelectedSizes([]);
+    setSelectedColors([]);
   }, [activeCategory]);
+
+  const toggleSize = (size: string) => {
+    setSelectedSizes((prev) => (prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]));
+    setPage(1);
+  };
+
+  const toggleColor = (color: string) => {
+    setSelectedColors((prev) => (prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]));
+    setPage(1);
+  };
+
+  const clearAllFilters = () => {
+    setPriceValue(null);
+    setAppliedPrice(null);
+    setSelectedSizes([]);
+    setSelectedColors([]);
+    selectCategory("");
+  };
 
   // debounce the live slider value before applying it as a filter
   useEffect(() => {
@@ -55,6 +78,7 @@ const ShopWithSidebarContent = () => {
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
+    const hasFilters = !!appliedPrice || selectedSizes.length > 0 || selectedColors.length > 0;
     fetchProducts({
       page,
       pageSize: PAGE_SIZE,
@@ -62,10 +86,12 @@ const ShopWithSidebarContent = () => {
       language,
       minPrice: appliedPrice?.from,
       maxPrice: appliedPrice?.to,
+      sizes: selectedSizes,
+      colors: selectedColors,
       signal: controller.signal,
     })
       .then((res) => {
-        const list = res.products.length ? res.products : !activeCategory && page === 1 && !appliedPrice ? shopData : [];
+        const list = res.products.length ? res.products : !activeCategory && page === 1 && !hasFilters ? shopData : [];
         setProducts(list);
         setTotal(res.total || list.length);
         setTotalPages(Math.max(1, res.totalPages || 1));
@@ -74,9 +100,11 @@ const ShopWithSidebarContent = () => {
           const max = Math.ceil(res.priceMax);
           setPriceBounds((prev) => (prev && prev.min === min && prev.max === max ? prev : { min, max }));
         }
+        setSizeOptions(res.sizes);
+        setColorOptions(res.colors);
       })
       .catch(() => {
-        if (!activeCategory && page === 1 && !appliedPrice) {
+        if (!activeCategory && page === 1 && !hasFilters) {
           setProducts(shopData);
           setTotal(shopData.length);
           setTotalPages(1);
@@ -86,7 +114,7 @@ const ShopWithSidebarContent = () => {
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [language, page, activeCategory, appliedPrice]);
+  }, [language, page, activeCategory, appliedPrice, selectedSizes, selectedColors]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -148,18 +176,6 @@ const ShopWithSidebarContent = () => {
         }))
       : fallbackCategories;
 
-  const genders = isArabic
-    ? [
-        { name: "نساء", products: 5 },
-        { name: "بنات", products: 3 },
-        { name: "أطفال", products: 1 },
-      ]
-    : [
-        { name: "Women", products: 5 },
-        { name: "Girls", products: 3 },
-        { name: "Baby", products: 1 },
-      ];
-
   useEffect(() => {
     window.addEventListener("scroll", handleStickyMenu);
     return () => window.removeEventListener("scroll", handleStickyMenu);
@@ -219,11 +235,7 @@ const ShopWithSidebarContent = () => {
                       <p className="font-medium text-dark">{isArabic ? "الفلاتر:" : "Filters:"}</p>
                       <button
                         type="button"
-                        onClick={() => {
-                          setPriceValue(null);
-                          setAppliedPrice(null);
-                          selectCategory("");
-                        }}
+                        onClick={clearAllFilters}
                         className="text-blue hover:underline"
                       >
                         {isArabic ? "مسح الكل" : "Clean All"}
@@ -239,14 +251,23 @@ const ShopWithSidebarContent = () => {
                     label={isArabic ? "الفئة" : "Category"}
                   />
 
-                  {/* <!-- gender box --> */}
-                  <GenderDropdown genders={genders} />
-
                   {/* // <!-- size box --> */}
-                  <SizeDropdown />
+                  <SizeDropdown
+                    title={isArabic ? "المقاس" : "Size"}
+                    emptyLabel={isArabic ? "لا توجد مقاسات" : "No sizes available"}
+                    options={sizeOptions}
+                    selected={selectedSizes}
+                    onToggle={toggleSize}
+                  />
 
                   {/* // <!-- color box --> */}
-                  <ColorsDropdwon />
+                  <ColorsDropdwon
+                    title={isArabic ? "الألوان" : "Colors"}
+                    emptyLabel={isArabic ? "لا توجد ألوان" : "No colors available"}
+                    options={colorOptions}
+                    selected={selectedColors}
+                    onToggle={toggleColor}
+                  />
 
                   {/* // <!-- price range box --> */}
                   <PriceDropdown

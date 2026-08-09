@@ -94,6 +94,8 @@ type FetchProductsParams = {
   isBestSeller?: boolean;
   minPrice?: number;
   maxPrice?: number;
+  sizes?: string[];
+  colors?: string[];
   signal?: AbortSignal;
 };
 
@@ -105,6 +107,8 @@ export type ProductsResult = {
   totalPages: number;
   priceMin: number | null;
   priceMax: number | null;
+  sizes: string[];
+  colors: { value: string; hex: string | null }[];
 };
 
 /** Fetch the active product catalogue from the public products API. */
@@ -123,6 +127,8 @@ export async function fetchProducts(
     isBestSeller,
     minPrice,
     maxPrice,
+    sizes,
+    colors,
     signal,
   } = params;
 
@@ -139,12 +145,14 @@ export async function fetchProducts(
   if (isBestSeller !== undefined) query.set("isBestSeller", String(isBestSeller));
   if (minPrice !== undefined) query.set("minPrice", String(minPrice));
   if (maxPrice !== undefined) query.set("maxPrice", String(maxPrice));
+  if (sizes && sizes.length) query.set("sizes", sizes.join(","));
+  if (colors && colors.length) query.set("colors", colors.join(","));
 
   const res = await fetch(`/api/products?${query.toString()}`, { signal });
   const json = await res.json();
 
   if (!json.success) {
-    return { products: [], total: 0, page, pageSize, totalPages: 0, priceMin: null, priceMax: null };
+    return { products: [], total: 0, page, pageSize, totalPages: 0, priceMin: null, priceMax: null, sizes: [], colors: [] };
   }
 
   return {
@@ -155,6 +163,8 @@ export async function fetchProducts(
     totalPages: json.meta?.totalPages ?? 0,
     priceMin: json.meta?.priceMin ?? null,
     priceMax: json.meta?.priceMax ?? null,
+    sizes: json.meta?.sizes ?? [],
+    colors: json.meta?.colors ?? [],
   };
 }
 
