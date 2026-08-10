@@ -1,14 +1,24 @@
 /* Admin Panel Custom Styles */
 
+/* SBC brand font used across the admin panel */
+@font-face {
+  font-family: "SBC";
+  src: url("/fonts/sbc.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 .admin-sidebar {
   background: #0f172a; /* slate-900 */
   height: 100vh;
   overflow: hidden;
 }
 
-/* Ensure a clean sans-serif base across the admin panel */
+/* SBC as the admin base font (Tailwind sets font-family: inherit on form
+   controls, so inputs, buttons and selects pick this up too). */
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+  font-family: "SBC", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 }
 
