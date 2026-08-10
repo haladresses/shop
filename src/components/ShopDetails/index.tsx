@@ -225,7 +225,7 @@ const ShopDetails = () => {
           <div className="flex flex-col lg:flex-row gap-7.5 xl:gap-17.5">
             {/* Gallery */}
             <div className="lg:max-w-[570px] w-full">
-              <div className="lg:min-h-[512px] rounded-lg shadow-1 bg-gray-2 p-4 sm:p-7.5 relative flex items-center justify-center group">
+              <div className="relative w-full aspect-square lg:aspect-[4/5] rounded-lg shadow-1 bg-gray-2 overflow-hidden flex items-center justify-center group">
                 <button
                   onClick={handleZoom}
                   aria-label="zoom"
@@ -265,9 +265,9 @@ const ShopDetails = () => {
                   <Image
                     src={images[activeImg]}
                     alt={title}
-                    width={450}
-                    height={450}
-                    className="object-contain max-h-[420px] w-auto"
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 570px"
+                    className="object-cover"
                     priority
                   />
                 )}
@@ -284,7 +284,7 @@ const ShopDetails = () => {
                         key === activeImg ? "border-blue" : "border-transparent"
                       }`}
                     >
-                      <Image width={70} height={70} src={src} alt="thumbnail" className="object-contain w-full h-full p-1" />
+                      <Image width={70} height={70} src={src} alt="thumbnail" className="object-cover w-full h-full" />
                     </button>
                   ))}
                 </div>
