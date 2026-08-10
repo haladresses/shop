@@ -31,17 +31,21 @@ export async function POST(req: NextRequest) {
     const cancelUrl = `${origin}/payment/thawani/callback?orderId=${order.id}&cancelled=1`;
 
     const shippingAddress = order.shippingAddress as { nameEn?: string; phone?: string } | null;
+    const customerName = shippingAddress?.nameEn || order.guestName || "Guest";
+    const customerPhone = shippingAddress?.phone || "";
 
     const result = await createCheckoutSession({
       orderNumber: order.orderNumber,
       amountOMR: Number(order.total),
       successUrl,
       cancelUrl,
+      // Metadata format aligned with Thawani's required sample
+      // ("Customer name" / "order id"). Internal callback keys are also kept.
       metadata: {
+        "Customer name": customerName,
+        "Customer phone": customerPhone,
+        "order id": order.orderNumber,
         order_id: order.id,
-        order_number: order.orderNumber,
-        customer_name: shippingAddress?.nameEn || order.guestName || "",
-        customer_phone: shippingAddress?.phone || "",
       },
     });
 
