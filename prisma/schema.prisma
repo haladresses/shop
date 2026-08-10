@@ -283,6 +283,10 @@ model Order {
   waselleeBranch       WaselleeBranch?       @relation(fields: [waselleeBranchId], references: [id])
   whatsappNotifiedAt   DateTime?
   whatsappNotifyError  String?               @db.Text
+  // Manual WhatsApp-Web dispatch tracking (set when the admin sends the
+  // prepared message to the driver / to Wasli from the order screen).
+  driverWhatsappSentAt    DateTime?
+  waselleeWhatsappSentAt  DateTime?
 
   user     User?       @relation(fields: [userId], references: [id])
   items    OrderItem[]

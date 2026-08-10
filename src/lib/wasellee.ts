@@ -72,6 +72,99 @@ function digitsOnly(v: string) {
   return v.replace(/[^0-9]/g, "");
 }
 
+/** Normalise any local/international number to wa.me digits (Oman default). */
+export function toWhatsAppNumber(raw: string): string {
+  const digits = digitsOnly(raw);
+  if (!digits) return "";
+  if (digits.startsWith("968")) return digits;
+  // Local Omani numbers are 8 digits; prefix the country code.
+  if (digits.length === 8) return `968${digits}`;
+  return digits;
+}
+
+/** Builds a click-to-chat WhatsApp Web link (opens in the user's WhatsApp). */
+export function buildWhatsAppLink(phone: string, text: string): string {
+  const number = toWhatsAppNumber(phone);
+  return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+}
+
+type OrderForDispatch = {
+  orderNumber: string;
+  guestName: string | null;
+  notes: string | null;
+  total: unknown;
+  shippingAddress: unknown;
+  itemsCount?: number;
+  paymentMethod?: string;
+};
+
+const isCod = (m?: string) => (m || "").toUpperCase().includes("CASH");
+
+/**
+ * Prepared Arabic message handed to the delivery DRIVER (راننده) once the
+ * order is packed and ready for pickup.
+ */
+export function buildDriverDispatchMessage(order: OrderForDispatch): string {
+  const addr = (order.shippingAddress as ShippingAddress) || {};
+  const lines = [
+    "مرحباً 👋",
+    "الطلب جاهز للاستلام والتوصيل.",
+    "",
+    `رقم الطلب: ${order.orderNumber}`,
+    `اسم العميل: ${addr.nameEn || order.guestName || "-"}`,
+    `هاتف العميل: ${addr.phone || "-"}`,
+    `العنوان: ${formatAddress(addr) || "-"}`,
+    ...(order.itemsCount ? [`عدد القطع: ${order.itemsCount}`] : []),
+    `الإجمالي: ${Number(order.total).toFixed(3)} ر.ع`,
+    ...(isCod(order.paymentMethod)
+      ? [`💵 يُحصّل من العميل عند التسليم: ${Number(order.total).toFixed(3)} ر.ع`]
+      : ["✅ مدفوع مسبقاً"]),
+    ...(order.notes ? [`ملاحظات: ${order.notes}`] : []),
+    "",
+    "يرجى تأكيد الاستلام ووقت التوصيل. شكراً 🌸",
+  ];
+  return lines.join("\n");
+}
+
+/**
+ * Prepared Arabic message handed to WASLI / وصلي (the delivery company office)
+ * — works for any order, with or without a resolved Wasellee branch.
+ */
+export function buildWasliDispatchMessage(
+  order: OrderForDispatch,
+  branchCity?: string | null
+): string {
+  const addr = (order.shippingAddress as ShippingAddress) || {};
+  const lines = [
+    "سلام وصلي 👋",
+    "طلب جديد جاهز للشحن.",
+    "",
+    `رقم الطلب: ${order.orderNumber}`,
+    `اسم العميل: ${addr.nameEn || order.guestName || "-"}`,
+    `هاتف العميل: ${addr.phone || "-"}`,
+    `المدينة: ${addr.city || branchCity || "-"}`,
+    `العنوان الكامل: ${formatAddress(addr) || "-"}`,
+    `مبلغ الطلب: ${Number(order.total).toFixed(3)} ر.ع`,
+    ...(isCod(order.paymentMethod)
+      ? [`💵 الدفع عند الاستلام: ${Number(order.total).toFixed(3)} ر.ع`]
+      : ["✅ مدفوع مسبقاً"]),
+    ...(order.notes ? [`ملاحظات: ${order.notes}`] : []),
+    "",
+    "يرجى تأكيد التكلفة ووقت الاستلام. شكراً 🌸",
+  ];
+  return lines.join("\n");
+}
+
+/** Resolves the plain phone strings for the two dispatch channels. */
+export async function getDispatchPhones() {
+  const settings = await getWaselleeSettings();
+  const driver = settings.bousherDriverPhone || settings.bousherContactPhone || "";
+  const wasli = settings.notifyChatId
+    ? settings.notifyChatId.replace("@c.us", "")
+    : settings.bousherOfficePhone;
+  return { driver, wasli };
+}
+
 /** Reads the singleton config row, lazily creating a default one on first use. */
 export async function getWaselleeSettings() {
   const existing = await prisma.waselleeSettings.findFirst();

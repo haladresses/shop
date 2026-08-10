@@ -5,7 +5,7 @@ import {
   LuSearch, LuChevronLeft, LuChevronRight, LuEye, LuShoppingBag,
   LuClock, LuTruck, LuCircleCheck, LuWallet, LuUser, LuMapPin, LuPhone,
   LuMail, LuPackage, LuTriangleAlert, LuSave, LuReceipt, LuBan,
-  LuMessageCircle, LuRefreshCw, LuExternalLink,
+  LuExternalLink, LuBike, LuBuilding2, LuCopy, LuUndo2, LuMessageCircle,
 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
 
@@ -70,6 +70,14 @@ type Order = {
   waselleeManualWhatsAppLink?: string | null;
 };
 
+type DispatchChannel = {
+  phone: string;
+  link: string | null;
+  text: string;
+  sentAt: string | null;
+};
+type Dispatch = { driver: DispatchChannel; wasellee: DispatchChannel };
+
 type Stats = {
   totalOrders: number;
   pending: number;
@@ -116,8 +124,10 @@ function OrdersView() {
   const [notesDraft, setNotesDraft] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
-  const [notifyingWasellee, setNotifyingWasellee] = useState(false);
-  const [notifyError, setNotifyError] = useState("");
+  const [dispatch, setDispatch] = useState<Dispatch | null>(null);
+  const [dispatchLoading, setDispatchLoading] = useState(false);
+  const [marking, setMarking] = useState<"driver" | "wasellee" | null>(null);
+  const [copied, setCopied] = useState<"driver" | "wasellee" | null>(null);
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -151,7 +161,7 @@ function OrdersView() {
       setNotesDraft(base.notes || "");
     }
     setConfirmStatus(null);
-    setNotifyError("");
+    setDispatch(null);
     setDetailLoading(true);
     const res = await fetch(`/api/orders/${id}`);
     const data = await res.json();
@@ -160,6 +170,12 @@ function OrdersView() {
       setNotesDraft(data.data.notes || "");
     }
     setDetailLoading(false);
+    // Load the prepared WhatsApp dispatch links for this order.
+    setDispatchLoading(true);
+    const dres = await fetch(`/api/orders/${id}/whatsapp-dispatch`);
+    const ddata = await dres.json();
+    if (ddata.success) setDispatch(ddata.data);
+    setDispatchLoading(false);
   }, []);
 
   const openDetail = (o: Order) => openDetailById(o.id, o);
@@ -225,21 +241,34 @@ function OrdersView() {
     setUpdating(false);
   };
 
-  const resendWasellee = async () => {
+  const markDispatch = async (channel: "driver" | "wasellee", sent: boolean) => {
     if (!selected) return;
-    setNotifyingWasellee(true);
-    setNotifyError("");
-    const res = await fetch(`/api/orders/${selected.id}/notify-wasellee`, { method: "POST" });
+    setMarking(channel);
+    const res = await fetch(`/api/orders/${selected.id}/whatsapp-dispatch`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ channel, sent }),
+    });
     const data = await res.json();
-    if (data.success) {
-      setSelected((prev) =>
-        prev ? { ...prev, whatsappNotifiedAt: data.data.whatsappNotifiedAt, whatsappNotifyError: null } : null
-      );
-    } else {
-      setNotifyError(data.error || "Failed to send");
-      setSelected((prev) => (prev ? { ...prev, whatsappNotifyError: data.error } : null));
+    if (data.success) setDispatch(data.data);
+    setMarking(null);
+  };
+
+  // Open WhatsApp Web with the prepared message and record it as sent.
+  const sendDispatch = (channel: "driver" | "wasellee", link: string | null) => {
+    if (!link) return;
+    window.open(link, "_blank", "noopener,noreferrer");
+    markDispatch(channel, true);
+  };
+
+  const copyDispatch = async (channel: "driver" | "wasellee", text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(channel);
+      setTimeout(() => setCopied((c) => (c === channel ? null : c)), 1500);
+    } catch {
+      /* clipboard unavailable — ignore */
     }
-    setNotifyingWasellee(false);
   };
 
   const saveNotes = async () => {
@@ -279,26 +308,40 @@ function OrdersView() {
         ))}
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <LuSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+      {/* Toolbar — single professional row */}
+      <div className="flex items-center gap-2 sm:gap-3 rounded-2xl border border-slate-200/70 bg-white p-2 sm:p-2.5">
+        <div className="relative min-w-0 flex-1">
+          <LuSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
-            className="admin-input !pl-10"
-            placeholder="Search by order # or email..."
+            className="admin-input"
+            style={{ paddingLeft: "2.5rem" }}
+            placeholder="Search orders…"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
-        <select className="admin-input admin-select w-auto min-w-[150px]" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}>
-          <option value="">All Statuses</option>
-          {ORDER_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select className="admin-input admin-select w-auto min-w-[150px]" value={payFilter} onChange={(e) => { setPayFilter(e.target.value); setPage(1); }}>
-          <option value="">All Payments</option>
-          {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <span className="text-sm text-slate-500 ml-auto">{total} orders</span>
+        <div className="w-28 flex-shrink-0 sm:w-44">
+          <select
+            className="admin-input admin-select"
+            style={{ width: "100%" }}
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+          >
+            <option value="">All Statuses</option>
+            {ORDER_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="w-28 flex-shrink-0 sm:w-44">
+          <select
+            className="admin-input admin-select"
+            style={{ width: "100%" }}
+            value={payFilter}
+            onChange={(e) => { setPayFilter(e.target.value); setPage(1); }}
+          >
+            <option value="">All Payments</option>
+            {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
       </div>
 
       {/* List */}
@@ -461,66 +504,103 @@ function OrdersView() {
               </div>
             </div>
 
-            {/* Wasellee shipping */}
+            {/* Wasellee branch (info only) */}
             {selected.shippingMethod === "WASELLEE" && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-5">
-                <p className="text-xs font-semibold text-emerald-700 uppercase mb-2 flex items-center gap-1.5">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 mb-4 text-sm text-slate-700">
+                <p className="text-xs font-semibold text-emerald-700 uppercase mb-1.5 flex items-center gap-1.5">
                   <LuTruck size={13} /> Wasellee (LO Express)
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-slate-700 mb-3">
-                  <p>
-                    <span className="text-slate-500">Delivery type: </span>
+                <div className="flex flex-wrap gap-x-6 gap-y-1">
+                  <span>
+                    <span className="text-slate-500">Delivery: </span>
                     <span className="font-medium">
                       {selected.waselleeDeliveryType === "OFFICE_PICKUP" ? "Office Pickup" : "Home Delivery"}
                     </span>
-                  </p>
+                  </span>
                   {selected.waselleeBranch && (
-                    <p>
+                    <span>
                       <span className="text-slate-500">Branch: </span>
-                      <span className="font-medium">{selected.waselleeBranch.cityEn}</span>{" "}
-                      <span className="font-mono text-slate-500">({selected.waselleeBranch.phone})</span>
-                    </p>
+                      <span className="font-medium">{selected.waselleeBranch.cityEn}</span>
+                    </span>
                   )}
                 </div>
-
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-1.5 text-sm">
-                    {selected.whatsappNotifiedAt ? (
-                      <span className="text-emerald-700 flex items-center gap-1">
-                        <LuCircleCheck size={14} /> Sent {fmtDate(selected.whatsappNotifiedAt)}
-                      </span>
-                    ) : (
-                      <span className="text-red-600 flex items-center gap-1">
-                        <LuTriangleAlert size={14} />
-                        {selected.whatsappNotifyError || "Not sent yet"}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={resendWasellee}
-                      disabled={notifyingWasellee}
-                      className="admin-btn admin-btn-secondary text-xs py-1 disabled:opacity-40"
-                    >
-                      {notifyingWasellee ? <span className="spinner !w-3.5 !h-3.5 !border-2" /> : <LuRefreshCw size={13} />}
-                      {selected.whatsappNotifiedAt ? "Resend" : "Send"} via WAHA
-                    </button>
-                    {selected.waselleeManualWhatsAppLink && (
-                      <a
-                        href={selected.waselleeManualWhatsAppLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="admin-btn admin-btn-secondary text-xs py-1"
-                      >
-                        <LuMessageCircle size={13} /> Open in WhatsApp <LuExternalLink size={11} />
-                      </a>
-                    )}
-                  </div>
-                </div>
-                {notifyError && <p className="text-xs text-red-600 mt-2">{notifyError}</p>}
               </div>
             )}
+
+            {/* WhatsApp dispatch — prepared messages sent manually via WhatsApp Web */}
+            <div className="rounded-xl border border-slate-200 mb-5 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                <LuMessageCircle size={15} className="text-emerald-600" />
+                <p className="text-sm font-semibold text-slate-700">WhatsApp Dispatch</p>
+                <span className="text-xs text-slate-400 ml-auto">Sent manually via WhatsApp Web</span>
+              </div>
+              {dispatchLoading && !dispatch ? (
+                <div className="flex justify-center py-6"><div className="spinner" /></div>
+              ) : dispatch ? (
+                <div className="divide-y divide-slate-100">
+                  {([
+                    { key: "driver" as const, title: "Driver", subtitle: "راننده / السائق", icon: LuBike, ch: dispatch.driver },
+                    { key: "wasellee" as const, title: "Wasli", subtitle: "وصلی / وصلي", icon: LuBuilding2, ch: dispatch.wasellee },
+                  ]).map(({ key, title, subtitle, icon: Icon, ch }) => (
+                    <div key={key} className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                          <Icon size={18} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-semibold text-slate-800">{title}</p>
+                            <span className="text-xs text-slate-400">{subtitle}</span>
+                            {ch.sentAt ? (
+                              <span className="badge badge-delivered ml-auto"><LuCircleCheck size={12} /> Sent {fmtDate(ch.sentAt)}</span>
+                            ) : (
+                              <span className="badge badge-pending ml-auto"><LuClock size={12} /> Not sent</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 font-mono mt-0.5">
+                            {ch.phone ? `+${ch.phone.replace(/^(\+)?/, "")}` : "No number set — configure in Shipping settings"}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                            <button
+                              type="button"
+                              disabled={!ch.link}
+                              onClick={() => sendDispatch(key, ch.link)}
+                              className="admin-btn text-xs py-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                              style={{ background: "#22c55e", color: "#fff" }}
+                            >
+                              <LuMessageCircle size={14} /> {ch.sentAt ? "Resend" : "Send"} <LuExternalLink size={11} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => copyDispatch(key, ch.text)}
+                              className="admin-btn admin-btn-secondary text-xs py-1.5"
+                            >
+                              {copied === key ? <><LuCircleCheck size={14} /> Copied</> : <><LuCopy size={14} /> Copy</>}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={marking === key}
+                              onClick={() => markDispatch(key, !ch.sentAt)}
+                              className="admin-btn admin-btn-secondary text-xs py-1.5 disabled:opacity-40"
+                            >
+                              {marking === key ? (
+                                <span className="spinner !w-3.5 !h-3.5 !border-2" />
+                              ) : ch.sentAt ? (
+                                <><LuUndo2 size={14} /> Mark unsent</>
+                              ) : (
+                                <><LuCircleCheck size={14} /> Mark sent</>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400 px-4 py-5 text-center">Could not load dispatch links.</p>
+              )}
+            </div>
 
             {/* Items */}
             <div className="mb-5">

@@ -4,7 +4,7 @@ import { getAuthFromRequest, userHasAnyPermission } from "@/lib/auth";
 import { ok, paginated, error, unauthorized, serverError } from "@/lib/api/response";
 import { createOrderSchema } from "@/lib/validations/order";
 import { generateOrderNumber } from "@/lib/utils";
-import { calculateWaselleeCost, sendWaselleeOrderNotification } from "@/lib/wasellee";
+import { calculateWaselleeCost } from "@/lib/wasellee";
 
 export async function GET(req: NextRequest) {
   try {
@@ -179,17 +179,9 @@ export async function POST(req: NextRequest) {
       }).catch(() => {});
     }
 
-    if (order.shippingMethod === "WASELLEE" && order.waselleeBranch) {
-      const result = await sendWaselleeOrderNotification(order, order.waselleeBranch, paymentMethod);
-      await prisma.order
-        .update({
-          where: { id: order.id },
-          data: result.ok
-            ? { whatsappNotifiedAt: new Date(), whatsappNotifyError: null }
-            : { whatsappNotifyError: result.error },
-        })
-        .catch(() => {});
-    }
+    // WhatsApp dispatch (to the driver / to Wasli) is sent MANUALLY by the admin
+    // from the order screen via WhatsApp Web once the order is packed & ready —
+    // no automatic WAHA send here.
 
     return ok(order, 201);
   } catch (e) {
