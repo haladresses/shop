@@ -74,7 +74,7 @@ COPY docker-entrypoint.sh ./docker-entrypoint.sh
 
 # Ensure the upload/backup targets exist and are writable by the app user.
 RUN chmod +x ./docker-entrypoint.sh ./docker-init.sh \
-    && mkdir -p ./public/images/products ./backups \
+    && mkdir -p ./public/images/products ./public/images/whatsapp-reviews ./backups \
     && chown -R nextjs:nodejs /app
 
 USER nextjs

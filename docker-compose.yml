@@ -78,6 +78,8 @@ services:
     volumes:
       # Persist uploaded product images (written by /api/upload).
       - uploads-data:/app/public/images/products
+      # Persist uploaded WhatsApp review screenshots.
+      - whatsapp-reviews-data:/app/public/images/whatsapp-reviews
       # Persist database + file backups created from the admin panel
       # (Settings → Backup) so they survive container restarts/redeploys.
       - backups-data:/app/backups
@@ -111,6 +113,9 @@ volumes:
   uploads-data:
     driver: local
     name: hala-uploads-data
+  whatsapp-reviews-data:
+    driver: local
+    name: hala-whatsapp-reviews-data
   backups-data:
     driver: local
     name: hala-backups-data
