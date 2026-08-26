@@ -1,25 +1,31 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
-import { useEffect, useState } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { fetchHero, DEFAULT_HERO_SLIDES, HeroSlide } from "@/lib/hero";
+import { HeroSlide } from "@/lib/hero";
 import Image from "next/image";
 
 import "swiper/css/pagination";
 import "swiper/css";
 
-const HeroCarousal = () => {
+const HeroCarousal = ({ slides }: { slides: HeroSlide[] | null }) => {
   const { language, isArabic } = useLanguage();
-  const [slides, setSlides] = useState<HeroSlide[]>(DEFAULT_HERO_SLIDES);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchHero(controller.signal)
-      .then((cfg) => setSlides(cfg.slides))
-      .catch(() => setSlides(DEFAULT_HERO_SLIDES));
-    return () => controller.abort();
-  }, []);
+  if (!slides) {
+    return (
+      <div className="min-h-[440px] sm:min-h-[420px] lg:min-h-[480px] flex items-center px-6 sm:px-10 lg:px-16">
+        <div className="flex-1 flex flex-col items-center sm:items-start animate-pulse">
+          <div className="h-6 w-40 rounded-full bg-gray-2 mb-5" />
+          <div className="h-8 sm:h-10 w-full max-w-[380px] rounded-lg bg-gray-2 mb-3" />
+          <div className="h-8 sm:h-10 w-full max-w-[260px] rounded-lg bg-gray-2 mb-6" />
+          <div className="h-11 w-40 rounded-full bg-gray-2" />
+        </div>
+        <div className="hidden sm:block flex-shrink-0">
+          <div className="w-[220px] h-[220px] lg:w-[300px] lg:h-[300px] rounded-full bg-gray-2 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Swiper

@@ -4,11 +4,17 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
 } from "react";
 
 type Language = "en" | "ar";
+
+// Read the saved language before paint (not after, like a regular effect)
+// so returning Arabic users never see a flash of the English default.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 type LanguageContextValue = {
   language: Language;
@@ -28,7 +34,7 @@ export const LanguageProvider = ({
 }) => {
   const [language, setLanguage] = useState<Language>("en");
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const savedLanguage = window.localStorage.getItem("hala-language");
 
     if (savedLanguage === "ar" || savedLanguage === "en") {

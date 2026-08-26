@@ -1,5 +1,4 @@
 "use client";
-import { useState, useEffect } from "react";
 import { Toaster } from "react-hot-toast";
 import "../css/euclid-circular-a-font.css";
 import "../css/style.css";
@@ -16,7 +15,6 @@ import { LanguageProvider } from "../context/LanguageContext";
 import PreviewSliderModal from "@/components/Common/PreviewSlider";
 
 import ScrollToTop from "@/components/Common/ScrollToTop";
-import PreLoader from "@/components/Common/PreLoader";
 import PwaRegister from "@/components/PwaRegister";
 
 export default function RootLayout({
@@ -24,12 +22,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [loading, setLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
-
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <head>
@@ -54,33 +46,29 @@ export default function RootLayout({
       </head>
       <body>
         <PwaRegister />
-        {loading ? (
-          <PreLoader />
-        ) : (
-          <LanguageProvider>
-            <ReduxProvider>
-              <CartModalProvider>
-                <ModalProvider>
-                  <PreviewSliderProvider>
-                    <Toaster
-                      position="top-center"
-                      containerStyle={{ top: 90, zIndex: 999999 }}
-                      toastOptions={{ duration: 3000, style: { zIndex: 999999 } }}
-                    />
-                    <Header />
-                    {children}
+        <LanguageProvider>
+          <ReduxProvider>
+            <CartModalProvider>
+              <ModalProvider>
+                <PreviewSliderProvider>
+                  <Toaster
+                    position="top-center"
+                    containerStyle={{ top: 90, zIndex: 999999 }}
+                    toastOptions={{ duration: 3000, style: { zIndex: 999999 } }}
+                  />
+                  <Header />
+                  {children}
 
-                    <QuickViewModal />
-                    <CartSidebarModal />
-                    <PreviewSliderModal />
-                  </PreviewSliderProvider>
-                </ModalProvider>
-              </CartModalProvider>
-            </ReduxProvider>
-            <ScrollToTop />
-            <Footer />
-          </LanguageProvider>
-        )}
+                  <QuickViewModal />
+                  <CartSidebarModal />
+                  <PreviewSliderModal />
+                </PreviewSliderProvider>
+              </ModalProvider>
+            </CartModalProvider>
+          </ReduxProvider>
+          <ScrollToTop />
+          <Footer />
+        </LanguageProvider>
       </body>
     </html>
   );

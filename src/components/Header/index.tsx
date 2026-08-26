@@ -181,8 +181,8 @@ const Header = () => {
           {/* Right actions */}
           <div className="flex items-center gap-1 sm:gap-3 ms-auto">
 
-            {/* Language switcher — desktop */}
-            <div className="hidden sm:flex">
+            {/* Language switcher */}
+            <div className="flex">
               <LanguageDropdown />
             </div>
 
@@ -327,8 +327,7 @@ const Header = () => {
           </nav>
 
           {/* Mobile bottom row */}
-          <div className="flex items-center justify-between pt-1">
-            <LanguageDropdown />
+          <div className="flex items-center justify-end pt-1">
             <Link
               href={dashboardHref}
               onClick={() => setMobileOpen(false)}

@@ -1,9 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import HeroCarousel from "./HeroCarousel";
 import HeroFeature from "./HeroFeature";
+import { fetchHero, HeroConfig } from "@/lib/hero";
 
 const Hero = () => {
+  const [config, setConfig] = useState<HeroConfig | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchHero(controller.signal).then(setConfig);
+    return () => controller.abort();
+  }, []);
+
   return (
     <section className="relative overflow-hidden pb-12 lg:pb-16 pt-24 xl:pt-[150px] bg-gradient-to-b from-[#FBF3EF] via-[#F7EDE7] to-white">
       {/* decorative accents */}
@@ -13,11 +23,11 @@ const Hero = () => {
 
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0 relative z-10">
         <div className="relative z-1 rounded-2xl sm:rounded-[20px] bg-white overflow-hidden shadow-[0_18px_50px_-20px_rgba(47,36,31,0.25)] ring-1 ring-blue/10">
-          <HeroCarousel />
+          <HeroCarousel slides={config?.slides ?? null} />
         </div>
       </div>
 
-      <HeroFeature />
+      <HeroFeature features={config?.features ?? null} />
     </section>
   );
 };
