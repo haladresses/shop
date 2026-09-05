@@ -23,7 +23,7 @@ export const createOrderSchema = z
     couponCode: z.string().optional(),
     notes: z.string().optional(),
     paymentMethod: z.enum(["CASH_ON_DELIVERY", "BANK_TRANSFER", "CARD", "THAWANI", "STRIPE"]),
-    shippingMethod: z.enum(["STANDARD", "WASELLEE"]).default("STANDARD"),
+    shippingMethod: z.enum(["STANDARD", "WASELLEE", "STORE_PICKUP"]).default("STANDARD"),
     waselleeDeliveryType: z.enum(["HOME_DELIVERY", "OFFICE_PICKUP"]).optional(),
     waselleeBranchId: z.string().optional(),
   })

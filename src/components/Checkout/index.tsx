@@ -11,8 +11,15 @@ import {
 import { useLanguage } from "@/app/context/LanguageContext";
 
 type PaymentMethod = "CASH_ON_DELIVERY" | "BANK_TRANSFER" | "THAWANI";
-type ShippingMethod = "STANDARD" | "WASELLEE";
+type ShippingMethod = "STANDARD" | "WASELLEE" | "STORE_PICKUP";
 type WaselleeDeliveryType = "HOME_DELIVERY" | "OFFICE_PICKUP";
+
+type StoreInfo = {
+  store_name_en?: string;
+  store_name_ar?: string;
+  store_address?: string;
+  store_phone?: string;
+};
 
 type WaselleeBranch = {
   id: string;
@@ -45,12 +52,20 @@ const Checkout = () => {
   const [waselleeDeliveryType, setWaselleeDeliveryType] =
     useState<WaselleeDeliveryType>("HOME_DELIVERY");
   const [waselleeBranchId, setWaselleeBranchId] = useState("");
+  const [storeInfo, setStoreInfo] = useState<StoreInfo>({});
 
   useEffect(() => {
     fetch("/api/wasellee/branches")
       .then((r) => r.json())
       .then((d) => {
         if (d.success) setBranches(d.data.filter((b: WaselleeBranch) => b.isActive));
+      })
+      .catch(() => {});
+
+    fetch("/api/settings?group=general")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) setStoreInfo(d.data);
       })
       .catch(() => {});
   }, []);
@@ -66,7 +81,9 @@ const Checkout = () => {
   const selectedBranch = branches.find((b) => b.id === waselleeBranchId) || null;
 
   const shippingCost =
-    shippingMethod === "WASELLEE"
+    shippingMethod === "STORE_PICKUP"
+      ? 0 // Collected in person at the shop — no delivery fee.
+      : shippingMethod === "WASELLEE"
       ? selectedBranch
         ? Number(
             waselleeDeliveryType === "OFFICE_PICKUP"
@@ -91,7 +108,7 @@ const Checkout = () => {
     couponCode: "",
   });
   const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod>("CASH_ON_DELIVERY");
+    useState<PaymentMethod>("THAWANI");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -137,6 +154,8 @@ const Checkout = () => {
             city:
               shippingMethod === "WASELLEE" && selectedBranch
                 ? selectedBranch.cityEn
+                : shippingMethod === "STORE_PICKUP"
+                ? t("Store Pickup", "استلام من المتجر")
                 : form.city,
             area: form.area || undefined,
             street: form.street || undefined,
@@ -350,6 +369,7 @@ const Checkout = () => {
                       [
                         ["STANDARD", t("Standard Delivery", "التوصيل العادي")],
                         ["WASELLEE", t("Wasellee (LO Express)", "وصلي (LO Express)")],
+                        ["STORE_PICKUP", t("Pickup from Hala Store", "الاستلام من متجر هلا")],
                       ] as [ShippingMethod, string][]
                     ).map(([value, label]) => (
                       <label
@@ -475,6 +495,31 @@ const Checkout = () => {
                       )}
                     </div>
                   )}
+
+                  {shippingMethod === "STORE_PICKUP" && (
+                    <div className="rounded-md bg-blue-light-5 border border-blue-light-4 px-4 py-3 text-sm text-dark">
+                      <p className="font-medium mb-1">
+                        {t(
+                          "Collect your order in person from our store:",
+                          "استلم طلبك شخصيًا من متجرنا:"
+                        )}
+                      </p>
+                      <p className="mb-1">
+                        {(isArabic ? storeInfo.store_name_ar : storeInfo.store_name_en) ||
+                          "Hala Dresses"}{" "}
+                        — {storeInfo.store_address || t("Muscat, Oman", "مسقط، عمان")}
+                        {storeInfo.store_phone && (
+                          <>
+                            {" "}
+                            — <span dir="ltr">{storeInfo.store_phone}</span>
+                          </>
+                        )}
+                      </p>
+                      <p className="font-medium text-green">
+                        {t("No delivery fee.", "لا توجد رسوم توصيل.")}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -570,16 +615,22 @@ const Checkout = () => {
                     {(
                       [
                         [
+                          "THAWANI",
+                          t("Pay with Card (Thawani)", "الدفع بالبطاقة (ثواني)"),
+                          t("Recommended", "موصى به"),
+                        ],
+                        [
                           "CASH_ON_DELIVERY",
                           t("Cash on delivery", "الدفع عند الاستلام"),
+                          null,
                         ],
                         [
                           "BANK_TRANSFER",
                           t("Direct bank transfer", "تحويل بنكي مباشر"),
+                          null,
                         ],
-                        ["THAWANI", t("Pay with Card (Thawani)", "الدفع بالبطاقة (ثواني)")],
-                      ] as [PaymentMethod, string][]
-                    ).map(([value, label]) => (
+                      ] as [PaymentMethod, string, string | null][]
+                    ).map(([value, label, badge]) => (
                       <label
                         key={value}
                         className="flex cursor-pointer select-none items-center gap-4"
@@ -593,20 +644,25 @@ const Checkout = () => {
                           className="sr-only"
                         />
                         <span
-                          className={`flex h-4 w-4 items-center justify-center rounded-full ${
+                          className={`flex h-4 w-4 items-center justify-center rounded-full flex-shrink-0 ${
                             paymentMethod === value
                               ? "border-4 border-blue"
                               : "border border-gray-4"
                           }`}
                         />
                         <span
-                          className={`rounded-md border-[0.5px] py-3.5 px-5 w-full ease-out duration-200 ${
+                          className={`flex items-center justify-between gap-3 rounded-md border-[0.5px] py-3.5 px-5 w-full ease-out duration-200 ${
                             paymentMethod === value
                               ? "border-transparent bg-gray-2"
                               : "border-gray-4 shadow-1"
                           }`}
                         >
                           {label}
+                          {badge && (
+                            <span className="text-2xs font-medium text-blue bg-blue-light-5 rounded-full px-2.5 py-0.5">
+                              {badge}
+                            </span>
+                          )}
                         </span>
                       </label>
                     ))}

@@ -133,7 +133,9 @@ export async function POST(req: NextRequest) {
 
     // Shipping cost is always computed server-side — never trust a client-submitted price.
     const shippingCost =
-      shippingMethod === "WASELLEE" && waselleeBranch
+      shippingMethod === "STORE_PICKUP"
+        ? 0 // Customer collects in person — no delivery involved.
+        : shippingMethod === "WASELLEE" && waselleeBranch
         ? calculateWaselleeCost(waselleeBranch, waselleeDeliveryType!)
         : subtotal >= 10
         ? 0

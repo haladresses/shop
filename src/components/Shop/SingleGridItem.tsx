@@ -53,13 +53,19 @@ const SingleGridItem = ({ item }: { item: Product }) => {
             Sale
           </span>
         )}
-        <Image
-          src={item.imgs.previews[0]}
-          alt=""
-          fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          className="object-cover"
-        />
+        <Link
+          href={item.slug ? `/shop-details?slug=${item.slug}` : "/shop-details"}
+          aria-label={item.title}
+          className="absolute inset-0 block"
+        >
+          <Image
+            src={item.imgs.previews[0]}
+            alt=""
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-cover"
+          />
+        </Link>
 
         <div className="absolute left-0 bottom-0 w-full">
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-dark/40 to-transparent sm:hidden" />

@@ -5,7 +5,7 @@ import {
   LuSearch, LuChevronLeft, LuChevronRight, LuEye, LuShoppingBag,
   LuClock, LuTruck, LuCircleCheck, LuWallet, LuUser, LuMapPin, LuPhone,
   LuMail, LuPackage, LuTriangleAlert, LuSave, LuReceipt, LuBan,
-  LuExternalLink, LuBike, LuBuilding2, LuCopy, LuUndo2, LuMessageCircle,
+  LuExternalLink, LuBike, LuBuilding2, LuCopy, LuUndo2, LuMessageCircle, LuStore,
 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
 
@@ -524,6 +524,16 @@ function OrdersView() {
                     </span>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Store pickup (info only) */}
+            {selected.shippingMethod === "STORE_PICKUP" && (
+              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3.5 mb-4 text-sm text-slate-700">
+                <p className="text-xs font-semibold text-indigo-700 uppercase mb-1.5 flex items-center gap-1.5">
+                  <LuStore size={13} /> Pickup from Hala Store
+                </p>
+                <p className="text-slate-600">Customer will collect this order in person — no delivery required.</p>
               </div>
             )}
 
