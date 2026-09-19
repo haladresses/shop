@@ -12,6 +12,7 @@ type User = {
   role: string;
   isActive: boolean;
   createdAt: string;
+  posPinSet: boolean;
   _count: { orders: number };
 };
 
@@ -31,6 +32,10 @@ export default function UsersPage() {
   const [form, setForm] = useState({ email: "", password: "", nameEn: "", nameAr: "", phone: "", role: "CUSTOMER" });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [pinUser, setPinUser] = useState<User | null>(null);
+  const [pinValue, setPinValue] = useState("");
+  const [pinSaving, setPinSaving] = useState(false);
+  const [pinError, setPinError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,6 +66,41 @@ export default function UsersPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role }),
     });
+    load();
+  };
+
+  const savePin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pinUser) return;
+    setPinSaving(true);
+    setPinError("");
+    const res = await fetch(`/api/users/${pinUser.id}/pos-pin`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin: pinValue }),
+    });
+    const data = await res.json();
+    if (!data.success) {
+      setPinError(data.error);
+    } else {
+      setPinUser(null);
+      setPinValue("");
+      load();
+    }
+    setPinSaving(false);
+  };
+
+  const clearPin = async () => {
+    if (!pinUser) return;
+    setPinSaving(true);
+    await fetch(`/api/users/${pinUser.id}/pos-pin`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin: null }),
+    });
+    setPinUser(null);
+    setPinValue("");
+    setPinSaving(false);
     load();
   };
 
@@ -128,6 +168,7 @@ export default function UsersPage() {
                   <th>Role</th>
                   <th>Orders</th>
                   <th>Status</th>
+                  <th>POS PIN</th>
                   <th>Joined</th>
                   <th>Actions</th>
                 </tr>
@@ -158,6 +199,14 @@ export default function UsersPage() {
                         {u.isActive ? "Active" : "Inactive"}
                       </button>
                     </td>
+                    <td>
+                      <button
+                        onClick={() => { setPinUser(u); setPinValue(""); setPinError(""); }}
+                        className={`admin-btn text-xs py-1 ${u.posPinSet ? "admin-btn-secondary" : "admin-btn-primary"}`}
+                      >
+                        {u.posPinSet ? "Change PIN" : "Set PIN"}
+                      </button>
+                    </td>
                     <td className="text-slate-500 text-sm">{new Date(u.createdAt).toLocaleDateString()}</td>
                     <td>
                       <button
@@ -170,7 +219,7 @@ export default function UsersPage() {
                   </tr>
                 ))}
                 {users.length === 0 && (
-                  <tr><td colSpan={8} className="text-center py-8 text-slate-400">No users found</td></tr>
+                  <tr><td colSpan={9} className="text-center py-8 text-slate-400">No users found</td></tr>
                 )}
               </tbody>
             </table>
@@ -238,6 +287,46 @@ export default function UsersPage() {
                 </div>
               </div>
             </form>
+        </AdminModal>
+      )}
+
+      {/* Set/Change POS PIN Modal */}
+      {pinUser && (
+        <AdminModal
+          open={!!pinUser}
+          onClose={() => setPinUser(null)}
+          title={`POS PIN — ${pinUser.nameEn || pinUser.email}`}
+          footer={
+            <>
+              {pinUser.posPinSet && (
+                <button type="button" onClick={clearPin} disabled={pinSaving} className="admin-btn admin-btn-secondary text-rose-600">
+                  Remove PIN
+                </button>
+              )}
+              <button type="button" onClick={() => setPinUser(null)} className="admin-btn admin-btn-secondary">Cancel</button>
+              <button type="submit" form="pin-form" disabled={pinSaving} className="admin-btn admin-btn-primary justify-center">
+                {pinSaving ? "Saving..." : "Save PIN"}
+              </button>
+            </>
+          }
+        >
+          {pinError && <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg mb-4">{pinError}</div>}
+          <p className="text-sm text-slate-500 mb-3">
+            Used to sign in at the in-store POS terminal (only works if this user&apos;s role has POS access — see Roles &amp; Permissions).
+          </p>
+          <form id="pin-form" onSubmit={savePin}>
+            <label className="block text-sm font-medium text-slate-700 mb-1">4-digit PIN</label>
+            <input
+              className="admin-input text-center text-lg tracking-[0.5em]"
+              inputMode="numeric"
+              pattern="\d{4}"
+              maxLength={4}
+              value={pinValue}
+              onChange={(e) => setPinValue(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              required
+              autoFocus
+            />
+          </form>
         </AdminModal>
       )}
     </div>

@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 function getPublicErrorMessage(e: unknown) {
+  if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+    const target = e.meta?.target;
+    const field = Array.isArray(target) ? target[0] : typeof target === "string" ? target : "value";
+    return `A record with this ${field} already exists.`;
+  }
+
   if (!(e instanceof Error)) return "Internal server error";
 
   const message = e.message.toLowerCase();

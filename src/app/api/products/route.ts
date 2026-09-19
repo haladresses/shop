@@ -32,6 +32,8 @@ export async function GET(req: NextRequest) {
           { nameEn: { contains: search, mode: "insensitive" as const } },
           { nameAr: { contains: search } },
           { sku: { contains: search, mode: "insensitive" as const } },
+          { barcode: { contains: search, mode: "insensitive" as const } },
+          { variants: { some: { barcode: { contains: search, mode: "insensitive" as const } } } },
         ],
       }),
       ...(categoryId && { categoryId }),
@@ -144,6 +146,7 @@ export async function POST(req: NextRequest) {
     const product = await prisma.product.create({
       data: {
         ...productData,
+        barcode: productData.barcode || null,
         slug,
         attributes: attributes && Object.keys(attributes).length
           ? (attributes as Prisma.InputJsonValue)
@@ -166,6 +169,7 @@ export async function POST(req: NextRequest) {
               : Prisma.JsonNull,
             size: v.size,
             sku: v.sku,
+            barcode: v.barcode || null,
             priceAdjustment: v.priceAdjustment,
             isActive: v.isActive,
             inventory: {

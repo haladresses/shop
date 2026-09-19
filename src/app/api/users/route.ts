@@ -43,13 +43,17 @@ export async function GET(req: NextRequest) {
           isActive: true,
           avatar: true,
           createdAt: true,
+          posPinHash: true,
           _count: { select: { orders: true } },
         },
       }),
       prisma.user.count({ where }),
     ]);
 
-    return paginated(users, { page, pageSize, total });
+    // Never send the PIN hash itself to the client — only whether one is set.
+    const data = users.map(({ posPinHash, ...u }) => ({ ...u, posPinSet: posPinHash != null }));
+
+    return paginated(data, { page, pageSize, total });
   } catch (e) {
     return serverError(e);
   }

@@ -18,12 +18,14 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * pageSize;
     const status = sp.get("status") || "";
     const paymentStatus = sp.get("paymentStatus") || "";
+    const source = sp.get("source") || "";
     const search = sp.get("search") || "";
 
     const where = {
       ...(canViewAllOrders ? {} : { userId: user.id }),
       ...(status && { status: status as never }),
       ...(paymentStatus && { paymentStatus: paymentStatus as never }),
+      ...(source && { source: source as never }),
       ...(search && {
         OR: [
           { orderNumber: { contains: search, mode: "insensitive" as const } },
@@ -40,6 +42,7 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
         include: {
           user: { select: { nameEn: true, email: true } },
+          cashier: { select: { nameEn: true } },
           items: {
             include: {
               product: { select: { nameEn: true, nameAr: true } },

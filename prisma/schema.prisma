@@ -41,8 +41,14 @@ enum PaymentMethod {
   CASH_ON_DELIVERY
   BANK_TRANSFER
   CARD
+  CASH
   THAWANI
   STRIPE
+}
+
+enum OrderSource {
+  ONLINE
+  POS
 }
 
 enum InventoryTxType {
@@ -96,6 +102,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // POS staff PIN login (separate credential from passwordHash — see /pos).
+  posPinHash        String?
+  posPinAttempts    Int       @default(0)
+  posPinLockedUntil DateTime?
+
   addresses     Address[]
   orders        Order[]
   reviews       Review[]
@@ -105,6 +116,7 @@ model User {
   products      Product[]      @relation("SellerProducts")
   auditLogs     AuditLog[]
   backups       Backup[]
+  posSales      Order[]        @relation("PosCashier")
 
   @@map("users")
 }
@@ -187,6 +199,9 @@ model Product {
   basePrice     Decimal  @db.Decimal(10, 3)
   salePrice     Decimal? @db.Decimal(10, 3)
   sku           String?  @unique
+  // Barcode for the product itself — used when it has no variants (a variant's
+  // own barcode takes precedence when one exists). Scanned at the POS.
+  barcode       String?  @unique
   isActive      Boolean  @default(true)
   isFeatured    Boolean  @default(false)
   isNew         Boolean  @default(true)
@@ -256,6 +271,9 @@ model ProductVariant {
   colorParts      Json?
   size            String?
   sku             String? @unique
+  // Scanned at the POS / printed on shelf labels to identify this exact
+  // color+size combination.
+  barcode         String? @unique
   priceAdjustment Decimal @default(0) @db.Decimal(10, 3)
   isActive        Boolean @default(true)
 
@@ -298,7 +316,13 @@ model Order {
   driverWhatsappSentAt    DateTime?
   waselleeWhatsappSentAt  DateTime?
 
+  // In-store POS sales vs the online storefront; cashierId records which
+  // staff member rang up a POS sale (see /pos).
+  source    OrderSource @default(ONLINE)
+  cashierId String?
+
   user     User?       @relation(fields: [userId], references: [id])
+  cashier  User?       @relation("PosCashier", fields: [cashierId], references: [id])
   items    OrderItem[]
   payments Payment[]
 
@@ -308,6 +332,7 @@ model Order {
   @@index([userId])
   @@index([orderNumber])
   @@index([waselleeBranchId])
+  @@index([cashierId])
   @@map("orders")
 }
 

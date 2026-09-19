@@ -16,6 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       where: { id },
       include: {
         user: { select: { nameEn: true, nameAr: true, email: true, phone: true } },
+        cashier: { select: { nameEn: true } },
         items: {
           include: {
             product: { include: { images: { where: { isPrimary: true }, take: 1 } } },

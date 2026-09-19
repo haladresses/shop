@@ -11,6 +11,7 @@ import {
   type AttributeValue,
   fetchCategoryAttributes,
 } from "@/lib/attributes";
+import BarcodePreview from "./BarcodePreview";
 
 export type ProductImageState = {
   url: string;
@@ -35,6 +36,9 @@ export type VariantState = {
   colorParts: ColorPartState[];
   size: string;
   sku: string;
+  // The code the admin already uses for this exact color/size, rendered as a
+  // scannable barcode — not auto-generated.
+  barcode: string;
   priceAdjustment: string;
   stock: string;
   isActive: boolean;
@@ -49,6 +53,7 @@ export type ProductFormValue = {
   basePrice: string;
   salePrice: string;
   sku: string;
+  barcode: string;
   isActive: boolean;
   isFeatured: boolean;
   isNew: boolean;
@@ -62,7 +67,7 @@ type Category = { id: string; nameEn: string };
 
 export const emptyProductForm: ProductFormValue = {
   nameEn: "", nameAr: "", descriptionEn: "", descriptionAr: "",
-  categoryId: "", basePrice: "", salePrice: "", sku: "",
+  categoryId: "", basePrice: "", salePrice: "", sku: "", barcode: "",
   isActive: true, isFeatured: false, isNew: true, isBestSeller: false,
   attributes: {}, images: [], variants: [],
 };
@@ -78,6 +83,7 @@ export function buildProductPayload(form: ProductFormValue) {
     basePrice: parseFloat(form.basePrice),
     salePrice: form.salePrice ? parseFloat(form.salePrice) : null,
     sku: form.sku || undefined,
+    barcode: form.barcode || undefined,
     isActive: form.isActive,
     isFeatured: form.isFeatured,
     isNew: form.isNew,
@@ -97,6 +103,7 @@ export function buildProductPayload(form: ProductFormValue) {
         .map((p) => ({ part: p.part.trim(), color: p.color.trim(), colorHex: p.colorHex || undefined })),
       size: v.size || undefined,
       sku: v.sku || undefined,
+      barcode: v.barcode || undefined,
       priceAdjustment: parseFloat(v.priceAdjustment) || 0,
       isActive: v.isActive,
       stock: parseInt(v.stock) || 0,
@@ -234,7 +241,7 @@ export default function ProductForm({
   const addVariant = () =>
     set("variants", [
       ...form.variants,
-      { color: "", colorHex: "", colorParts: [], size: "", sku: "", priceAdjustment: "0", stock: "0", isActive: true },
+      { color: "", colorHex: "", colorParts: [], size: "", sku: "", barcode: "", priceAdjustment: "0", stock: "0", isActive: true },
     ]);
 
   const setVariant = (idx: number, patch: Partial<VariantState>) =>
@@ -389,6 +396,31 @@ export default function ProductForm({
               <input className="admin-input" value={form.sku} onChange={(e) => set("sku", e.target.value)} />
             </div>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+            <div>
+              <Label>Barcode</Label>
+              <div className="flex items-center gap-2">
+                <input className="admin-input" value={form.barcode} onChange={(e) => set("barcode", e.target.value)} placeholder="Scan or type the item's code" />
+                <button
+                  type="button"
+                  onClick={() => set("barcode", form.sku)}
+                  disabled={!form.sku}
+                  className="admin-btn admin-btn-secondary whitespace-nowrap text-xs disabled:opacity-40"
+                  title="Copy the SKU into the barcode field"
+                >
+                  Use SKU
+                </button>
+              </div>
+              {form.variants.length > 0 && (
+                <p className="text-xs text-slate-400 mt-1">Only used if this product has no variants below — each variant has its own barcode.</p>
+              )}
+            </div>
+            {form.barcode.trim() && (
+              <div className="flex justify-start sm:justify-end">
+                <BarcodePreview value={form.barcode} className="h-14" />
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label>Description (English)</Label>
@@ -469,6 +501,25 @@ export default function ProductForm({
                   </div>
                   <button type="button" onClick={() => removeVariant(idx)} className="p-2 rounded text-rose-500 hover:bg-rose-50 mb-0.5" aria-label="Remove variant"><LuTrash2 size={16} /></button>
                 </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <div className="flex-1 min-w-[180px]">
+                  <label className="block text-xs text-slate-500 mb-1">Barcode</label>
+                  <div className="flex items-center gap-1.5">
+                    <input className="admin-input !py-1.5 text-sm" value={v.barcode} onChange={(e) => setVariant(idx, { barcode: e.target.value })} placeholder="Scan or type this variant's code" />
+                    <button
+                      type="button"
+                      onClick={() => setVariant(idx, { barcode: v.sku })}
+                      disabled={!v.sku}
+                      className="admin-btn admin-btn-secondary whitespace-nowrap text-xs !py-1.5 disabled:opacity-40"
+                      title="Copy the SKU into the barcode field"
+                    >
+                      Use SKU
+                    </button>
+                  </div>
+                </div>
+                {v.barcode.trim() && <BarcodePreview value={v.barcode} className="h-12" />}
               </div>
 
               {/* Multi-color breakdown for this option, e.g. yellow sleeves + blue body */}

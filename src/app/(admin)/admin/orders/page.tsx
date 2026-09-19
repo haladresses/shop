@@ -68,6 +68,8 @@ type Order = {
   guestName?: string | null;
   guestEmail?: string | null;
   createdAt: string;
+  source?: "ONLINE" | "POS";
+  cashier?: { nameEn?: string | null } | null;
   shippingAddress?: ShippingAddress | null;
   user?: { nameEn?: string | null; nameAr?: string | null; email?: string; phone?: string | null } | null;
   items: OrderItem[];
@@ -126,6 +128,7 @@ function OrdersView() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [payFilter, setPayFilter] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
   const [loading, setLoading] = useState(true);
 
   const [selected, setSelected] = useState<Order | null>(null);
@@ -149,12 +152,13 @@ function OrdersView() {
       ...(search && { search }),
       ...(statusFilter && { status: statusFilter }),
       ...(payFilter && { paymentStatus: payFilter }),
+      ...(sourceFilter && { source: sourceFilter }),
     });
     const res = await fetch(`/api/orders?${params}`);
     const data = await res.json();
     if (data.success) { setOrders(data.data); setTotal(data.meta.total); }
     setLoading(false);
-  }, [page, search, statusFilter, payFilter]);
+  }, [page, search, statusFilter, payFilter, sourceFilter]);
 
   const loadStats = useCallback(async () => {
     const res = await fetch("/api/orders/stats");
@@ -352,6 +356,18 @@ function OrdersView() {
             {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
+        <div className="w-24 flex-shrink-0 sm:w-36">
+          <select
+            className="admin-input admin-select"
+            style={{ width: "100%" }}
+            value={sourceFilter}
+            onChange={(e) => { setSourceFilter(e.target.value); setPage(1); }}
+          >
+            <option value="">All Channels</option>
+            <option value="ONLINE">Online</option>
+            <option value="POS">POS</option>
+          </select>
+        </div>
       </div>
 
       {/* List */}
@@ -370,7 +386,10 @@ function OrdersView() {
               {orders.map((o) => (
                 <button key={o.id} onClick={() => openDetail(o)} className="w-full text-left p-4 flex flex-col gap-2 active:bg-slate-50">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono font-semibold text-indigo-600 text-sm">{o.orderNumber}</span>
+                    <span className="font-mono font-semibold text-indigo-600 text-sm flex items-center gap-1.5">
+                      {o.orderNumber}
+                      {o.source === "POS" && <span className="badge bg-slate-100 text-slate-600">POS</span>}
+                    </span>
                     <span className="font-semibold text-slate-800 text-sm">{omr(o.total)}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
@@ -404,7 +423,12 @@ function OrdersView() {
                 <tbody>
                   {orders.map((o) => (
                     <tr key={o.id} className="cursor-pointer" onClick={() => openDetail(o)}>
-                      <td className="font-mono font-medium text-indigo-600">{o.orderNumber}</td>
+                      <td className="font-mono font-medium text-indigo-600">
+                        <span className="flex items-center gap-1.5">
+                          {o.orderNumber}
+                          {o.source === "POS" && <span className="badge bg-slate-100 text-slate-600">POS</span>}
+                        </span>
+                      </td>
                       <td>
                         <div className="font-medium text-slate-800 truncate max-w-[180px]">{customerName(o)}</div>
                         {o.user?.email && <div className="text-xs text-slate-400 truncate max-w-[180px]">{o.user.email}</div>}
@@ -498,6 +522,9 @@ function OrdersView() {
                 )}
                 {(selected.user?.phone || selected.shippingAddress?.phone) && (
                   <p className="text-sm text-slate-600 flex items-center gap-1.5 mt-0.5"><LuPhone size={13} className="text-slate-400" />{selected.user?.phone || selected.shippingAddress?.phone}</p>
+                )}
+                {selected.source === "POS" && selected.cashier?.nameEn && (
+                  <p className="text-sm text-slate-600 flex items-center gap-1.5 mt-0.5"><LuUser size={13} className="text-slate-400" />Rung up by {selected.cashier.nameEn}</p>
                 )}
               </div>
               <div className="bg-slate-50 rounded-xl p-4">

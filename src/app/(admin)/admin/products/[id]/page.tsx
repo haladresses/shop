@@ -16,6 +16,7 @@ type ApiVariant = {
   colorParts?: ApiColorPart[] | null;
   size: string | null;
   sku: string | null;
+  barcode?: string | null;
   priceAdjustment: string | number | null;
   isActive: boolean;
   inventory?: { quantity: number } | null;
@@ -33,6 +34,7 @@ type ApiProduct = {
   basePrice: string | number;
   salePrice: string | number | null;
   sku: string | null;
+  barcode?: string | null;
   isActive: boolean;
   isFeatured: boolean;
   isNew: boolean;
@@ -52,6 +54,7 @@ function toFormValue(p: ApiProduct): ProductFormValue {
     basePrice: String(p.basePrice ?? ""),
     salePrice: p.salePrice == null ? "" : String(p.salePrice),
     sku: p.sku ?? "",
+    barcode: p.barcode ?? "",
     isActive: p.isActive,
     isFeatured: p.isFeatured,
     isNew: p.isNew,
@@ -74,6 +77,7 @@ function toFormValue(p: ApiProduct): ProductFormValue {
       })),
       size: v.size ?? "",
       sku: v.sku ?? "",
+      barcode: v.barcode ?? "",
       priceAdjustment: v.priceAdjustment == null ? "0" : String(v.priceAdjustment),
       stock: String(v.inventory?.quantity ?? 0),
       isActive: v.isActive,

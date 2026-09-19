@@ -14,6 +14,9 @@ export const productVariantSchema = z.object({
   colorParts: z.array(productVariantColorPartSchema).optional(),
   size: z.string().optional(),
   sku: z.string().optional(),
+  // The item's own code, typed by the admin and rendered as a scannable
+  // barcode — not auto-generated.
+  barcode: z.string().optional(),
   priceAdjustment: z.number().default(0),
   isActive: z.boolean().default(true),
   stock: z.number().int().min(0).default(0),
@@ -35,6 +38,7 @@ export const productSchema = z.object({
   basePrice: z.number().positive("Price must be positive"),
   salePrice: z.number().positive().optional().nullable(),
   sku: z.string().optional(),
+  barcode: z.string().optional(),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
   isNew: z.boolean().default(true),

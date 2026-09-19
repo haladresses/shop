@@ -1,5 +1,6 @@
 import type { IconType } from "react-icons";
 import {
+  LuBarcode,
   LuCreditCard,
   LuGalleryHorizontalEnd,
   LuImage,
@@ -11,6 +12,7 @@ import {
   LuPackage,
   LuQuote,
   LuScale,
+  LuScanBarcode,
   LuSettings,
   LuShield,
   LuShirt,
@@ -37,6 +39,7 @@ export type AdminNavigationMeta = {
 
 export const ADMIN_NAVIGATION_META: AdminNavigationMeta[] = [
   { href: "/admin", label: "Dashboard", permission: "admin.dashboard.view", section: "Overview", icon: LuLayoutDashboard, color: "text-sky-400", exact: true },
+  { href: "/pos", label: "POS", permission: "pos.access", section: "Operations", icon: LuScanBarcode, color: "text-emerald-400" },
   { href: "/admin/orders", label: "Orders", permission: "admin.orders.view", section: "Operations", icon: LuPackage, color: "text-amber-400" },
   { href: "/admin/payments", label: "Payments", permission: "admin.payments.view", section: "Operations", icon: LuCreditCard, color: "text-green-400" },
   { href: "/admin/shipping", label: "Shipping", permission: "admin.shipping.view", section: "Operations", icon: LuTruck, color: "text-blue-400" },
@@ -46,6 +49,7 @@ export const ADMIN_NAVIGATION_META: AdminNavigationMeta[] = [
   { href: "/admin/products", label: "Products", permission: "admin.products.view", section: "Catalog", icon: LuShirt, color: "text-rose-400" },
   { href: "/admin/categories", label: "Categories", permission: "admin.categories.view", section: "Catalog", icon: LuTags, color: "text-emerald-400" },
   { href: "/admin/inventory", label: "Inventory", permission: "admin.inventory.view", section: "Catalog", icon: LuWarehouse, color: "text-orange-400" },
+  { href: "/admin/products/labels", label: "Barcode Labels", permission: "admin.products.view", section: "Catalog", icon: LuBarcode, color: "text-slate-400" },
   { href: "/admin/reviews", label: "Reviews", permission: "admin.reviews.view", section: "Catalog", icon: LuStar, color: "text-yellow-400" },
   { href: "/admin/hero", label: "Homepage Hero", permission: "admin.hero.manage", section: "Content", icon: LuImage, color: "text-cyan-400" },
   { href: "/admin/promo-banner", label: "Promo Banner", permission: "admin.promo.manage", section: "Content", icon: LuGalleryHorizontalEnd, color: "text-fuchsia-400" },

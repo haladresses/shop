@@ -17,6 +17,7 @@ const pageTitles: Record<string, string> = {
   "/admin/users": "Users Management",
   "/admin/products": "Products Management",
   "/admin/products/new": "Add Product",
+  "/admin/products/labels": "Barcode Labels",
   "/admin/categories": "Categories",
   "/admin/orders": "Orders",
   "/admin/inventory": "Inventory",

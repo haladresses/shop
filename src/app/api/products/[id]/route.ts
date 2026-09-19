@@ -62,6 +62,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const data: Prisma.ProductUpdateInput = { ...scalar };
 
+    // An empty string must become NULL, not "" — the column is unique, and
+    // Postgres treats "" as a real (colliding) value while NULLs never collide.
+    if (scalar.barcode !== undefined) data.barcode = scalar.barcode || null;
+
     if (attributes !== undefined) {
       data.attributes =
         attributes && Object.keys(attributes).length
@@ -94,6 +98,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             : Prisma.JsonNull,
           size: v.size,
           sku: v.sku,
+          barcode: v.barcode || null,
           priceAdjustment: v.priceAdjustment,
           isActive: v.isActive,
           inventory: { create: { quantity: v.stock, lowStockAlert: 5 } },
