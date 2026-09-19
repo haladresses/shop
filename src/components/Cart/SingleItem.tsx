@@ -5,11 +5,13 @@ import {
   removeItemFromCart,
   updateCartItemQuantity,
 } from "@/redux/features/cart-slice";
+import { formatVariantLabel } from "@/lib/utils";
 
 import Image from "next/image";
 
 const SingleItem = ({ item }) => {
   const [quantity, setQuantity] = useState(item.quantity);
+  const variantLabel = formatVariantLabel(item);
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -44,10 +46,8 @@ const SingleItem = ({ item }) => {
               <h3 className="text-dark ease-out duration-200 hover:text-blue">
                 <a href="#"> {item.title} </a>
               </h3>
-              {(item.color || item.size) && (
-                <p className="text-custom-sm text-dark-4 mt-1">
-                  {[item.color, item.size].filter(Boolean).join(" / ")}
-                </p>
+              {variantLabel && (
+                <p className="text-custom-sm text-dark-4 mt-1">{variantLabel}</p>
               )}
             </div>
           </div>

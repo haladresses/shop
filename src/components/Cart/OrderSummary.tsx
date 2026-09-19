@@ -3,6 +3,7 @@ import { useAppSelector } from "@/redux/store";
 import React from "react";
 import { useSelector } from "react-redux";
 import Link from "next/link";
+import { formatVariantLabel } from "@/lib/utils";
 
 const OrderSummary = () => {
   const cartItems = useAppSelector((state) => state.cartReducer.items);
@@ -32,10 +33,8 @@ const OrderSummary = () => {
             <div key={item.id} className="flex items-center justify-between py-5 border-b border-gray-3">
               <div>
                 <p className="text-dark">{item.title}</p>
-                {(item.color || item.size) && (
-                  <p className="text-custom-sm text-dark-4">
-                    {[item.color, item.size].filter(Boolean).join(" / ")}
-                  </p>
+                {formatVariantLabel(item) && (
+                  <p className="text-custom-sm text-dark-4">{formatVariantLabel(item)}</p>
                 )}
               </div>
               <div>

@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
           items: {
             include: {
               product: { select: { nameEn: true, nameAr: true } },
-              variant: { select: { color: true, size: true } },
+              variant: { select: { color: true, colorParts: true, size: true } },
             },
           },
           payments: { orderBy: { createdAt: "desc" }, take: 1 },
@@ -139,6 +139,7 @@ export async function POST(req: NextRequest) {
           sku: variant?.sku || product.sku || null,
           color: variant?.color || null,
           colorHex: variant?.colorHex || null,
+          colorParts: variant?.colorParts || null,
           size: variant?.size || null,
         },
       });

@@ -161,6 +161,9 @@ export async function POST(req: NextRequest) {
           create: variants.map((v) => ({
             color: v.color,
             colorHex: v.colorHex,
+            colorParts: v.colorParts && v.colorParts.length
+              ? (v.colorParts as Prisma.InputJsonValue)
+              : Prisma.JsonNull,
             size: v.size,
             sku: v.sku,
             priceAdjustment: v.priceAdjustment,

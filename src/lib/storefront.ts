@@ -11,10 +11,17 @@ export type ApiProductImage = {
   color?: string | null;
 };
 
+export type ApiProductColorPart = {
+  part: string;
+  color: string;
+  colorHex?: string | null;
+};
+
 export type ApiProductVariant = {
   id: string;
   color?: string | null;
   colorHex?: string | null;
+  colorParts?: ApiProductColorPart[] | null;
   size?: string | null;
   priceAdjustment?: number | string;
   isActive?: boolean;

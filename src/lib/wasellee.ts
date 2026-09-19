@@ -1,5 +1,6 @@
 import prisma from "@/lib/db";
 import type { WaselleeBranch, WaselleeDeliveryType } from "@prisma/client";
+import { formatVariantLabel } from "@/lib/utils";
 
 type ShippingAddress = {
   nameEn?: string;
@@ -40,10 +41,11 @@ function formatDispatchItems(items?: DispatchOrderItem[]): string[] {
         nameAr?: string;
         nameEn?: string;
         color?: string | null;
+        colorParts?: { part: string; color: string }[] | null;
         size?: string | null;
       } | null) || {};
     const name = snap.nameAr || snap.nameEn || "منتج";
-    const variantBits = [snap.color, snap.size].filter(Boolean).join(" / ");
+    const variantBits = formatVariantLabel(snap);
     return `- ${name}${variantBits ? ` (${variantBits})` : ""} × ${item.quantity}`;
   });
 }

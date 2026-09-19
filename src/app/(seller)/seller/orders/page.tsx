@@ -1,5 +1,8 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { formatVariantLabel } from "@/lib/utils";
+
+type ColorPart = { part: string; color: string; colorHex?: string | null };
 
 type Order = {
   id: string;
@@ -11,7 +14,7 @@ type Order = {
   items: Array<{
     quantity: number;
     product: { nameEn: string };
-    variant?: { color?: string | null; size?: string | null } | null;
+    variant?: { color?: string | null; colorParts?: ColorPart[] | null; size?: string | null } | null;
   }>;
 };
 
@@ -70,7 +73,7 @@ export default function SellerOrdersPage() {
                     <td className="px-4 py-3 font-mono font-medium text-sky-600">{o.orderNumber}</td>
                     <td className="px-4 py-3 text-slate-600">
                       {o.items.map((i) => {
-                        const variant = [i.variant?.color, i.variant?.size].filter(Boolean).join("/");
+                        const variant = formatVariantLabel(i.variant || {});
                         return `${i.product.nameEn}${variant ? ` (${variant})` : ""} ×${i.quantity}`;
                       }).join(", ")}
                     </td>

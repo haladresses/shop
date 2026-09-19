@@ -145,10 +145,16 @@ const ShopDetails = () => {
 
   // Variants: distinct colors + sizes.
   const variants = (api?.variants ?? []).filter((v) => v.isActive !== false);
+  // Identifies a variant's color option, whether it's a flat color or a
+  // multi-area breakdown (e.g. yellow sleeves + blue body) with no flat color set.
+  const colorKey = (v: ApiProductVariant) => {
+    const partsKey = (v.colorParts || []).map((p) => `${p.part}:${p.color}`).join("|");
+    return v.colorHex || v.color || partsKey;
+  };
   const colorVariants = useMemo(() => {
     const seen = new Set<string>();
     return variants.filter((v) => {
-      const key = v.colorHex || v.color || "";
+      const key = colorKey(v);
       if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -165,7 +171,7 @@ const ShopDetails = () => {
     if (variants.length === 0) return null;
     const matching = variants.filter(
       (v) =>
-        (!activeVariant || (v.colorHex || v.color) === (activeVariant.colorHex || activeVariant.color)) &&
+        (!activeVariant || colorKey(v) === colorKey(activeVariant)) &&
         (!activeSize || v.size === activeSize)
     );
     return matching.reduce((sum, v) => sum + (v.inventory?.quantity ?? 0), 0);
@@ -205,6 +211,7 @@ const ShopDetails = () => {
         variantId: activeVariant?.id,
         color: activeVariant?.color || undefined,
         colorHex: activeVariant?.colorHex || undefined,
+        colorParts: activeVariant?.colorParts || undefined,
         size: activeSize || undefined,
         quantity,
       } as never)
@@ -375,22 +382,42 @@ const ShopDetails = () => {
                   </h4>
                   <div className="flex flex-wrap items-center gap-2.5">
                     {colorVariants.map((v) => {
-                      const active = (activeVariant?.colorHex || activeVariant?.color) === (v.colorHex || v.color);
+                      const active = !!activeVariant && colorKey(activeVariant) === colorKey(v);
+                      const parts = v.colorParts || [];
+                      // Multi-color option (e.g. yellow sleeves + blue body): render a pie-slice
+                      // swatch of each area's color instead of one flat fill.
+                      const swatchBg =
+                        parts.length > 1
+                          ? `conic-gradient(${parts
+                              .map(
+                                (p, i) =>
+                                  `${p.colorHex || "#ccc"} ${(i * 360) / parts.length}deg ${
+                                    ((i + 1) * 360) / parts.length
+                                  }deg`
+                              )
+                              .join(", ")})`
+                          : v.colorHex || "#ccc";
+                      const label = v.color || parts.map((p) => `${p.part}: ${p.color}`).join(", ");
                       return (
                         <button
                           key={v.id}
                           onClick={() => setActiveVariant(active ? null : v)}
-                          title={v.color || ""}
-                          aria-label={v.color || "color"}
+                          title={label}
+                          aria-label={label || "color"}
                           className={`w-9 h-9 rounded-full flex items-center justify-center border-2 duration-200 ${
                             active ? "border-blue" : "border-transparent hover:border-gray-4"
                           }`}
                         >
-                          <span className="w-7 h-7 rounded-full border border-gray-3" style={{ background: v.colorHex || "#ccc" }} />
+                          <span className="w-7 h-7 rounded-full border border-gray-3" style={{ background: swatchBg }} />
                         </button>
                       );
                     })}
                   </div>
+                  {activeVariant?.colorParts && activeVariant.colorParts.length > 0 && (
+                    <p className="mt-2 text-custom-sm text-dark-4">
+                      {activeVariant.colorParts.map((p) => `${p.part}: ${p.color}`).join(isArabic ? " · " : " · ")}
+                    </p>
+                  )}
                 </div>
               )}
 

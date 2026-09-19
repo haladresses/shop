@@ -9,6 +9,7 @@ import {
   removeAllItemsFromCart,
 } from "@/redux/features/cart-slice";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { formatVariantLabel } from "@/lib/utils";
 
 type PaymentMethod = "CASH_ON_DELIVERY" | "BANK_TRANSFER" | "THAWANI";
 type ShippingMethod = "STANDARD" | "WASELLEE" | "STORE_PICKUP";
@@ -556,9 +557,9 @@ const Checkout = () => {
                           <p className="text-dark">
                             {item.title}{" "}
                             <span className="text-dark-4">x{item.quantity}</span>
-                            {(item.color || item.size) && (
+                            {formatVariantLabel(item) && (
                               <span className="block text-custom-xs text-dark-4 mt-0.5">
-                                {[item.color, item.size].filter(Boolean).join(" / ")}
+                                {formatVariantLabel(item)}
                               </span>
                             )}
                           </p>

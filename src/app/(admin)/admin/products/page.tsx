@@ -41,7 +41,7 @@ export default function ProductsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(page), search, ...(categoryFilter && { categoryId: categoryFilter }) });
-    const res = await fetch(`/api/products?${params}`);
+    const res = await fetch(`/api/products?${params}`, { cache: "no-store" });
     const data = await res.json();
     if (data.success) { setProducts(data.data); setTotal(data.meta.total); }
     setLoading(false);

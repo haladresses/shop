@@ -249,6 +249,11 @@ model ProductVariant {
   productId       String
   color           String?
   colorHex        String?
+  // Per-region color breakdown for a single item that is itself multi-color
+  // (e.g. yellow sleeves + blue body): [{ part, color, colorHex? }]. `color`/
+  // `colorHex` above stay the swatch/label for this option (e.g. "Look 1");
+  // this is the detailed breakdown shown to the shopper and the admin.
+  colorParts      Json?
   size            String?
   sku             String? @unique
   priceAdjustment Decimal @default(0) @db.Decimal(10, 3)

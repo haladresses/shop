@@ -10,6 +10,8 @@ type InitialState = {
 // picked) so two colors/sizes of the same product get separate lines instead
 // of merging into one. `productId` is always the real product id, used when
 // submitting the order.
+type CartColorPart = { part: string; color: string; colorHex?: string | null };
+
 type CartItem = {
   id: string;
   productId: string;
@@ -17,6 +19,9 @@ type CartItem = {
   variantId?: string;
   color?: string;
   colorHex?: string;
+  // Per-region breakdown when this option is itself multi-color (e.g. yellow
+  // sleeves + blue body), so the cart/checkout/order can show it.
+  colorParts?: CartColorPart[];
   size?: string;
   title: string;
   price: number;

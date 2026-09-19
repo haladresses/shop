@@ -20,9 +20,19 @@ export type ProductImageState = {
   color?: string;
 };
 
+export type ColorPartState = {
+  part: string;
+  color: string;
+  colorHex: string;
+};
+
 export type VariantState = {
   color: string;
   colorHex: string;
+  // Per-region breakdown for a variant that is itself multi-color, e.g. one
+  // option = yellow sleeves + blue body. Optional — most variants are a
+  // single solid color and leave this empty.
+  colorParts: ColorPartState[];
   size: string;
   sku: string;
   priceAdjustment: string;
@@ -82,6 +92,9 @@ export function buildProductPayload(form: ProductFormValue) {
     variants: form.variants.map((v) => ({
       color: v.color || undefined,
       colorHex: v.colorHex || undefined,
+      colorParts: (v.colorParts || [])
+        .filter((p) => p.part.trim() && p.color.trim())
+        .map((p) => ({ part: p.part.trim(), color: p.color.trim(), colorHex: p.colorHex || undefined })),
       size: v.size || undefined,
       sku: v.sku || undefined,
       priceAdjustment: parseFloat(v.priceAdjustment) || 0,
@@ -221,7 +234,7 @@ export default function ProductForm({
   const addVariant = () =>
     set("variants", [
       ...form.variants,
-      { color: "", colorHex: "", size: "", sku: "", priceAdjustment: "0", stock: "0", isActive: true },
+      { color: "", colorHex: "", colorParts: [], size: "", sku: "", priceAdjustment: "0", stock: "0", isActive: true },
     ]);
 
   const setVariant = (idx: number, patch: Partial<VariantState>) =>
@@ -229,6 +242,22 @@ export default function ProductForm({
 
   const removeVariant = (idx: number) =>
     set("variants", form.variants.filter((_, i) => i !== idx));
+
+  // ---- Variant color parts (e.g. yellow sleeves + blue body) ----
+  const addColorPart = (variantIdx: number) =>
+    setVariant(variantIdx, {
+      colorParts: [...(form.variants[variantIdx].colorParts || []), { part: "", color: "", colorHex: "" }],
+    });
+
+  const setColorPart = (variantIdx: number, partIdx: number, patch: Partial<ColorPartState>) =>
+    setVariant(variantIdx, {
+      colorParts: (form.variants[variantIdx].colorParts || []).map((p, i) => (i === partIdx ? { ...p, ...patch } : p)),
+    });
+
+  const removeColorPart = (variantIdx: number, partIdx: number) =>
+    setVariant(variantIdx, {
+      colorParts: (form.variants[variantIdx].colorParts || []).filter((_, i) => i !== partIdx),
+    });
 
   // ---- Submit ----
   const handleSubmit = async (e: React.FormEvent) => {
@@ -251,6 +280,10 @@ export default function ProductForm({
     const res = await onSubmit(form);
     setSaving(false);
     if (!res.success) { setError(res.error || "Could not save product"); return; }
+    // Drop the client router cache for this product so re-opening it (e.g. to
+    // check the colors just saved) fetches fresh data instead of the page as
+    // it looked before this save.
+    router.refresh();
     router.push("/admin/products");
   };
 
@@ -436,6 +469,46 @@ export default function ProductForm({
                   </div>
                   <button type="button" onClick={() => removeVariant(idx)} className="p-2 rounded text-rose-500 hover:bg-rose-50 mb-0.5" aria-label="Remove variant"><LuTrash2 size={16} /></button>
                 </div>
+              </div>
+
+              {/* Multi-color breakdown for this option, e.g. yellow sleeves + blue body */}
+              <div className="mt-3 pt-3 border-t border-slate-100">
+                <p className="text-xs text-slate-500 mb-2">
+                  This option&apos;s own color is one flat color (e.g. a solid-colored bag). If this item mixes colors by
+                  area instead (e.g. yellow sleeves, blue body), break it down here — it&apos;ll show as this option&apos;s
+                  detail and swatch.
+                </p>
+                <div className="space-y-2">
+                  {(v.colorParts || []).map((p, pIdx) => (
+                    <div key={pIdx} className="grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-center">
+                      <input
+                        className="admin-input !py-1.5 text-sm"
+                        placeholder="Area (e.g. Sleeves)"
+                        value={p.part}
+                        onChange={(e) => setColorPart(idx, pIdx, { part: e.target.value })}
+                      />
+                      <input
+                        className="admin-input !py-1.5 text-sm"
+                        placeholder="Color (e.g. Yellow)"
+                        value={p.color}
+                        onChange={(e) => setColorPart(idx, pIdx, { color: e.target.value })}
+                      />
+                      <input
+                        type="color"
+                        value={p.colorHex || "#000000"}
+                        onChange={(e) => setColorPart(idx, pIdx, { colorHex: e.target.value })}
+                        className="w-8 h-8 rounded border border-slate-200 p-0.5 cursor-pointer"
+                        aria-label="Area color swatch"
+                      />
+                      <button type="button" onClick={() => removeColorPart(idx, pIdx)} className="p-2 rounded text-rose-500 hover:bg-rose-50" aria-label="Remove color area">
+                        <LuTrash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" onClick={() => addColorPart(idx)} className="admin-btn admin-btn-secondary inline-flex items-center gap-1.5 text-xs mt-2 !py-1.5">
+                  <LuPlus size={13} /> Add color area
+                </button>
               </div>
             </div>
           ))}

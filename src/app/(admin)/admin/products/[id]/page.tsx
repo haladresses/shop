@@ -8,9 +8,12 @@ import ProductForm, {
 } from "@/components/admin/ProductForm";
 import type { ProductAttributes } from "@/lib/attributes";
 
+type ApiColorPart = { part: string; color: string; colorHex?: string | null };
+
 type ApiVariant = {
   color: string | null;
   colorHex: string | null;
+  colorParts?: ApiColorPart[] | null;
   size: string | null;
   sku: string | null;
   priceAdjustment: string | number | null;
@@ -64,6 +67,11 @@ function toFormValue(p: ApiProduct): ProductFormValue {
     variants: (p.variants ?? []).map((v) => ({
       color: v.color ?? "",
       colorHex: v.colorHex ?? "",
+      colorParts: (v.colorParts ?? []).map((cp) => ({
+        part: cp.part,
+        color: cp.color,
+        colorHex: cp.colorHex ?? "",
+      })),
       size: v.size ?? "",
       sku: v.sku ?? "",
       priceAdjustment: v.priceAdjustment == null ? "0" : String(v.priceAdjustment),
@@ -79,7 +87,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    fetch(`/api/products/${id}`)
+    // Force a fresh fetch — otherwise the browser/Next.js can serve a cached
+    // response and the edit form loads stale data (e.g. colors saved a moment
+    // ago don't show up when you come back into this page).
+    fetch(`/api/products/${id}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
         if (d.success) setInitial(toFormValue(d.data));

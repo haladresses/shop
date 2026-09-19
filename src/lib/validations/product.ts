@@ -1,8 +1,17 @@
 import { z } from "zod";
 
+export const productVariantColorPartSchema = z.object({
+  part: z.string().min(1),
+  color: z.string().min(1),
+  colorHex: z.string().optional(),
+});
+
 export const productVariantSchema = z.object({
   color: z.string().optional(),
   colorHex: z.string().optional(),
+  // Per-region breakdown for a variant that is itself multi-color, e.g.
+  // [{ part: "Sleeves", color: "Yellow" }, { part: "Body", color: "Blue" }].
+  colorParts: z.array(productVariantColorPartSchema).optional(),
   size: z.string().optional(),
   sku: z.string().optional(),
   priceAdjustment: z.number().default(0),
