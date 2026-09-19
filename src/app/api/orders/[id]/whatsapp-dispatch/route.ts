@@ -19,7 +19,7 @@ async function buildDispatch(orderId: string) {
     include: {
       waselleeBranch: true,
       payments: { orderBy: { createdAt: "desc" }, take: 1 },
-      _count: { select: { items: true } },
+      items: { select: { quantity: true, productSnapshot: true } },
     },
   });
   if (!order) return null;
@@ -31,7 +31,7 @@ async function buildDispatch(orderId: string) {
     notes: order.notes,
     total: order.total,
     shippingAddress: order.shippingAddress,
-    itemsCount: order._count.items,
+    items: order.items,
     paymentMethod,
   };
 

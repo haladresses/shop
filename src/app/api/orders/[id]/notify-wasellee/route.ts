@@ -13,7 +13,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const { id } = await params;
     const order = await prisma.order.findUnique({
       where: { id },
-      include: { waselleeBranch: true, payments: { orderBy: { createdAt: "desc" }, take: 1 } },
+      include: {
+        waselleeBranch: true,
+        payments: { orderBy: { createdAt: "desc" }, take: 1 },
+        items: { select: { quantity: true, productSnapshot: true } },
+      },
     });
 
     if (!order) return notFound("Order");

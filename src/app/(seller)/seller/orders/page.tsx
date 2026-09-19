@@ -8,7 +8,11 @@ type Order = {
   status: string;
   paymentStatus: string;
   createdAt: string;
-  items: Array<{ quantity: number; product: { nameEn: string } }>;
+  items: Array<{
+    quantity: number;
+    product: { nameEn: string };
+    variant?: { color?: string | null; size?: string | null } | null;
+  }>;
 };
 
 const statusColors: Record<string, string> = {
@@ -64,7 +68,12 @@ export default function SellerOrdersPage() {
                 {orders.map((o) => (
                   <tr key={o.id} className="border-t border-slate-100 hover:bg-slate-50">
                     <td className="px-4 py-3 font-mono font-medium text-sky-600">{o.orderNumber}</td>
-                    <td className="px-4 py-3 text-slate-600">{o.items.map(i => `${i.product.nameEn} ×${i.quantity}`).join(", ")}</td>
+                    <td className="px-4 py-3 text-slate-600">
+                      {o.items.map((i) => {
+                        const variant = [i.variant?.color, i.variant?.size].filter(Boolean).join("/");
+                        return `${i.product.nameEn}${variant ? ` (${variant})` : ""} ×${i.quantity}`;
+                      }).join(", ")}
+                    </td>
                     <td className="px-4 py-3 font-medium">{Number(o.total).toFixed(3)} OMR</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[o.status] || "bg-slate-100 text-slate-600"}`}>

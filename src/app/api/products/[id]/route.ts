@@ -77,6 +77,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           url: img.url,
           isPrimary: img.isPrimary || i === 0,
           sortOrder: img.sortOrder ?? i,
+          color: img.color || null,
         })),
       };
     }

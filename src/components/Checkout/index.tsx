@@ -144,7 +144,7 @@ const Checkout = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: cartItems.map((item) => ({
-            productId: item.id,
+            productId: item.productId,
             ...(item.variantId ? { variantId: item.variantId } : {}),
             quantity: item.quantity,
           })),
@@ -551,13 +551,18 @@ const Checkout = () => {
                       cartItems.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between py-5 border-b border-gray-3"
+                          className="flex items-center justify-between py-5 border-b border-gray-3 gap-3"
                         >
                           <p className="text-dark">
                             {item.title}{" "}
                             <span className="text-dark-4">x{item.quantity}</span>
+                            {(item.color || item.size) && (
+                              <span className="block text-custom-xs text-dark-4 mt-0.5">
+                                {[item.color, item.size].filter(Boolean).join(" / ")}
+                              </span>
+                            )}
                           </p>
-                          <p className="text-dark text-right">
+                          <p className="text-dark text-right whitespace-nowrap">
                             {(item.discountedPrice * item.quantity).toFixed(3)}{" "}
                             {currency}
                           </p>

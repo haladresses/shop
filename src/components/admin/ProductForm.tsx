@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   LuX, LuImagePlus, LuStar, LuTrash2, LuPlus, LuChevronUp, LuChevronDown,
@@ -17,6 +17,7 @@ export type ProductImageState = {
   isPrimary: boolean;
   altEn?: string;
   altAr?: string;
+  color?: string;
 };
 
 export type VariantState = {
@@ -76,6 +77,7 @@ export function buildProductPayload(form: ProductFormValue) {
       url: img.url,
       isPrimary: img.isPrimary,
       sortOrder: i,
+      color: img.color || undefined,
     })),
     variants: form.variants.map((v) => ({
       color: v.color || undefined,
@@ -149,6 +151,18 @@ export default function ProductForm({
   const setAttr = (key: string, value: AttributeValue) =>
     setForm((f) => ({ ...f, attributes: { ...f.attributes, [key]: value } }));
 
+  // Distinct variant colors, offered as the per-image color tag options.
+  const variantColors = useMemo(() => {
+    const seen = new Set<string>();
+    return form.variants
+      .map((v) => v.color.trim())
+      .filter((c) => {
+        if (!c || seen.has(c)) return false;
+        seen.add(c);
+        return true;
+      });
+  }, [form.variants]);
+
   // ---- Images ----
   const uploadImages = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -186,6 +200,12 @@ export default function ProductForm({
     setForm((f) => ({
       ...f,
       images: f.images.map((img, i) => ({ ...img, isPrimary: i === idx })),
+    }));
+
+  const setImageColor = (idx: number, color: string) =>
+    setForm((f) => ({
+      ...f,
+      images: f.images.map((img, i) => (i === idx ? { ...img, color } : img)),
     }));
 
   const reorderImage = (from: number, to: number) =>
@@ -240,40 +260,59 @@ export default function ProductForm({
         <div className="bg-rose-50 text-rose-700 text-sm px-4 py-3 rounded-xl border border-rose-100">{error}</div>
       )}
 
-      <Card title="Images" desc="The starred image is the primary thumbnail. Drag or use arrows to reorder.">
+      <Card
+        title="Images"
+        desc={
+          variantColors.length > 0
+            ? "The starred image is the primary thumbnail. Drag or use arrows to reorder. Tag an image with a color so shoppers see it when they pick that color."
+            : "The starred image is the primary thumbnail. Drag or use arrows to reorder. Add colors under Variants & Stock to tag images per color."
+        }
+      >
         <div className="flex flex-wrap gap-3">
           {form.images.map((img, idx) => (
-            <div
-              key={img.url + idx}
-              draggable
-              onDragStart={() => setDragIndex(idx)}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={() => { if (dragIndex !== null) reorderImage(dragIndex, idx); setDragIndex(null); }}
-              className={`relative w-28 h-28 rounded-xl overflow-hidden border-2 group ${img.isPrimary ? "border-indigo-500 ring-2 ring-indigo-100" : "border-slate-200"}`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt="product" className="w-full h-full object-cover" />
-              <div className="absolute inset-x-0 top-0 flex items-center justify-between p-1 bg-gradient-to-b from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-white/80 cursor-grab"><LuGripVertical size={14} /></span>
-                <button type="button" onClick={() => removeImage(idx)} className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center" aria-label="Remove image">
-                  <LuX size={12} />
-                </button>
-              </div>
-              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-1 bg-gradient-to-t from-black/60 to-transparent">
-                <button
-                  type="button"
-                  onClick={() => setPrimary(idx)}
-                  title={img.isPrimary ? "Primary image" : "Set as primary"}
-                  className={`flex items-center gap-1 text-[10px] font-medium ${img.isPrimary ? "text-amber-300" : "text-white/80 hover:text-amber-300"}`}
-                >
-                  <LuStar size={12} className={img.isPrimary ? "fill-amber-300" : ""} />
-                  {img.isPrimary ? "Primary" : "Set"}
-                </button>
-                <div className="flex">
-                  <button type="button" onClick={() => reorderImage(idx, idx - 1)} className="text-white/70 hover:text-white" aria-label="Move left"><LuChevronUp size={13} className="-rotate-90" /></button>
-                  <button type="button" onClick={() => reorderImage(idx, idx + 1)} className="text-white/70 hover:text-white" aria-label="Move right"><LuChevronDown size={13} className="-rotate-90" /></button>
+            <div key={img.url + idx} className="w-28">
+              <div
+                draggable
+                onDragStart={() => setDragIndex(idx)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => { if (dragIndex !== null) reorderImage(dragIndex, idx); setDragIndex(null); }}
+                className={`relative w-28 h-28 rounded-xl overflow-hidden border-2 group ${img.isPrimary ? "border-indigo-500 ring-2 ring-indigo-100" : "border-slate-200"}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.url} alt="product" className="w-full h-full object-cover" />
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between p-1 bg-gradient-to-b from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-white/80 cursor-grab"><LuGripVertical size={14} /></span>
+                  <button type="button" onClick={() => removeImage(idx)} className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center" aria-label="Remove image">
+                    <LuX size={12} />
+                  </button>
+                </div>
+                <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-1 bg-gradient-to-t from-black/60 to-transparent">
+                  <button
+                    type="button"
+                    onClick={() => setPrimary(idx)}
+                    title={img.isPrimary ? "Primary image" : "Set as primary"}
+                    className={`flex items-center gap-1 text-[10px] font-medium ${img.isPrimary ? "text-amber-300" : "text-white/80 hover:text-amber-300"}`}
+                  >
+                    <LuStar size={12} className={img.isPrimary ? "fill-amber-300" : ""} />
+                    {img.isPrimary ? "Primary" : "Set"}
+                  </button>
+                  <div className="flex">
+                    <button type="button" onClick={() => reorderImage(idx, idx - 1)} className="text-white/70 hover:text-white" aria-label="Move left"><LuChevronUp size={13} className="-rotate-90" /></button>
+                    <button type="button" onClick={() => reorderImage(idx, idx + 1)} className="text-white/70 hover:text-white" aria-label="Move right"><LuChevronDown size={13} className="-rotate-90" /></button>
+                  </div>
                 </div>
               </div>
+              {variantColors.length > 0 && (
+                <select
+                  className="admin-input admin-select !py-1 mt-1.5 text-xs"
+                  value={img.color && variantColors.includes(img.color) ? img.color : ""}
+                  onChange={(e) => setImageColor(idx, e.target.value)}
+                  aria-label="Image color"
+                >
+                  <option value="">All colors</option>
+                  {variantColors.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              )}
             </div>
           ))}
           <label className="w-28 h-28 rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer text-slate-400 hover:border-indigo-400 hover:text-indigo-500 text-xs">

@@ -8,6 +8,7 @@ export type ApiProductImage = {
   altEn?: string | null;
   altAr?: string | null;
   sortOrder?: number;
+  color?: string | null;
 };
 
 export type ApiProductVariant = {

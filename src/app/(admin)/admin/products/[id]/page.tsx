@@ -18,7 +18,7 @@ type ApiVariant = {
   inventory?: { quantity: number } | null;
 };
 
-type ApiImage = { url: string; isPrimary: boolean; altEn?: string | null; altAr?: string | null };
+type ApiImage = { url: string; isPrimary: boolean; altEn?: string | null; altAr?: string | null; color?: string | null };
 
 type ApiProduct = {
   id: string;
@@ -59,6 +59,7 @@ function toFormValue(p: ApiProduct): ProductFormValue {
       isPrimary: i.isPrimary,
       altEn: i.altEn ?? undefined,
       altAr: i.altAr ?? undefined,
+      color: i.color ?? undefined,
     })),
     variants: (p.variants ?? []).map((v) => ({
       color: v.color ?? "",

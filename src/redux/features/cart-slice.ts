@@ -5,10 +5,19 @@ type InitialState = {
   items: CartItem[];
 };
 
+// One cart line per product+variant combination. `id` is the unique line key
+// (the product id alone, or `${productId}::${variantId}` when a variant is
+// picked) so two colors/sizes of the same product get separate lines instead
+// of merging into one. `productId` is always the real product id, used when
+// submitting the order.
 type CartItem = {
   id: string;
+  productId: string;
   slug?: string;
   variantId?: string;
+  color?: string;
+  colorHex?: string;
+  size?: string;
   title: string;
   price: number;
   discountedPrice: number;
@@ -19,6 +28,8 @@ type CartItem = {
   };
 };
 
+type AddItemToCartPayload = Omit<CartItem, "id" | "productId"> & { id: string };
+
 const initialState: InitialState = {
   items: [],
 };
@@ -27,23 +38,21 @@ export const cart = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    addItemToCart: (state, action: PayloadAction<CartItem>) => {
-      const { id, slug, variantId, title, price, quantity, discountedPrice, imgs } =
-        action.payload;
-      const existingItem = state.items.find((item) => item.id === id);
+    addItemToCart: (state, action: PayloadAction<AddItemToCartPayload>) => {
+      const { id, variantId, quantity, ...rest } = action.payload;
+      const productId = id;
+      const lineId = variantId ? `${productId}::${variantId}` : productId;
+      const existingItem = state.items.find((item) => item.id === lineId);
 
       if (existingItem) {
         existingItem.quantity += quantity;
       } else {
         state.items.push({
-          id,
-          slug,
+          ...rest,
+          id: lineId,
+          productId,
           variantId,
-          title,
-          price,
           quantity,
-          discountedPrice,
-          imgs,
         });
       }
     },

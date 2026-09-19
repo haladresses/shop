@@ -26,6 +26,11 @@ const SingleItem = ({ item, removeItemFromCart }) => {
           <h3 className="font-medium text-dark text-sm mb-1 truncate hover:text-blue ease-out duration-200">
             <a href="#">{item.title}</a>
           </h3>
+          {(item.color || item.size) && (
+            <p className="text-custom-xs text-dark-4 mb-1 truncate">
+              {[item.color, item.size].filter(Boolean).join(" / ")}
+            </p>
+          )}
           <p className="text-custom-sm text-dark-4">
             {isArabic ? "السعر:" : "Price:"}{" "}
             <span className="text-dark font-medium">

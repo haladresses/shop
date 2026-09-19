@@ -44,6 +44,11 @@ const SingleItem = ({ item }) => {
               <h3 className="text-dark ease-out duration-200 hover:text-blue">
                 <a href="#"> {item.title} </a>
               </h3>
+              {(item.color || item.size) && (
+                <p className="text-custom-sm text-dark-4 mt-1">
+                  {[item.color, item.size].filter(Boolean).join(" / ")}
+                </p>
+              )}
             </div>
           </div>
         </div>

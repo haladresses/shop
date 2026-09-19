@@ -40,7 +40,12 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
         include: {
           user: { select: { nameEn: true, email: true } },
-          items: { include: { product: { select: { nameEn: true, nameAr: true } } } },
+          items: {
+            include: {
+              product: { select: { nameEn: true, nameAr: true } },
+              variant: { select: { color: true, size: true } },
+            },
+          },
           payments: { orderBy: { createdAt: "desc" }, take: 1 },
           waselleeBranch: true,
         },
@@ -109,8 +114,9 @@ export async function POST(req: NextRequest) {
       if (!product) return error(`Product ${item.productId} not found`);
 
       let unitPrice = Number(product.salePrice || product.basePrice);
+      let variant = null;
       if (item.variantId) {
-        const variant = product.variants.find((v) => v.id === item.variantId);
+        variant = product.variants.find((v) => v.id === item.variantId) || null;
         if (variant) unitPrice += Number(variant.priceAdjustment);
       }
 
@@ -123,10 +129,17 @@ export async function POST(req: NextRequest) {
         quantity: item.quantity,
         unitPrice,
         total: itemTotal,
+        // A durable copy of what was actually ordered (name, color, size, SKU)
+        // so the admin always sees the exact selection even if the variant is
+        // later edited or removed from the product.
         productSnapshot: {
           nameEn: product.nameEn,
           nameAr: product.nameAr,
           price: unitPrice,
+          sku: variant?.sku || product.sku || null,
+          color: variant?.color || null,
+          colorHex: variant?.colorHex || null,
+          size: variant?.size || null,
         },
       });
     }

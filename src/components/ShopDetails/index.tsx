@@ -38,6 +38,8 @@ const Chevron = ({ dir }: { dir: "left" | "right" }) => (
 
 const pick = (en: string, ar: string, isArabic: boolean) => (isArabic ? ar || en : en);
 
+const GALLERY_PLACEHOLDER = "/images/products/p1.png";
+
 const ShopDetails = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { isArabic } = useLanguage();
@@ -108,7 +110,31 @@ const ShopDetails = () => {
     };
   }, [api?.id]);
 
-  const images = product?.imgs?.previews ?? [];
+  // All product images, primary first then by sortOrder (mirrors mapApiProduct's ordering).
+  const sortedImages = useMemo(() => {
+    const imgs = api?.images ?? [];
+    return [...imgs].sort((a, b) => {
+      if (a.isPrimary && !b.isPrimary) return -1;
+      if (!a.isPrimary && b.isPrimary) return 1;
+      return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+    });
+  }, [api]);
+
+  // When a color is selected, prefer images tagged with that color; fall back
+  // to the full gallery when that color has no dedicated photos.
+  const images = useMemo(() => {
+    const activeColor = activeVariant?.color;
+    const matched = activeColor
+      ? sortedImages.filter((img) => img.color && img.color === activeColor)
+      : [];
+    const list = (matched.length > 0 ? matched : sortedImages).map((img) => img.url).filter(Boolean);
+    return list.length > 0 ? list : [GALLERY_PLACEHOLDER];
+  }, [sortedImages, activeVariant]);
+
+  // Jump back to the first (color-matched) photo whenever the color selection changes.
+  useEffect(() => {
+    setActiveImg(0);
+  }, [activeVariant?.color]);
 
   // Pricing (respect the selected variant's adjustment).
   const adjust = activeVariant?.priceAdjustment != null ? Number(activeVariant.priceAdjustment) : 0;
@@ -173,7 +199,13 @@ const ShopDetails = () => {
     dispatch(
       addItemToCart({
         ...product,
+        // Reflect the selected variant's price adjustment, not the base product price.
+        price: base,
+        discountedPrice: sale,
         variantId: activeVariant?.id,
+        color: activeVariant?.color || undefined,
+        colorHex: activeVariant?.colorHex || undefined,
+        size: activeSize || undefined,
         quantity,
       } as never)
     );

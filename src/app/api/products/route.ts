@@ -154,6 +154,7 @@ export async function POST(req: NextRequest) {
             url: img.url,
             isPrimary: img.isPrimary || i === 0,
             sortOrder: img.sortOrder ?? i,
+            color: img.color || null,
           })),
         },
         variants: {

@@ -14,6 +14,7 @@ export const productImageSchema = z.object({
   url: z.string().min(1),
   isPrimary: z.boolean().default(false),
   sortOrder: z.number().int().default(0),
+  color: z.string().optional(),
 });
 
 export const productSchema = z.object({

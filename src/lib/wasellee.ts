@@ -11,6 +11,11 @@ type ShippingAddress = {
   country?: string;
 };
 
+type DispatchOrderItem = {
+  quantity: number;
+  productSnapshot: unknown;
+};
+
 type OrderForNotify = {
   orderNumber: string;
   guestName: string | null;
@@ -18,7 +23,30 @@ type OrderForNotify = {
   total: unknown;
   shippingAddress: unknown;
   waselleeDeliveryType: WaselleeDeliveryType | null;
+  items?: DispatchOrderItem[];
 };
+
+/**
+ * Renders the order's line items as "- Name (Color / Size) × Qty" so whoever
+ * packs or delivers the order can pick the exact product the customer chose.
+ * Reads from the order-time snapshot, not the live product/variant, so it
+ * stays accurate even if the catalogue changes afterwards.
+ */
+function formatDispatchItems(items?: DispatchOrderItem[]): string[] {
+  if (!items || items.length === 0) return [];
+  return items.map((item) => {
+    const snap =
+      (item.productSnapshot as {
+        nameAr?: string;
+        nameEn?: string;
+        color?: string | null;
+        size?: string | null;
+      } | null) || {};
+    const name = snap.nameAr || snap.nameEn || "منتج";
+    const variantBits = [snap.color, snap.size].filter(Boolean).join(" / ");
+    return `- ${name}${variantBits ? ` (${variantBits})` : ""} × ${item.quantity}`;
+  });
+}
 
 export function calculateWaselleeCost(
   branch: Pick<WaselleeBranch, "homeDeliveryCost" | "officePickupCost">,
@@ -44,6 +72,8 @@ export function buildWaselleeWhatsAppMessage(
       ? `تحویل از فرع (${branch.cityEn})`
       : "توصیل درب المنزل";
 
+  const itemLines = formatDispatchItems(order.items);
+
   const lines = [
     "سلام،",
     "",
@@ -55,6 +85,8 @@ export function buildWaselleeWhatsAppMessage(
     `شهر: ${addr.city || branch.cityEn}`,
     `آدرس کامل: ${formatAddress(addr) || "-"}`,
     `روش تحویل: ${deliveryLabel}`,
+    ...(itemLines.length ? ["", "اقلام سفارش:", ...itemLines] : []),
+    "",
     `مبلغ سفارش: ${Number(order.total).toFixed(3)} OMR`,
     `روش پرداخت: ${paymentMethod}`,
     ...(paymentMethod === "CASH_ON_DELIVERY"
@@ -94,7 +126,7 @@ type OrderForDispatch = {
   notes: string | null;
   total: unknown;
   shippingAddress: unknown;
-  itemsCount?: number;
+  items?: DispatchOrderItem[];
   paymentMethod?: string;
 };
 
@@ -106,6 +138,7 @@ const isCod = (m?: string) => (m || "").toUpperCase().includes("CASH");
  */
 export function buildDriverDispatchMessage(order: OrderForDispatch): string {
   const addr = (order.shippingAddress as ShippingAddress) || {};
+  const itemLines = formatDispatchItems(order.items);
   const lines = [
     "مرحباً 👋",
     "الطلب جاهز للاستلام والتوصيل.",
@@ -114,7 +147,8 @@ export function buildDriverDispatchMessage(order: OrderForDispatch): string {
     `اسم العميل: ${addr.nameEn || order.guestName || "-"}`,
     `هاتف العميل: ${addr.phone || "-"}`,
     `العنوان: ${formatAddress(addr) || "-"}`,
-    ...(order.itemsCount ? [`عدد القطع: ${order.itemsCount}`] : []),
+    ...(itemLines.length ? ["", "محتويات الطلب:", ...itemLines] : []),
+    "",
     `الإجمالي: ${Number(order.total).toFixed(3)} ر.ع`,
     ...(isCod(order.paymentMethod)
       ? [`💵 يُحصّل من العميل عند التسليم: ${Number(order.total).toFixed(3)} ر.ع`]
@@ -135,6 +169,7 @@ export function buildWasliDispatchMessage(
   branchCity?: string | null
 ): string {
   const addr = (order.shippingAddress as ShippingAddress) || {};
+  const itemLines = formatDispatchItems(order.items);
   const lines = [
     "سلام وصلي 👋",
     "طلب جديد جاهز للشحن.",
@@ -144,6 +179,8 @@ export function buildWasliDispatchMessage(
     `هاتف العميل: ${addr.phone || "-"}`,
     `المدينة: ${addr.city || branchCity || "-"}`,
     `العنوان الكامل: ${formatAddress(addr) || "-"}`,
+    ...(itemLines.length ? ["", "محتويات الطلب:", ...itemLines] : []),
+    "",
     `مبلغ الطلب: ${Number(order.total).toFixed(3)} ر.ع`,
     ...(isCod(order.paymentMethod)
       ? [`💵 الدفع عند الاستلام: ${Number(order.total).toFixed(3)} ر.ع`]

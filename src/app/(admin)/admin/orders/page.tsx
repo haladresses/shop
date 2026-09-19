@@ -24,7 +24,13 @@ type OrderItem = {
   quantity: number;
   unitPrice: number;
   total?: number;
-  productSnapshot?: { nameEn?: string; nameAr?: string } | null;
+  productSnapshot?: {
+    nameEn?: string;
+    nameAr?: string;
+    color?: string | null;
+    size?: string | null;
+    sku?: string | null;
+  } | null;
   product?: { nameEn?: string; nameAr?: string; images?: { url: string }[] } | null;
   variant?: { color?: string | null; size?: string | null } | null;
 };
@@ -619,6 +625,10 @@ function OrdersView() {
                 {selected.items.map((item, i) => {
                   const name = item.product?.nameEn || item.productSnapshot?.nameEn || "Product";
                   const img = item.product?.images?.[0]?.url;
+                  // Prefer the live variant; fall back to the order-time snapshot
+                  // (e.g. the variant was later edited or removed from the product).
+                  const color = item.variant?.color ?? item.productSnapshot?.color;
+                  const size = item.variant?.size ?? item.productSnapshot?.size;
                   return (
                     <div key={item.id || i} className="flex items-center gap-3 bg-slate-50 rounded-xl px-3 py-2">
                       <div className="w-11 h-11 rounded-lg bg-white border border-slate-200 overflow-hidden flex-shrink-0 flex items-center justify-center">
@@ -633,8 +643,8 @@ function OrdersView() {
                         <p className="text-sm font-medium text-slate-800 truncate">{name}</p>
                         <p className="text-xs text-slate-400">
                           {omr(item.unitPrice)} &times; {item.quantity}
-                          {(item.variant?.color || item.variant?.size) && (
-                            <span className="ml-1">{[item.variant?.color, item.variant?.size].filter(Boolean).join(" / ")}</span>
+                          {(color || size) && (
+                            <span className="ml-1 font-medium text-slate-500">{[color, size].filter(Boolean).join(" / ")}</span>
                           )}
                         </p>
                       </div>

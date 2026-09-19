@@ -231,6 +231,10 @@ model ProductImage {
   url       String
   altEn     String?
   altAr     String?
+  // Ties this image to one of the product's variant colors (matches
+  // ProductVariant.color) so the gallery can swap photos when a shopper
+  // picks a color. Null/empty means the image applies to every color.
+  color     String?
   isPrimary Boolean @default(false)
   sortOrder Int     @default(0)
 
