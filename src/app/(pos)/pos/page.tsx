@@ -477,39 +477,52 @@ export default function PosPage() {
           </form>
           {scanError && <p className="text-rose-600 text-sm">{scanError}</p>}
 
-          {/* Category / color filters */}
-          <div className="flex flex-wrap items-center gap-2">
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="text-sm border border-slate-200 rounded-lg px-2.5 py-1.5 bg-white text-slate-600"
+          {/* Category tabs */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1">
+            <button
+              onClick={() => setCategoryFilter("")}
+              className={`flex-shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                categoryFilter === "" ? "bg-slate-800 border-slate-800 text-white" : "border-slate-200 text-slate-600 hover:border-slate-300"
+              }`}
             >
-              <option value="">All categories</option>
-              {categories.map((c) => <option key={c.id} value={c.id}>{c.nameEn}</option>)}
-            </select>
-            {colorFacets.length > 0 && (
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <button
-                  onClick={() => setColorFilter("")}
-                  className={`text-xs px-2.5 py-1.5 rounded-full border ${colorFilter === "" ? "border-rose-400 bg-rose-50 text-rose-600" : "border-slate-200 text-slate-500"}`}
-                >
-                  All colors
-                </button>
-                {colorFacets.map((c) => (
-                  <button
-                    key={c.value}
-                    onClick={() => setColorFilter(c.value === colorFilter ? "" : c.value)}
-                    title={c.value}
-                    aria-label={c.value}
-                    className={`w-7 h-7 rounded-full border-2 flex-shrink-0 ${colorFilter === c.value ? "border-rose-500" : "border-transparent"}`}
-                  >
-                    <span className="block w-full h-full rounded-full border border-slate-200" style={{ background: c.hex || "#ccc" }} />
-                  </button>
-                ))}
-              </div>
-            )}
-            {catalogLoading && <LuLoaderCircle size={14} className="animate-spin text-slate-400" />}
+              All
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c.id}
+                onClick={() => setCategoryFilter(c.id === categoryFilter ? "" : c.id)}
+                className={`flex-shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                  categoryFilter === c.id ? "bg-slate-800 border-slate-800 text-white" : "border-slate-200 text-slate-600 hover:border-slate-300"
+                }`}
+              >
+                {c.nameEn}
+              </button>
+            ))}
+            {catalogLoading && <LuLoaderCircle size={14} className="animate-spin text-slate-400 flex-shrink-0 ml-1" />}
           </div>
+
+          {/* Color filter */}
+          {colorFacets.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                onClick={() => setColorFilter("")}
+                className={`text-xs px-2.5 py-1 rounded-full border ${colorFilter === "" ? "border-rose-400 bg-rose-50 text-rose-600" : "border-slate-200 text-slate-500"}`}
+              >
+                All colors
+              </button>
+              {colorFacets.map((c) => (
+                <button
+                  key={c.value}
+                  onClick={() => setColorFilter(c.value === colorFilter ? "" : c.value)}
+                  title={c.value}
+                  aria-label={c.value}
+                  className={`w-6 h-6 rounded-full border-2 flex-shrink-0 ${colorFilter === c.value ? "border-rose-500" : "border-transparent"}`}
+                >
+                  <span className="block w-full h-full rounded-full border border-slate-200" style={{ background: c.hex || "#ccc" }} />
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Catalog grid — tap to add */}
           <div className="flex-1 bg-white rounded-xl border border-slate-200 p-2.5 overflow-y-auto">
@@ -573,9 +586,9 @@ export default function PosPage() {
                         {formatVariantLabel(l) && <p className="text-xs text-slate-400 truncate">{formatVariantLabel(l)}</p>}
                       </div>
                       <div className="flex items-center rounded-md border border-slate-200 flex-shrink-0">
-                        <button onClick={() => updateQty(key, l.quantity - 1)} className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-rose-600 text-sm">−</button>
-                        <span className="w-6 text-center text-xs">{l.quantity}</span>
-                        <button onClick={() => updateQty(key, l.quantity + 1)} className="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-rose-600 text-sm">+</button>
+                        <button onClick={() => updateQty(key, l.quantity - 1)} className="w-5 h-5 flex items-center justify-center text-slate-500 hover:text-rose-600 text-xs">−</button>
+                        <span className="w-5 text-center text-xs">{l.quantity}</span>
+                        <button onClick={() => updateQty(key, l.quantity + 1)} className="w-5 h-5 flex items-center justify-center text-slate-500 hover:text-rose-600 text-xs">+</button>
                       </div>
                       <span className="w-16 text-right text-xs font-medium text-slate-700 flex-shrink-0">{omr(l.unitPrice * l.quantity)}</span>
                       <button onClick={() => updateQty(key, 0)} className="text-slate-300 hover:text-rose-500 flex-shrink-0" aria-label="Remove">
@@ -585,6 +598,21 @@ export default function PosPage() {
                   );
                 })
               )}
+            </div>
+            {/* Payment method — sits directly under the cart list, small and compact */}
+            <div className="flex-shrink-0 border-t border-slate-100 px-3.5 py-2.5 flex items-center gap-1.5">
+              <span className="text-[11px] font-medium text-slate-400 uppercase mr-1">Pay</span>
+              {(["CASH", "CARD"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setPaymentMethod(m)}
+                  className={`text-xs font-medium px-3 py-1 rounded-full border ${
+                    paymentMethod === m ? "bg-rose-500 border-rose-500 text-white" : "border-slate-200 text-slate-600 hover:border-slate-300"
+                  }`}
+                >
+                  {m === "CASH" ? "Cash" : "Card"}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -612,20 +640,6 @@ export default function PosPage() {
                 placeholder="For loyalty / order history"
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
               />
-            </div>
-
-            <div className="flex gap-2">
-              {(["CASH", "CARD"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setPaymentMethod(m)}
-                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium border ${
-                    paymentMethod === m ? "bg-rose-500 border-rose-500 text-white" : "border-slate-200 text-slate-600 hover:border-slate-300"
-                  }`}
-                >
-                  {m === "CASH" ? "Cash" : "Card"}
-                </button>
-              ))}
             </div>
 
             {checkoutError && <p className="text-rose-600 text-sm">{checkoutError}</p>}
