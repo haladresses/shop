@@ -569,7 +569,7 @@ export default function PosPage() {
 
         {/* Cart + checkout sidebar */}
         <div className="w-full lg:w-96 flex-shrink-0 flex flex-col gap-3 min-h-0">
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col flex-1 min-h-[180px] max-h-[42vh] lg:max-h-none">
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col min-h-[140px] max-h-[38vh]">
             <div className="px-3.5 py-2 border-b border-slate-100 text-xs font-semibold text-slate-500 uppercase flex-shrink-0">
               Cart ({cart.length})
             </div>
