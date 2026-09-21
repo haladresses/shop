@@ -120,7 +120,11 @@ export async function POST(req: NextRequest) {
       let variant = null;
       if (item.variantId) {
         variant = product.variants.find((v) => v.id === item.variantId) || null;
+        if (!variant) return error(`Variant not found for ${product.nameEn}`);
         if (variant) unitPrice += Number(variant.priceAdjustment);
+        if ((variant.inventory?.quantity ?? 0) < item.quantity) {
+          return error(`Not enough stock for ${product.nameEn}${variant.color ? ` (${variant.color})` : ""}`);
+        }
       }
 
       const itemTotal = unitPrice * item.quantity;
@@ -159,36 +163,69 @@ export async function POST(req: NextRequest) {
         : 1.5; // Free shipping over 10 OMR
     const total = subtotal + shippingCost - discount;
 
-    const order = await prisma.order.create({
-      data: {
-        orderNumber: generateOrderNumber(),
-        userId: sessionUser?.id || null,
-        guestEmail: !sessionUser ? body.guestEmail : null,
-        guestName: !sessionUser ? body.guestName : null,
-        subtotal,
-        shippingCost,
-        discount,
-        total,
-        couponCode: couponCode || null,
-        notes,
-        shippingAddress,
-        shippingMethod: shippingMethod as never,
-        waselleeDeliveryType: (waselleeDeliveryType as never) || null,
-        waselleeBranchId: waselleeBranch?.id || null,
-        items: { create: orderItemsData },
-        payments: {
-          create: {
-            amount: total,
-            method: paymentMethod as never,
-            status: "UNPAID",
+    const order = await prisma.$transaction(async (tx) => {
+      // Claim stock atomically — re-checks the live quantity (not the copy
+      // read above) so two customers can't both buy the last unit. Applies
+      // to every order regardless of payment method: an unpaid COD/bank
+      // transfer order still holds the physical item the moment it's placed.
+      for (const item of items) {
+        if (!item.variantId) continue;
+        const res = await tx.inventory.updateMany({
+          where: { variantId: item.variantId, quantity: { gte: item.quantity } },
+          data: { quantity: { decrement: item.quantity } },
+        });
+        if (res.count !== 1) {
+          throw new Error("Not enough stock — someone else may have just bought the last one.");
+        }
+      }
+
+      const created = await tx.order.create({
+        data: {
+          orderNumber: generateOrderNumber(),
+          userId: sessionUser?.id || null,
+          guestEmail: !sessionUser ? body.guestEmail : null,
+          guestName: !sessionUser ? body.guestName : null,
+          subtotal,
+          shippingCost,
+          discount,
+          total,
+          couponCode: couponCode || null,
+          notes,
+          shippingAddress,
+          shippingMethod: shippingMethod as never,
+          waselleeDeliveryType: (waselleeDeliveryType as never) || null,
+          waselleeBranchId: waselleeBranch?.id || null,
+          source: "ONLINE",
+          items: { create: orderItemsData },
+          payments: {
+            create: {
+              amount: total,
+              method: paymentMethod as never,
+              status: "UNPAID",
+            },
           },
         },
-      },
-      include: {
-        items: true,
-        payments: true,
-        waselleeBranch: true,
-      },
+        include: {
+          items: true,
+          payments: true,
+          waselleeBranch: true,
+        },
+      });
+
+      for (const item of items) {
+        if (!item.variantId) continue;
+        await tx.inventoryTransaction.create({
+          data: {
+            inventory: { connect: { variantId: item.variantId } },
+            type: "SALE",
+            quantity: item.quantity,
+            note: `Online order ${created.orderNumber}`,
+            createdBy: sessionUser?.id || null,
+          },
+        });
+      }
+
+      return created;
     });
 
     if (couponCode) {
@@ -204,6 +241,9 @@ export async function POST(req: NextRequest) {
 
     return ok(order, 201);
   } catch (e) {
+    if (e instanceof Error && e.message.includes("Not enough stock")) {
+      return error(e.message, 409);
+    }
     return serverError(e);
   }
 }

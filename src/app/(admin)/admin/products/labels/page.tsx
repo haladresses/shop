@@ -84,11 +84,15 @@ export default function BarcodeLabelsPage() {
       for (const res of results) {
         if (!res.success) continue;
         const p = res.data as FullProduct;
+        const basePrice = Number(p.salePrice ?? p.basePrice);
         const activeVariants = (p.variants || []).filter((v) => v.isActive);
+        const variantsWithBarcode = activeVariants.filter((v) => v.barcode);
 
-        if (activeVariants.length === 0) {
+        if (activeVariants.length === 0 || variantsWithBarcode.length === 0) {
+          // No variants, or none of them have their own barcode yet — fall
+          // back to the product's own barcode (one label for the product).
           if (p.barcode) {
-            entries.push({ key: p.id, name: p.nameEn, variant: "", price: Number(p.salePrice ?? p.basePrice), barcode: p.barcode });
+            entries.push({ key: p.id, name: p.nameEn, variant: "", price: basePrice, barcode: p.barcode });
           } else {
             skipped += 1;
           }
@@ -101,7 +105,7 @@ export default function BarcodeLabelsPage() {
             key: v.id,
             name: p.nameEn,
             variant: formatVariantLabel(v),
-            price: Number(p.salePrice ?? p.basePrice) + Number(v.priceAdjustment),
+            price: basePrice + Number(v.priceAdjustment),
             barcode: v.barcode,
           });
         }

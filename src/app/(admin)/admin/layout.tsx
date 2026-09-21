@@ -20,6 +20,7 @@ const pageTitles: Record<string, string> = {
   "/admin/products/labels": "Barcode Labels",
   "/admin/categories": "Categories",
   "/admin/orders": "Orders",
+  "/admin/reports": "Sales Report",
   "/admin/inventory": "Inventory",
   "/admin/payments": "Payments",
   "/admin/coupons": "Coupons",

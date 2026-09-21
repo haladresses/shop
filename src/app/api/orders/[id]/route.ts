@@ -57,7 +57,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const parsed = updateOrderSchema.safeParse(body);
     if (!parsed.success) return error(parsed.error.issues[0].message);
 
-    const existing = await prisma.order.findUnique({ where: { id }, select: { id: true } });
+    const existing = await prisma.order.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        orderNumber: true,
+        items: { select: { variantId: true, quantity: true } },
+      },
+    });
     if (!existing) return notFound("Order");
 
     const { status, paymentStatus, notes } = parsed.data;
@@ -81,10 +89,37 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       };
     }
 
-    const order = await prisma.order.update({
-      where: { id },
-      data,
-    });
+    // The first time an order moves into CANCELLED/REFUNDED, give the stock
+    // it held back — mirrors the SALE deduction made at checkout (online or
+    // POS) so inventory stays correct end to end, not just one-directional.
+    const TERMINAL_RETURN_STATUSES = ["CANCELLED", "REFUNDED"];
+    const isNewlyReturned =
+      status !== undefined &&
+      TERMINAL_RETURN_STATUSES.includes(status) &&
+      !TERMINAL_RETURN_STATUSES.includes(existing.status);
+
+    const order = isNewlyReturned
+      ? await prisma.$transaction(async (tx) => {
+          for (const item of existing.items) {
+            if (!item.variantId) continue;
+            await tx.inventory.update({
+              where: { variantId: item.variantId },
+              data: {
+                quantity: { increment: item.quantity },
+                transactions: {
+                  create: {
+                    type: "RETURN",
+                    quantity: item.quantity,
+                    note: `Order ${existing.orderNumber} ${status?.toLowerCase()}`,
+                    createdBy: user.id,
+                  },
+                },
+              },
+            });
+          }
+          return tx.order.update({ where: { id }, data });
+        })
+      : await prisma.order.update({ where: { id }, data });
 
     return ok(order);
   } catch (e) {
