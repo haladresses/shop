@@ -36,8 +36,35 @@ const prisma = new PrismaClient();
 NODE
 }
 
-echo "→ Applying Prisma schema (db push)..."
-npx prisma db push --skip-generate
+# `prisma db push` stops with "use --accept-data-loss" even for harmless
+# additive changes (e.g. a new nullable @unique column), which would leave the
+# init service failing on every deploy. Passing that flag blindly could also
+# let a genuinely destructive change through, and nothing on the server may
+# ever be deleted. So we preview the exact SQL first and only push when it
+# contains nothing that drops or rewrites existing data.
+apply_schema() {
+  diff_file="$(mktemp)"
+  destructive='DROP (TABLE|COLUMN|TYPE|SCHEMA)|TRUNCATE|DELETE FROM|SET DATA TYPE'
+
+  npx prisma migrate diff \
+    --from-url "$DATABASE_URL" \
+    --to-schema-datamodel prisma/schema.prisma \
+    --script > "$diff_file"
+
+  if grep -Eiq "$destructive" "$diff_file"; then
+    echo "✖ Refusing to apply schema: it would remove or rewrite existing data:" >&2
+    grep -Ei "$destructive" "$diff_file" >&2
+    echo "  Nothing was changed. Handle this change manually (backup first)." >&2
+    rm -f "$diff_file"
+    exit 1
+  fi
+
+  rm -f "$diff_file"
+  npx prisma db push --skip-generate --accept-data-loss
+}
+
+echo "→ Applying Prisma schema (additive changes only)..."
+apply_schema
 
 sync_seed_assets
 
