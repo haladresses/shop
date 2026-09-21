@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { LuChartColumn, LuMonitor, LuScanBarcode, LuWallet } from "react-icons/lu";
+import { LuCalendarRange, LuChartColumn, LuMonitor, LuScanBarcode, LuWallet } from "react-icons/lu";
 
 type SourceStat = { revenue: number; orders: number };
 
@@ -35,17 +35,25 @@ type Preset = "today" | "7d" | "30d" | "month" | "custom";
 function presetRange(preset: Preset): { from: string; to: string } {
   const to = new Date();
   const from = new Date();
-  if (preset === "today") {
-    // from = to = today
-  } else if (preset === "7d") {
-    from.setDate(from.getDate() - 6);
-  } else if (preset === "30d") {
-    from.setDate(from.getDate() - 29);
-  } else if (preset === "month") {
-    from.setDate(1);
-  }
+  if (preset === "7d") from.setDate(from.getDate() - 6);
+  else if (preset === "30d") from.setDate(from.getDate() - 29);
+  else if (preset === "month") from.setDate(1);
   return { from: toISODate(from), to: toISODate(to) };
 }
+
+const StatCard = ({
+  icon: Icon, accent, ring, value, label,
+}: { icon: React.ElementType; accent: string; ring: string; value: string; label: string }) => (
+  <div className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
+    <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${accent} ring-4 ${ring} flex items-center justify-center text-white flex-shrink-0`}>
+      <Icon size={22} />
+    </div>
+    <div className="min-w-0">
+      <p className="text-lg sm:text-xl font-bold text-slate-800 leading-tight truncate">{value}</p>
+      <p className="text-xs sm:text-sm text-slate-500 truncate">{label}</p>
+    </div>
+  </div>
+);
 
 export default function SalesReportPage() {
   const [preset, setPreset] = useState<Preset>("30d");
@@ -77,33 +85,38 @@ export default function SalesReportPage() {
   return (
     <div className="space-y-5">
       {/* Date range */}
-      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200/70 bg-white p-2.5">
-        {([
-          ["today", "Today"], ["7d", "Last 7 days"], ["30d", "Last 30 days"], ["month", "This month"],
-        ] as [Preset, string][]).map(([p, label]) => (
-          <button
-            key={p}
-            onClick={() => applyPreset(p)}
-            className={`text-xs font-medium px-3 py-1.5 rounded-full border ${
-              preset === p ? "bg-slate-800 border-slate-800 text-white" : "border-slate-200 text-slate-600 hover:border-slate-300"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-        <div className="flex items-center gap-1.5 ml-auto">
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {([
+            ["today", "Today"], ["7d", "7 days"], ["30d", "30 days"], ["month", "This month"],
+          ] as [Preset, string][]).map(([p, label]) => (
+            <button
+              key={p}
+              onClick={() => applyPreset(p)}
+              className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                preset === p ? "bg-slate-800 border-slate-800 text-white" : "border-slate-200 text-slate-600 hover:border-slate-300"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 sm:ml-auto">
+          <LuCalendarRange size={16} className="text-slate-400 flex-shrink-0 hidden sm:block" />
           <input
             type="date"
             value={range.from}
+            max={range.to}
             onChange={(e) => { setPreset("custom"); setRange((r) => ({ ...r, from: e.target.value })); }}
-            className="admin-input !py-1.5 text-sm"
+            className="admin-input !py-1.5 text-sm !w-auto"
           />
-          <span className="text-slate-400 text-sm">to</span>
+          <span className="text-slate-400 text-sm flex-shrink-0">to</span>
           <input
             type="date"
             value={range.to}
+            min={range.from}
             onChange={(e) => { setPreset("custom"); setRange((r) => ({ ...r, to: e.target.value })); }}
-            className="admin-input !py-1.5 text-sm"
+            className="admin-input !py-1.5 text-sm !w-auto"
           />
         </div>
       </div>
@@ -112,61 +125,51 @@ export default function SalesReportPage() {
         <div className="flex justify-center py-16"><div className="spinner" /></div>
       ) : (
         <>
-          {/* Summary cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-fuchsia-500 to-pink-500 ring-4 ring-fuchsia-100 flex items-center justify-center text-white flex-shrink-0">
-                <LuWallet size={22} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-lg sm:text-xl font-bold text-slate-800 leading-tight truncate">{omr(totalRevenue)}</p>
-                <p className="text-xs sm:text-sm text-slate-500 truncate">Total Revenue</p>
-              </div>
+          {/* Overview */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <StatCard icon={LuWallet} accent="from-fuchsia-500 to-pink-500" ring="ring-fuchsia-100" value={omr(totalRevenue)} label="Total Revenue" />
+            <StatCard icon={LuChartColumn} accent="from-indigo-500 to-violet-500" ring="ring-indigo-100" value={String(report?.totals.orders ?? 0)} label="Paid Orders" />
+            <StatCard icon={LuWallet} accent="from-amber-400 to-orange-500" ring="ring-amber-100" value={omr(report?.totals.avgOrderValue ?? 0)} label="Average Order" />
+          </div>
+
+          {/* By channel */}
+          <div className="admin-card p-4 sm:p-5">
+            <p className="text-xs font-semibold text-slate-500 uppercase mb-3">Revenue by channel</p>
+
+            <div className="h-2.5 w-full rounded-full overflow-hidden bg-slate-100 flex mb-4">
+              <div className="h-full bg-sky-500" style={{ width: `${onlineShare}%` }} />
+              <div className="h-full bg-emerald-500" style={{ width: `${posShare}%` }} />
             </div>
-            <div className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 ring-4 ring-indigo-100 flex items-center justify-center text-white flex-shrink-0">
-                <LuChartColumn size={22} />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex items-center gap-3 rounded-xl border border-slate-100 p-3.5">
+                <div className="w-10 h-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
+                  <LuMonitor size={18} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-slate-800">Online</p>
+                  <p className="text-xs text-slate-400">{online.orders} order{online.orders === 1 ? "" : "s"}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-sm font-bold text-slate-800">{omr(online.revenue)}</p>
+                  <p className="text-xs text-slate-400">{onlineShare.toFixed(0)}%</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-lg sm:text-xl font-bold text-slate-800 leading-tight truncate">{report?.totals.orders ?? 0}</p>
-                <p className="text-xs sm:text-sm text-slate-500 truncate">Paid Orders</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-400 to-sky-500 ring-4 ring-sky-100 flex items-center justify-center text-white flex-shrink-0">
-                <LuMonitor size={22} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-lg sm:text-xl font-bold text-slate-800 leading-tight truncate">{omr(online.revenue)}</p>
-                <p className="text-xs sm:text-sm text-slate-500 truncate">Online · {online.orders} orders ({onlineShare.toFixed(0)}%)</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 ring-4 ring-emerald-100 flex items-center justify-center text-white flex-shrink-0">
-                <LuScanBarcode size={22} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-lg sm:text-xl font-bold text-slate-800 leading-tight truncate">{omr(pos.revenue)}</p>
-                <p className="text-xs sm:text-sm text-slate-500 truncate">POS · {pos.orders} orders ({posShare.toFixed(0)}%)</p>
+              <div className="flex items-center gap-3 rounded-xl border border-slate-100 p-3.5">
+                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                  <LuScanBarcode size={18} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-slate-800">POS</p>
+                  <p className="text-xs text-slate-400">{pos.orders} order{pos.orders === 1 ? "" : "s"}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-sm font-bold text-slate-800">{omr(pos.revenue)}</p>
+                  <p className="text-xs text-slate-400">{posShare.toFixed(0)}%</p>
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Channel share bar */}
-          {totalRevenue > 0 && (
-            <div className="admin-card p-4 sm:p-5">
-              <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Revenue by channel</p>
-              <div className="h-3 w-full rounded-full overflow-hidden bg-slate-100 flex">
-                <div className="h-full bg-sky-500" style={{ width: `${onlineShare}%` }} title={`Online ${onlineShare.toFixed(1)}%`} />
-                <div className="h-full bg-emerald-500" style={{ width: `${posShare}%` }} title={`POS ${posShare.toFixed(1)}%`} />
-              </div>
-              <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-sky-500" /> Online — {omr(online.revenue)}</span>
-                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> POS — {omr(pos.revenue)}</span>
-                <span className="ml-auto">Avg order: {omr(report?.totals.avgOrderValue ?? 0)}</span>
-              </div>
-            </div>
-          )}
 
           {/* Daily breakdown */}
           <div className="admin-card">
@@ -191,12 +194,12 @@ export default function SalesReportPage() {
                   <tbody>
                     {[...report.byDay].reverse().map((d) => (
                       <tr key={d.date}>
-                        <td className="font-medium text-slate-700">{d.date}</td>
-                        <td className="text-right">{omr(d.onlineRevenue)}</td>
+                        <td className="font-medium text-slate-700 whitespace-nowrap">{d.date}</td>
+                        <td className="text-right whitespace-nowrap">{omr(d.onlineRevenue)}</td>
                         <td className="text-center text-slate-500">{d.onlineOrders}</td>
-                        <td className="text-right">{omr(d.posRevenue)}</td>
+                        <td className="text-right whitespace-nowrap">{omr(d.posRevenue)}</td>
                         <td className="text-center text-slate-500">{d.posOrders}</td>
-                        <td className="text-right font-medium">{omr(d.onlineRevenue + d.posRevenue)}</td>
+                        <td className="text-right font-medium whitespace-nowrap">{omr(d.onlineRevenue + d.posRevenue)}</td>
                       </tr>
                     ))}
                   </tbody>

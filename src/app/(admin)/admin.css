@@ -92,7 +92,11 @@ body {
   border-collapse: collapse;
 }
 
-.admin-table th {
+/* :where() keeps this selector's specificity at zero so a per-cell
+   `text-right`/`text-center` utility class always wins — otherwise every
+   <th className="text-right"> silently stays left-aligned while its <td>
+   correctly follows the utility class, and headers stop lining up with data. */
+:where(.admin-table) th {
   background: #f8fafc;
   padding: 0.75rem 1rem;
   text-align: left;
@@ -104,7 +108,7 @@ body {
   border-bottom: 1px solid #e2e8f0;
 }
 
-.admin-table td {
+:where(.admin-table) td {
   padding: 0.875rem 1rem;
   font-size: 0.875rem;
   color: #1e293b;
