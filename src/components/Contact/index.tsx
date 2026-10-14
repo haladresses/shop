@@ -18,7 +18,7 @@ type StoreInfo = {
 
 const DEFAULT_STORE_INFO: StoreInfo = {
   nameEn: "Hala Dresses Retail Team",
-  nameAr: "فريق هلا دريسز",
+  nameAr: "فريق حلا للازياء",
   phone: "+968 9944 0312",
   whatsapp: "",
   address: "Bousher, Muscat, Oman",
@@ -80,7 +80,7 @@ const Contact = () => {
     ? {
         breadcrumbTitle: "اتصل بنا",
         breadcrumbPage: "اتصل بنا",
-        heading: "تواصلي مع هلا دريسز",
+        heading: "تواصلي مع حلا للازياء",
         subheading: "فريقنا في مسقط جاهز لمساعدتك في الطلبات والمقاسات والتوصيل.",
         nameLabel: "المتجر",
         nameValue: store.nameAr,

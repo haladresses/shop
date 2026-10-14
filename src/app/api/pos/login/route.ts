@@ -4,7 +4,7 @@ import { z } from "zod";
 import prisma from "@/lib/db";
 import { createSession } from "@/lib/auth";
 import { verifyPin, isValidPin } from "@/lib/pos";
-import { roleHasPermission } from "@/lib/permissions";
+import { getEffectivePermissions } from "@/lib/permissions";
 import { ok, error, forbidden, notFound, serverError } from "@/lib/api/response";
 
 const bodySchema = z.object({
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     });
     if (!user || !user.isActive) return notFound("Staff member");
 
-    if (!(await roleHasPermission(user.role, "pos.access"))) return forbidden();
+    if (!(await getEffectivePermissions(user)).includes("pos.access")) return forbidden();
 
     const result = await verifyPin(user, pin);
     if (!result.ok) return error(result.error || "Incorrect PIN.");

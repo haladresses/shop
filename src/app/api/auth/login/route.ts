@@ -2,8 +2,8 @@ import { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/db";
 import { verifyPassword, createSession } from "@/lib/auth";
-import { getPermissionsForRole } from "@/lib/permissions";
-import { loginSchema } from "@/lib/validations/auth";
+import { getEffectivePermissions } from "@/lib/permissions";
+import { loginSchema, parseIdentifier, phoneCandidates } from "@/lib/validations/auth";
 import { ok, error, serverError } from "@/lib/api/response";
 
 export async function POST(req: NextRequest) {
@@ -12,16 +12,23 @@ export async function POST(req: NextRequest) {
     const parsed = loginSchema.safeParse(body);
     if (!parsed.success) return error(parsed.error.issues[0].message);
 
-    const { email, password } = parsed.data;
-    const user = await prisma.user.findUnique({ where: { email } });
+    const { password } = parsed.data;
+    const id = parseIdentifier(parsed.data.identifier || parsed.data.email || "");
+    if (id.kind === "invalid") return error("Enter a valid email or mobile number");
 
-    if (!user || !user.isActive) return error("Invalid credentials", 401);
+    const user =
+      id.kind === "email"
+        ? await prisma.user.findFirst({ where: { email: { equals: id.email, mode: "insensitive" } } })
+        : await prisma.user.findFirst({ where: { phone: { in: phoneCandidates(id.phone) } } });
+
+    if (!user || !user.isActive) return error("Incorrect email/mobile or password", 401);
 
     const valid = await verifyPassword(password, user.passwordHash);
-    if (!valid) return error("Invalid credentials", 401);
+    if (!valid) return error("Incorrect email/mobile or password", 401);
 
     const token = await createSession(user.id);
-  const permissions = await getPermissionsForRole(user.role);
+    const permissions = await getEffectivePermissions(user);
+    await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } }).catch(() => {});
 
     const cookieStore = await cookies();
     cookieStore.set("session_token", token, {

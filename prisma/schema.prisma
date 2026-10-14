@@ -102,6 +102,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Per-user adjustments on top of the role: { grant: string[], revoke: string[] }.
+  permissionOverrides Json?
+  lastLoginAt         DateTime?
+
   // POS staff PIN login (separate credential from passwordHash — see /pos).
   posPinHash        String?
   posPinAttempts    Int       @default(0)

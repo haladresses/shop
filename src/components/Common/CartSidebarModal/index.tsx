@@ -14,6 +14,10 @@ const CartSidebarModal = () => {
   const { isArabic } = useLanguage();
   const cartItems = useAppSelector((state) => state.cartReducer.items);
   const totalPrice = useSelector(selectTotalPrice);
+  const itemCount = cartItems.reduce((n, i) => n + i.quantity, 0);
+  // Mirrors the server rule in /api/orders: free standard shipping from 10 OMR.
+  const FREE_SHIPPING_FROM = 10;
+  const toFree = Math.max(0, FREE_SHIPPING_FROM - totalPrice);
 
   const copy = isArabic
     ? { title: "سلة التسوق", subtotal: "المجموع:", viewCart: "عرض السلة", checkout: "الدفع" }
@@ -54,8 +58,13 @@ const CartSidebarModal = () => {
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 sm:px-7.5 lg:px-11 py-4 sm:py-7.5 border-b border-gray-3">
-          <h2 className="font-medium text-dark text-lg sm:text-2xl">
+          <h2 className="font-semibold text-dark text-lg sm:text-2xl flex items-baseline gap-2">
             {copy.title}
+            {itemCount > 0 && (
+              <span key={itemCount} className="fx-badge-pop !delay-0 text-sm font-medium text-dark-4">
+                ({itemCount} {isArabic ? (itemCount === 1 ? "قطعة" : "قطع") : itemCount === 1 ? "item" : "items"})
+              </span>
+            )}
           </h2>
           <button
             onClick={closeCartModal}
@@ -68,6 +77,23 @@ const CartSidebarModal = () => {
             </svg>
           </button>
         </div>
+
+        {cartItems.length > 0 && (
+          <div className="px-4 sm:px-7.5 lg:px-11 pt-4">
+            <p className="text-sm text-dark-3 mb-2">
+              {toFree > 0
+                ? isArabic
+                  ? `أضيفي ${toFree.toFixed(3)} ر.ع. للحصول على شحن مجاني`
+                  : `Add ${toFree.toFixed(3)} OMR more for free shipping`
+                : isArabic
+                  ? "🎉 حصلتِ على شحن مجاني"
+                  : "🎉 You've unlocked free shipping"}
+            </p>
+            <div className="h-1.5 rounded-full bg-gray-2 overflow-hidden">
+              <div className="h-full rounded-full bg-blue transition-[width] duration-500" style={{ width: `${Math.min(100, (totalPrice / FREE_SHIPPING_FROM) * 100)}%` }} />
+            </div>
+          </div>
+        )}
 
         {/* Items */}
         <div className="flex-1 overflow-y-auto no-scrollbar px-4 sm:px-7.5 lg:px-11 py-6">
@@ -83,7 +109,7 @@ const CartSidebarModal = () => {
         </div>
 
         {/* Footer */}
-        <div className="px-4 sm:px-7.5 lg:px-11 py-5 border-t border-gray-3">
+        <div className="px-4 sm:px-7.5 lg:px-11 pt-5 pb-[calc(20px+env(safe-area-inset-bottom))] border-t border-gray-3">
           <div className="flex items-center justify-between gap-5 mb-5">
             <p className="font-medium text-xl text-dark">{copy.subtotal}</p>
             <p className="font-medium text-xl text-dark">
@@ -95,14 +121,14 @@ const CartSidebarModal = () => {
             <Link
               onClick={closeCartModal}
               href="/cart"
-              className="w-full flex justify-center font-medium text-white bg-blue py-[13px] px-6 rounded-md ease-out duration-200 hover:bg-blue-dark"
+              className="w-full flex justify-center font-semibold text-dark bg-white ring-1 ring-gray-3 py-[13px] px-6 rounded-full ease-out duration-200 hover:ring-dark"
             >
               {copy.viewCart}
             </Link>
             <Link
               onClick={closeCartModal}
               href="/checkout"
-              className="w-full flex justify-center font-medium text-white bg-dark py-[13px] px-6 rounded-md ease-out duration-200 hover:bg-opacity-95"
+              className="w-full flex justify-center font-semibold text-white bg-dark py-[13px] px-6 rounded-full ease-out duration-200 hover:bg-blue"
             >
               {copy.checkout}
             </Link>

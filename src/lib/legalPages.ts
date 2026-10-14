@@ -101,7 +101,7 @@ export const DEFAULT_PRIVACY_POLICY: LegalPageConfig = {
   introEn:
     "Hala Dresses (“we”, “us”) respects your privacy. This policy explains what information we collect when you shop with us in Oman, how we use it, and the choices you have.",
   introAr:
-    "تحترم هلا دريسز (“نحن”) خصوصيتك. توضح هذه السياسة المعلومات التي نجمعها عند تسوقك معنا في عُمان، وكيفية استخدامها، والخيارات المتاحة لكِ.",
+    "تحترم حلا للازياء (“نحن”) خصوصيتك. توضح هذه السياسة المعلومات التي نجمعها عند تسوقك معنا في عُمان، وكيفية استخدامها، والخيارات المتاحة لكِ.",
   sections: [
     {
       headingEn: "Information We Collect",
@@ -182,7 +182,7 @@ export const DEFAULT_TERMS_OF_USE: LegalPageConfig = {
   introEn:
     "Welcome to Hala Dresses. By browsing our website or placing an order, you agree to the following terms. Please read them carefully.",
   introAr:
-    "مرحباً بكِ في هلا دريسز. باستخدام موقعنا أو تقديم طلب، فإنكِ توافقين على الشروط التالية. يرجى قراءتها بعناية.",
+    "مرحباً بكِ في حلا للازياء. باستخدام موقعنا أو تقديم طلب، فإنكِ توافقين على الشروط التالية. يرجى قراءتها بعناية.",
   sections: [
     {
       headingEn: "Acceptance of Terms",
@@ -222,7 +222,7 @@ export const DEFAULT_TERMS_OF_USE: LegalPageConfig = {
       bodyEn:
         "All content on this website — including photos, logos, and text — is the property of Hala Dresses and may not be copied or reused without our written permission.",
       bodyAr:
-        "جميع محتويات هذا الموقع — بما في ذلك الصور والشعارات والنصوص — هي ملك لهلا دريسز ولا يجوز نسخها أو إعادة استخدامها دون إذن كتابي منا.",
+        "جميع محتويات هذا الموقع — بما في ذلك الصور والشعارات والنصوص — هي ملك لحلا للازياء ولا يجوز نسخها أو إعادة استخدامها دون إذن كتابي منا.",
     },
     {
       headingEn: "Limitation of Liability",

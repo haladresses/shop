@@ -19,7 +19,7 @@ export type NewsletterConfig = {
 
 export const DEFAULT_NEWSLETTER_CONFIG: NewsletterConfig = {
   titleEn: "Join the Hala Circle",
-  titleAr: "انضمي إلى دائرة هلا",
+  titleAr: "انضمي إلى دائرة حلا",
   descriptionEn: "Get updates on women's and kids' new arrivals, sale announcements, and store news from Muscat.",
   descriptionAr: "احصلي على تحديثات أحدث وصولات النساء والأطفال، والتنزيلات، وأخبار المتجر من مسقط.",
   placeholderEn: "Enter your email for new arrivals",

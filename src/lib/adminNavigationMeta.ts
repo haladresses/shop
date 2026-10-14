@@ -51,6 +51,7 @@ export const ADMIN_NAVIGATION_META: AdminNavigationMeta[] = [
   { href: "/admin/shipping", label: "Shipping", permission: "admin.shipping.view", section: "Operations", icon: LuTruck, color: "text-blue-400" },
   { href: "/admin/coupons", label: "Coupons", permission: "admin.coupons.view", section: "Operations", icon: LuTicket, color: "text-pink-400" },
   { href: "/admin/users", label: "Users", permission: "admin.users.view", section: "Operations", icon: LuUsers, color: "text-violet-400" },
+  { href: "/admin/roles", label: "Roles & Permissions", permission: "admin.roles.view", section: "Operations", icon: LuShield, color: "text-purple-300" },
   { href: "/admin/contact", label: "Contact", permission: "admin.contact.view", section: "Operations", icon: LuMailOpen, color: "text-rose-400" },
   { href: "/admin/products", label: "Products", permission: "admin.products.view", section: "Catalog", icon: LuShirt, color: "text-rose-400" },
   { href: "/admin/categories", label: "Categories", permission: "admin.categories.view", section: "Catalog", icon: LuTags, color: "text-emerald-400" },
@@ -65,7 +66,6 @@ export const ADMIN_NAVIGATION_META: AdminNavigationMeta[] = [
   { href: "/admin/navigation", label: "Navigation Menu", permission: "admin.navigation.manage", section: "Content", icon: LuMenu, color: "text-indigo-400" },
   { href: "/admin/legal-pages", label: "Legal Pages", permission: "admin.legal.manage", section: "Content", icon: LuScale, color: "text-amber-300" },
   { href: "/admin/settings", label: "Settings", permission: "admin.settings.manage", section: "System", icon: LuSettings, color: "text-slate-300" },
-  { href: "/admin/roles", label: "Roles", permission: "admin.roles.view", section: "System", icon: LuShield, color: "text-purple-300" },
   { href: "/admin/help", label: "Help", permission: "admin.help.view", section: "System", icon: LuInfo, color: "text-cyan-300" },
 ];
 

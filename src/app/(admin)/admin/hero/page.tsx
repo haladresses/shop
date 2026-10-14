@@ -222,7 +222,6 @@ export default function HeroAdminPage() {
                       />
                     </div>
 
-                    <Pair label="Badge" en={slide.badgeEn} ar={slide.badgeAr} onEn={(v) => updateSlide(i, { badgeEn: v })} onAr={(v) => updateSlide(i, { badgeAr: v })} />
                     <Pair label="Headline" en={slide.titleEn} ar={slide.titleAr} onEn={(v) => updateSlide(i, { titleEn: v })} onAr={(v) => updateSlide(i, { titleAr: v })} />
                     <Pair label="Sub-headline" multiline en={slide.subtitleEn} ar={slide.subtitleAr} onEn={(v) => updateSlide(i, { subtitleEn: v })} onAr={(v) => updateSlide(i, { subtitleAr: v })} />
 

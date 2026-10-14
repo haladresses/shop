@@ -74,10 +74,7 @@ const Newsletter = () => {
   return (
     <section className="overflow-hidden">
       <div className="max-w-[1170px] mx-auto px-4 sm:px-8 xl:px-0">
-        <div className="relative z-1 overflow-hidden rounded-2xl bg-gradient-to-br from-blue via-blue-dark to-[#4A1D25]">
-          {/* decorative accents */}
-          <div aria-hidden className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 rounded-full bg-white/10 blur-3xl" />
-          <div aria-hidden className="pointer-events-none absolute -bottom-20 left-10 w-56 h-56 rounded-full bg-white/5 blur-3xl" />
+        <div className="relative z-1 overflow-hidden rounded-3xl bg-blue">
 
           <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 sm:gap-8 px-5 sm:px-7.5 xl:pl-12.5 xl:pr-14 py-9 sm:py-11">
             <div className="max-w-[491px] w-full">

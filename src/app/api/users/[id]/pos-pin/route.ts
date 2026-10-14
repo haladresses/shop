@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db";
 import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
+import { canManageUser } from "@/lib/permissions";
 import { isValidPin, hashPin, PIN_LENGTH } from "@/lib/pos";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
 
@@ -22,6 +23,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) return notFound("User");
+    // Your own PIN, or someone below you — never a peer or senior.
+    if (admin.id !== user.id && !canManageUser(admin, user)) return forbidden();
 
     if (parsed.data.pin === null) {
       await prisma.user.update({

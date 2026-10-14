@@ -29,7 +29,7 @@ async function main() {
       email: "seller@haladresses.com",
       passwordHash: sellerHash,
       nameEn: "Hala Store",
-      nameAr: "متجر هلا",
+      nameAr: "متجر حلا",
       role: Role.SELLER,
       phone: "+96891000001",
     },
@@ -630,7 +630,7 @@ async function main() {
   // ── Default Settings ──────────────────────────────────────
   const settings = [
     { key: "store_name_en", value: "Hala Dresses", group: "general", labelEn: "Store Name (EN)" },
-    { key: "store_name_ar", value: "هلا دريسز", group: "general", labelEn: "Store Name (AR)" },
+    { key: "store_name_ar", value: "حلا للازياء", group: "general", labelEn: "Store Name (AR)" },
     { key: "store_email", value: "info@haladresses.com", group: "general", labelEn: "Store Email" },
     { key: "store_phone", value: "+968 9944 0312", group: "general", labelEn: "Store Phone" },
     { key: "store_address", value: "Bousher, Muscat, Oman", group: "general", labelEn: "Address" },

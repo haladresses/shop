@@ -8,7 +8,7 @@ import WhatsAppSettings from "@/components/admin/WhatsAppSettings";
 
 const DEFAULT_SETTINGS = [
   { key: "store_name_en", group: "general", labelEn: "Store Name (English)", type: "string", defaultValue: "Hala Dresses" },
-  { key: "store_name_ar", group: "general", labelEn: "Store Name (Arabic)", type: "string", defaultValue: "هلا دريسز" },
+  { key: "store_name_ar", group: "general", labelEn: "Store Name (Arabic)", type: "string", defaultValue: "حلا للازياء" },
   { key: "store_email", group: "general", labelEn: "Store Email", type: "string", defaultValue: "info@haladresses.com" },
   { key: "store_phone", group: "general", labelEn: "Store Phone", type: "string", defaultValue: "+968 9000 0000" },
   { key: "store_address", group: "general", labelEn: "Store Address", type: "string", defaultValue: "Muscat, Oman" },
@@ -79,7 +79,7 @@ export default function SettingsPage() {
   if (loading) return <div className="flex justify-center py-12"><div className="spinner" /></div>;
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6 w-full">
       {/* Group Tabs */}
       <div className="flex gap-2 flex-wrap">
         {visibleGroups.map((g) => (
@@ -106,7 +106,7 @@ export default function SettingsPage() {
       ) : (
         <>
           <div className="admin-card p-6">
-        <div className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
           {groupSettings.map((setting) => (
             <div key={setting.key}>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">{setting.labelEn}</label>
@@ -123,6 +123,7 @@ export default function SettingsPage() {
               ) : (
                 <input
                   className="admin-input"
+                  dir="auto"
                   value={values[setting.key] || ""}
                   onChange={(e) => setValues({ ...values, [setting.key]: e.target.value })}
                 />

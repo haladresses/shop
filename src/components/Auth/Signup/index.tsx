@@ -1,5 +1,5 @@
 "use client";
-import Breadcrumb from "@/components/Common/Breadcrumb";
+import AuthShell, { AuthError, AuthField, AuthSubmit, PasswordField } from "@/components/Auth/AuthShell";
 import { useLanguage } from "@/app/context/LanguageContext";
 import Link from "next/link";
 import { useState } from "react";
@@ -8,21 +8,27 @@ import { useRouter } from "next/navigation";
 const Signup = () => {
   const router = useRouter();
   const { isArabic } = useLanguage();
-  const [form, setForm] = useState({ nameEn: "", email: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState({ nameEn: "", identifier: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const copy = isArabic
     ? {
         breadcrumb: "إنشاء حساب",
-        title: "أنشئي حساباً جديداً",
-        subtitle: "أدخلي بياناتك لإنشاء حسابك بسهولة",
+        title: "أنشئي حسابك",
+        subtitle: "دقيقة واحدة فقط — لمتابعة الطلبات وحفظ المفضلة.",
+        quote: "إطلالات تليق بكل مناسبة.",
+        show: "إظهار كلمة المرور",
+        hide: "إخفاء كلمة المرور",
+        strength: ["ضعيفة", "مقبولة", "جيدة", "قوية"],
+        match: "متطابقة",
         name: "الاسم الكامل",
         namePlaceholder: "أدخلي اسمك الكامل",
-        email: "البريد الإلكتروني",
-        emailPlaceholder: "أدخلي بريدك الإلكتروني",
+        email: "البريد الإلكتروني أو رقم الجوال",
+        emailPlaceholder: "مثال: 9944 0312 أو name@email.com",
+        emailHint: "يكفي واحد منهما",
         password: "كلمة المرور",
-        passwordPlaceholder: "8 أحرف على الأقل",
+        passwordPlaceholder: "6 أحرف على الأقل",
         confirmPassword: "تأكيد كلمة المرور",
         confirmPasswordPlaceholder: "أعيدي إدخال كلمة المرور",
         submit: "إنشاء الحساب",
@@ -30,28 +36,34 @@ const Signup = () => {
         haveAccount: "لديك حساب بالفعل؟",
         signin: "سجلي الدخول الآن",
         passwordMismatch: "كلمتا المرور غير متطابقتين",
-        passwordMin: "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+        passwordMin: "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
         failed: "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
         registerFailed: "فشل إنشاء الحساب",
       }
     : {
         breadcrumb: "Sign Up",
-        title: "Create an Account",
-        subtitle: "Enter your details below",
+        title: "Create your account",
+        subtitle: "It takes a minute — track orders and save favourites.",
+        quote: "Looks made for every occasion.",
+        show: "Show password",
+        hide: "Hide password",
+        strength: ["Weak", "Fair", "Good", "Strong"],
+        match: "Matches",
         name: "Full Name",
         namePlaceholder: "Enter your full name",
-        email: "Email Address",
-        emailPlaceholder: "Enter your email address",
+        email: "Email or mobile number",
+        emailPlaceholder: "e.g. 9944 0312 or name@email.com",
+        emailHint: "Either one is fine",
         password: "Password",
-        passwordPlaceholder: "Min. 8 characters",
+        passwordPlaceholder: "At least 6 characters",
         confirmPassword: "Re-type Password",
         confirmPasswordPlaceholder: "Re-enter your password",
         submit: "Create Account",
         submitting: "Creating account...",
         haveAccount: "Already have an account?",
-        signin: "Sign in Now",
+        signin: "Sign in",
         passwordMismatch: "Passwords do not match",
-        passwordMin: "Password must be at least 8 characters",
+        passwordMin: "Password must be at least 6 characters",
         failed: "Something went wrong. Please try again.",
         registerFailed: "Registration failed",
       };
@@ -60,11 +72,7 @@ const Signup = () => {
     e.preventDefault();
     setError("");
 
-    if (form.password !== form.confirmPassword) {
-      setError(copy.passwordMismatch);
-      return;
-    }
-    if (form.password.length < 8) {
+    if (form.password.length < 6) {
       setError(copy.passwordMin);
       return;
     }
@@ -74,7 +82,7 @@ const Signup = () => {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nameEn: form.nameEn, email: form.email, password: form.password }),
+        body: JSON.stringify({ nameEn: form.nameEn, identifier: form.identifier, password: form.password }),
       });
 
       const data = await res.json();
@@ -83,7 +91,8 @@ const Signup = () => {
         return;
       }
 
-      router.push("/my-account");
+      const next = new URLSearchParams(window.location.search).get("next");
+      router.push(next && next.startsWith("/") && !next.startsWith("//") ? next : "/my-account");
     } catch {
       setError(copy.failed);
     } finally {
@@ -91,112 +100,80 @@ const Signup = () => {
     }
   };
 
+  // 0–4 strength score: length, mixed case, digits, symbols.
+  const pw = form.password;
+  const score = !pw
+    ? 0
+    : Math.min(4, (pw.length >= 6 ? 1 : 0) + (/[a-z]/.test(pw) && /[A-Z]/.test(pw) ? 1 : 0) + (/\d/.test(pw) ? 1 : 0) + (/[^A-Za-z0-9]/.test(pw) || pw.length >= 12 ? 1 : 0));
+  const STRENGTH_COLORS = ["#F23030", "#F59E0B", "#3B82F6", "#16A34A"];
+
   return (
-    <>
-      <Breadcrumb title={copy.breadcrumb} pages={[copy.breadcrumb]} />
-      <section dir={isArabic ? "rtl" : "ltr"} className="overflow-hidden py-20 bg-gray-2">
-        <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
-          <div className="max-w-[570px] w-full mx-auto rounded-xl bg-white shadow-1 p-4 sm:p-7.5 xl:p-11">
-            <div className="text-center mb-11">
-              <h2 className="font-semibold text-xl sm:text-2xl xl:text-heading-5 text-dark mb-1.5">
-                {copy.title}
-              </h2>
-              <p className="text-dark-4">{copy.subtitle}</p>
-            </div>
-
-            {error && (
-              <div className="mb-5 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit}>
-              <div className="mb-5">
-                <label htmlFor="name" className="block mb-2.5 font-medium text-dark">
-                  {copy.name} <span className="text-red">*</span>
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  placeholder={copy.namePlaceholder}
-                  value={form.nameEn}
-                  onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
-                  required
-                  minLength={2}
-                  dir={isArabic ? "rtl" : "ltr"}
-                  className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
-                />
-              </div>
-
-              <div className="mb-5">
-                <label htmlFor="email" className="block mb-2.5 font-medium text-dark">
-                  {copy.email} <span className="text-red">*</span>
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  placeholder={copy.emailPlaceholder}
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                  dir={isArabic ? "rtl" : "ltr"}
-                  className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
-                />
-              </div>
-
-              <div className="mb-5">
-                <label htmlFor="password" className="block mb-2.5 font-medium text-dark">
-                  {copy.password} <span className="text-red">*</span>
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  placeholder={copy.passwordPlaceholder}
-                  autoComplete="new-password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
-                  dir={isArabic ? "rtl" : "ltr"}
-                  className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
-                />
-              </div>
-
-              <div className="mb-5.5">
-                <label htmlFor="confirmPassword" className="block mb-2.5 font-medium text-dark">
-                  {copy.confirmPassword} <span className="text-red">*</span>
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  placeholder={copy.confirmPasswordPlaceholder}
-                  autoComplete="new-password"
-                  value={form.confirmPassword}
-                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
-                  required
-                  dir={isArabic ? "rtl" : "ltr"}
-                  className="rounded-lg border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-3 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center font-medium text-white bg-dark py-3 px-6 rounded-lg ease-out duration-200 hover:bg-blue mt-7.5 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {loading ? copy.submitting : copy.submit}
-              </button>
-
-              <p className="text-center mt-6 text-dark-4">
-                {copy.haveAccount}{" "}
-                <Link href="/signin" className="text-dark ease-out duration-200 hover:text-blue font-medium">
-                  {copy.signin}
-                </Link>
-              </p>
-            </form>
+    <AuthShell
+      title={copy.title}
+      subtitle={copy.subtitle}
+      quote={copy.quote}
+      footer={
+        <>
+          {copy.haveAccount}{" "}
+          <Link href="/signin" className="font-semibold text-dark underline underline-offset-4 decoration-dark/30 hover:decoration-dark">
+            {copy.signin}
+          </Link>
+        </>
+      }
+    >
+      <AuthError message={error} />
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthField
+          label={copy.name}
+          name="name"
+          autoComplete="name"
+          placeholder={copy.namePlaceholder}
+          value={form.nameEn}
+          onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
+          required
+          autoFocus
+        />
+        <AuthField
+          label={copy.email}
+          type="text"
+          name="username"
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          placeholder={copy.emailPlaceholder}
+          hint={<span className="text-xs font-normal text-dark-4">{copy.emailHint}</span>}
+          value={form.identifier}
+          onChange={(e) => setForm({ ...form, identifier: e.target.value })}
+          required
+          dir="ltr"
+        />
+        <div>
+          <PasswordField
+            label={copy.password}
+            name="new-password"
+            autoComplete="new-password"
+            placeholder={copy.passwordPlaceholder}
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            required
+            minLength={6}
+            dir="ltr"
+            showLabel={copy.show}
+            hideLabel={copy.hide}
+            hint={pw ? <span className="text-xs font-medium" style={{ color: STRENGTH_COLORS[Math.max(0, score - 1)] }}>{copy.strength[Math.max(0, score - 1)]}</span> : undefined}
+          />
+          <div className="mt-2 grid grid-cols-4 gap-1.5" aria-hidden>
+            {[0, 1, 2, 3].map((i) => (
+              <span key={i} className="h-1 rounded-full transition-colors duration-300" style={{ background: i < score ? STRENGTH_COLORS[score - 1] : "#E5E7EB" }} />
+            ))}
           </div>
         </div>
-      </section>
-    </>
+        <div className="pt-2">
+          <AuthSubmit loading={loading}>{loading ? copy.submitting : copy.submit}</AuthSubmit>
+        </div>
+      </form>
+    </AuthShell>
   );
 };
 

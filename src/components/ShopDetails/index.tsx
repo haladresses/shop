@@ -293,8 +293,8 @@ const ShopDetails = () => {
   return (
     <>
       <Breadcrumb
-        title={isArabic ? "تفاصيل المنتج" : "Shop Details"}
-        pages={[isArabic ? "المتجر" : "shop", "/", title]}
+        title={api.category ? pick(api.category.nameEn, api.category.nameAr ?? "", isArabic) : isArabic ? "المتجر" : "Shop"}
+        pages={[isArabic ? "المتجر" : "Shop", "/", title]}
       />
 
       <section className="overflow-hidden relative pb-20 pt-5 lg:pt-20 xl:pt-28">
@@ -303,7 +303,7 @@ const ShopDetails = () => {
             {/* Gallery */}
             <div className="lg:max-w-[570px] w-full">
               <div
-                className="relative w-full aspect-[3/4] -mx-4 sm:mx-0 w-[calc(100%+2rem)] sm:w-full sm:rounded-2xl bg-[#F4EFEB] overflow-hidden flex items-center justify-center group"
+                className="relative w-full aspect-[3/4] rounded-2xl bg-[#F4EFEB] overflow-hidden flex items-center justify-center group"
                 onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
                 onTouchEnd={(e) => {
                   // Swipe between photos on phones (direction-aware for RTL).
@@ -392,7 +392,7 @@ const ShopDetails = () => {
             {/* Content */}
             <div className="max-w-[539px] w-full">
               <div className="flex items-center justify-between gap-3 mb-3">
-                <h1 className="font-semibold text-xl sm:text-2xl xl:text-custom-3 text-dark">{title}</h1>
+                <h2 data-product-title className="font-semibold text-xl sm:text-2xl xl:text-custom-3 text-dark">{title}</h2>
               </div>
 
               <div className="flex flex-wrap items-center gap-4 mb-5">

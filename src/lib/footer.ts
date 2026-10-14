@@ -37,7 +37,7 @@ export type FooterConfig = {
 
 export const DEFAULT_FOOTER_CONFIG: FooterConfig = {
   brandEn: "Hala Dresses",
-  brandAr: "هلا دريسز",
+  brandAr: "حلا للازياء",
   addressEn: "Bousher, Muscat, Oman.",
   addressAr: "بوشر، مسقط، عمان.",
   phone: "+968 9944 0312",
@@ -80,7 +80,7 @@ export const DEFAULT_FOOTER_CONFIG: FooterConfig = {
   instagramLeadEn: "Get in on",
   instagramLeadAr: "تابعينا على",
   copyrightEn: "\u00A9 {year}. Hala Dresses. All rights reserved.",
-  copyrightAr: "\u00A9 {year}. هلا دريسز. جميع الحقوق محفوظة.",
+  copyrightAr: "\u00A9 {year}. حلا للازياء. جميع الحقوق محفوظة.",
 };
 
 export const FOOTER_CONFIG_KEY = "footer_config";

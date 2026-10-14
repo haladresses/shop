@@ -1,9 +1,11 @@
 import React from "react";
 import Link from "next/link";
 import { useCartModalContext } from "@/app/context/CartSidebarModalContext";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const EmptyCart = () => {
   const { closeCartModal } = useCartModalContext();
+  const { isArabic } = useLanguage();
 
   return (
     <div className="text-center">
@@ -17,14 +19,15 @@ const EmptyCart = () => {
         </div>
       </div>
 
-      <p className="pb-6">Your cart is empty!</p>
+      <p className="font-medium text-dark">{isArabic ? "سلتك فارغة" : "Your cart is empty"}</p>
+      <p className="pb-6 pt-1 text-sm text-dark-4">{isArabic ? "اكتشفي أحدث التشكيلات وأضيفي ما يعجبك." : "Discover the latest pieces and add your favourites."}</p>
 
       <Link
         onClick={() => closeCartModal()}
         href="/shop"
-        className="w-full lg:w-10/12 mx-auto flex justify-center font-medium text-white bg-dark py-[13px] px-6 rounded-md ease-out duration-200 hover:bg-opacity-95"
+        className="w-full lg:w-10/12 mx-auto flex justify-center font-medium text-white bg-dark py-[13px] px-6 rounded-full ease-out duration-200 hover:bg-blue"
       >
-        Continue Shopping
+        {isArabic ? "تابعي التسوق" : "Continue shopping"}
       </Link>
     </div>
   );

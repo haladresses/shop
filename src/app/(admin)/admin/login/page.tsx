@@ -1,11 +1,13 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { LuShirt } from "react-icons/lu";
+import { LuEye, LuEyeOff, LuLoaderCircle, LuLock, LuShieldCheck } from "react-icons/lu";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
+  const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -21,73 +23,92 @@ export default function AdminLoginPage() {
       });
       const data = await res.json();
       if (!data.success) {
-        setError(data.error || "Invalid credentials");
+        setError(data.error || "Invalid email or password");
         return;
       }
-      if (!["SUPER_ADMIN", "ADMIN", "STAFF"].includes(data.data.user.role)) {
-        setError("Access denied. Admin access required.");
+      // Same rule as the admin layout: access comes from the role's permissions.
+      const permissions: string[] = data.data.user.permissions || [];
+      if (!permissions.includes("panel.admin.access")) {
+        await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+        setError("This account doesn't have access to the admin panel.");
         return;
       }
       router.push("/admin");
     } catch {
-      setError("Something went wrong");
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  const input =
+    "w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-[15px] text-slate-800 placeholder:text-slate-400 outline-none transition focus:border-slate-800 focus:ring-4 focus:ring-slate-800/5";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <LuShirt className="text-white" size={30} />
+    <div className="min-h-[100dvh] bg-[#F7F2EE] flex items-center justify-center p-4">
+      <div className="w-full max-w-[400px]">
+        <div className="flex flex-col items-center text-center mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-white shadow-sm ring-1 ring-black/5 flex items-center justify-center mb-4">
+            <Image src="/logo.svg" alt="Hala Dresses" width={36} height={36} priority />
           </div>
-          <h1 className="text-2xl font-bold text-white">Hala Dresses</h1>
-          <p className="text-indigo-300 mt-1">Admin Panel</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Admin panel</h1>
+          <p className="text-sm text-slate-500 mt-1">Sign in to manage Hala Dresses</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-slate-800 mb-6">Sign In</h2>
-
+        <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-[0_20px_60px_-30px_rgba(47,36,31,.35)] ring-1 ring-black/5 p-6 sm:p-8 space-y-5">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">
+            <div role="alert" className="rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-3">
               {error}
             </div>
           )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+          <label className="block">
+            <span className="block text-sm font-medium text-slate-700 mb-1.5">Email</span>
+            <input
+              type="email"
+              autoComplete="email"
+              autoFocus
+              required
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className={input}
+              placeholder="you@haladresses.com"
+            />
+          </label>
+          <label className="block">
+            <span className="block text-sm font-medium text-slate-700 mb-1.5">Password</span>
+            <span className="relative block">
               <input
-                type="email"
-                className="admin-input"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                placeholder="admin@haladresses.com"
+                type={show ? "text" : "password"}
+                autoComplete="current-password"
                 required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
-              <input
-                type="password"
-                className="admin-input"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className={`${input} pe-12`}
                 placeholder="••••••••"
-                required
               />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-60 disabled:cursor-not-allowed mt-2"
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
-          </form>
-        </div>
+              <button
+                type="button"
+                onClick={() => setShow((s) => !s)}
+                aria-label={show ? "Hide password" : "Show password"}
+                className="absolute end-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50"
+              >
+                {show ? <LuEyeOff size={18} /> : <LuEye size={18} />}
+              </button>
+            </span>
+          </label>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-12 rounded-xl bg-slate-900 hover:bg-[#8C3B49] text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-70"
+          >
+            {loading ? <LuLoaderCircle size={18} className="animate-spin" /> : <LuLock size={16} />}
+            {loading ? "Signing in..." : "Sign in"}
+          </button>
+        </form>
+
+        <p className="flex items-center justify-center gap-1.5 text-xs text-slate-400 mt-6">
+          <LuShieldCheck size={14} /> Staff-only area
+        </p>
       </div>
     </div>
   );

@@ -17,6 +17,7 @@ type RoleInfo = {
   labelEn: string;
   labelAr: string;
   editable: boolean;
+  users?: number;
 };
 
 type PermissionInfo = {
@@ -286,6 +287,9 @@ export default function RolesPage() {
                       }`}
                     >
                       <span>{role.labelEn}</span>
+                      {typeof role.users === "number" && (
+                        <span className={`text-[11px] tabular-nums rounded-full px-1.5 ${isActive ? "bg-white/20" : "bg-slate-100 text-slate-500"}`}>{role.users}</span>
+                      )}
                       {!role.editable ? <LuLock size={12} className={isActive ? "text-white/70" : "text-slate-400"} /> : null}
                     </button>
                   );
@@ -294,7 +298,7 @@ export default function RolesPage() {
               {activeRoleInfo && !activeRoleInfo.editable ? (
                 <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
                   <LuLock size={14} className="mt-0.5 shrink-0" />
-                  <span>{activeRoleInfo.labelEn} is locked and always keeps its permissions. Choose an editable role to make changes.</span>
+                  <span>{activeRoleInfo.key === "SUPER_ADMIN" ? `${activeRoleInfo.labelEn} always has every permission.` : `${activeRoleInfo.labelEn} is at or above your own level, so only someone more senior can change it.`} To adjust one person, open them in Users → Role & access.</span>
                 </div>
               ) : null}
             </section>

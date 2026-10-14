@@ -45,7 +45,7 @@ const STATUS_BADGE: Record<ContactMessage["status"], string> = {
 
 const INFO_FIELDS: { key: string; labelEn: string; placeholder: string; full?: boolean; ltr?: boolean }[] = [
   { key: "store_name_en", labelEn: "Store name (EN)", placeholder: "Hala Dresses" },
-  { key: "store_name_ar", labelEn: "Store name (AR)", placeholder: "هلا دريسز" },
+  { key: "store_name_ar", labelEn: "Store name (AR)", placeholder: "حلا للازياء" },
   { key: "store_email", labelEn: "Email", placeholder: "info@haladresses.com", ltr: true },
   { key: "store_phone", labelEn: "Phone", placeholder: "+968 9944 0312", ltr: true },
   { key: "store_whatsapp", labelEn: "WhatsApp (optional)", placeholder: "+968 9944 0312", ltr: true },

@@ -33,7 +33,7 @@ export default function ScrollToTop() {
       {isVisible && (
         <button
           onClick={scrollToTop}
-          className={`scroll-top-btn items-center justify-center w-10 h-10 rounded-full shadow-lg bg-blue ease-out duration-200 hover:bg-blue-dark fixed bottom-8 end-5 sm:end-8 z-999 ${
+          className={`scroll-top-btn items-center justify-center w-10 h-10 rounded-full shadow-lg bg-blue ease-out duration-200 hover:bg-blue-dark fixed bottom-8 start-5 sm:start-8 z-999 ${
             isVisible ? "flex" : "hidden"
           }`}
         >

@@ -370,7 +370,7 @@ const Checkout = () => {
                       [
                         ["STANDARD", t("Standard Delivery", "التوصيل العادي")],
                         ["WASELLEE", t("Wasellee (LO Express)", "وصلي (LO Express)")],
-                        ["STORE_PICKUP", t("Pickup from Hala Store", "الاستلام من متجر هلا")],
+                        ["STORE_PICKUP", t("Pickup from Hala Store", "الاستلام من متجر حلا")],
                       ] as [ShippingMethod, string][]
                     ).map(([value, label]) => (
                       <label

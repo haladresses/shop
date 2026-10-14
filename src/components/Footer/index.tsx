@@ -41,10 +41,10 @@ const Footer = () => {
   const whatsappHref = `https://api.whatsapp.com/send?phone=${config.whatsappNumber.replace(/[^\d]/g, "")}`;
 
   return (
-    <footer className="overflow-hidden">
+    <footer className="overflow-hidden border-t border-gray-3 bg-white">
       <div className="max-w-[1170px] mx-auto px-4 sm:px-8 xl:px-0">
         {/* <!-- footer menu start --> */}
-        <div className={`grid grid-cols-2 gap-x-6 gap-y-10 pt-12 sm:pt-16 xl:pt-22.5 pb-10 xl:pb-15 xl:grid-cols-12 xl:gap-x-8 ${isArabic ? "text-right" : ""}`}>
+        <div className={`grid grid-cols-2 gap-x-6 gap-y-10 pt-10 sm:pt-14 xl:pt-16 pb-10 xl:pb-12 xl:grid-cols-12 xl:gap-x-8 ${isArabic ? "text-right" : ""}`}>
           <div className="col-span-2 xl:col-span-4 xl:max-w-[330px]">
             <Image src="/logo.svg" alt={copy.brandHeading} width={48} height={48} className="mb-4" />
             <h2 className="mb-7.5 text-custom-1 font-medium text-dark">
@@ -308,7 +308,7 @@ const Footer = () => {
       </div>
 
       {/* <!-- footer bottom start --> */}
-      <div className="py-5 xl:py-7.5 bg-gray-1">
+      <div className="pt-5 pb-28 lg:py-7.5 bg-[#F7F2EE]">
         <div className="max-w-[1170px] mx-auto px-4 sm:px-8 xl:px-0">
           <div className={`flex flex-col items-center gap-5 text-center sm:flex-row sm:flex-wrap sm:justify-between ${isArabic ? "sm:text-right" : "sm:text-left"}`}>
             <p className="text-dark font-medium order-2 sm:order-1">

@@ -334,3 +334,14 @@ html.reveal-ready [data-reveal].is-revealed { opacity: 1; transform: none }
 @keyframes wa-bubble-in { from { opacity: 0; transform: translateY(8px) } }
 .wa-card { animation: wa-card-in .3s cubic-bezier(.2,.9,.3,1.15); transform-origin: bottom right }
 .wa-bubble { animation: wa-bubble-in .4s .15s cubic-bezier(.2,.8,.2,1) both }
+@keyframes auth-in { from { opacity: 0; transform: translateY(14px) } }
+.auth-in { animation: auth-in .55s cubic-bezier(.2,.8,.2,1) }
+/* Animated Hala logo (auth pages) */
+@keyframes logo-ring { 0% { transform: scale(.72); opacity: .9 } 100% { transform: scale(1.18); opacity: 0 } }
+@keyframes logo-float { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }
+@keyframes logo-draw { 0% { opacity: 0; transform: scale(.6) rotate(-12deg); filter: blur(6px) } 60% { opacity: 1; transform: scale(1.06) rotate(2deg); filter: blur(0) } 100% { transform: none } }
+.logo-ring { animation: logo-ring 3.6s cubic-bezier(.2,.6,.3,1) infinite }
+.logo-float { animation: logo-float 5s ease-in-out infinite }
+.logo-draw { animation: logo-draw 1.1s cubic-bezier(.2,.8,.2,1) both }
+.auth-quote { animation: auth-in .8s .5s cubic-bezier(.2,.8,.2,1) both }
+@media (prefers-reduced-motion: reduce) { .logo-ring, .logo-float, .logo-draw, .auth-quote { animation: none } }

@@ -12,7 +12,7 @@ export type TestimonialItem = {
 export const DEFAULT_TESTIMONIALS: TestimonialItem[] = [
   {
     reviewEn: "My daughter's dress from Hala Dresses was the prettiest at her graduation. Soft fabric, beautiful stitching — delivered right on time.",
-    reviewAr: "فستان ابنتي من هلا دريسز كان الأجمل في حفل التخرج. القماش ناعم والخياطة دقيقة، وصلت في الوقت المحدد تماماً.",
+    reviewAr: "فستان ابنتي من حلا للازياء كان الأجمل في حفل التخرج. القماش ناعم والخياطة دقيقة، وصلت في الوقت المحدد تماماً.",
     authorNameEn: "Um Mohammed",
     authorNameAr: "أم محمد",
     authorRoleEn: "Mother from Muscat",
@@ -42,7 +42,7 @@ export const DEFAULT_TESTIMONIALS: TestimonialItem[] = [
   },
   {
     reviewEn: "What I love most is that the collections always stay fresh and on-trend. Every visit I discover something new that catches my eye.",
-    reviewAr: "أجمل ما في هلا دريسز أن التشكيلات تتغير دائماً وتواكب الموضة. كل زيارة أجد شيئاً جديداً يلفت انتباهي.",
+    reviewAr: "أجمل ما في حلا للازياء أن التشكيلات تتغير دائماً وتواكب الموضة. كل زيارة أجد شيئاً جديداً يلفت انتباهي.",
     authorNameEn: "Noor Al-Busaidi",
     authorNameAr: "نور البوسعيدي",
     authorRoleEn: "Fashion Designer",

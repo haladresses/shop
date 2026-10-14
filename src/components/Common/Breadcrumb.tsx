@@ -4,46 +4,34 @@ import Link from "next/link";
 import React from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 
-const Breadcrumb = ({ title, pages }) => {
+/**
+ * Page title + trail. Compact on phones (single line trail above a smaller
+ * title) so products start higher on the screen; mirrors automatically in RTL.
+ */
+const Breadcrumb = ({ title, pages }: { title: string; pages: string[] }) => {
   const { isArabic } = useLanguage();
+  const trail = pages.filter((p) => p && p !== "/");
 
   return (
-    <div className="overflow-hidden shadow-breadcrumb pt-[73px] xl:pt-[125px]">
+    <div className="overflow-hidden pt-[73px] xl:pt-[125px] bg-white" dir={isArabic ? "rtl" : "ltr"}>
       <div className="border-t border-gray-3">
-        <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0 py-4 xl:py-6">
-          <div
-            className={`flex flex-col gap-3 sm:items-center sm:justify-between ${
-              isArabic
-                ? "items-end text-right sm:flex-row"
-                : "items-start text-left sm:flex-row"
-            }`}
-          >
-            <div className="w-full sm:w-auto sm:order-1">
-              <h1 className="font-semibold text-dark text-xl sm:text-2xl xl:text-custom-2">
-                {title}
-              </h1>
-            </div>
-
-            <ul
-              dir={isArabic ? "rtl" : "ltr"}
-              className={`flex w-full flex-wrap items-center gap-2 sm:w-auto ${
-                isArabic ? "justify-start text-left sm:order-2" : "justify-start text-left sm:order-2"
-              }`}
-            >
-              <li className="text-custom-sm hover:text-blue">
+        <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0 py-3 sm:py-5 xl:py-6 flex flex-col-reverse gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <h1 className="font-semibold text-dark text-lg sm:text-2xl xl:text-custom-2 leading-tight truncate">{title}</h1>
+          <nav aria-label="Breadcrumb" className="min-w-0">
+            <ol className="flex items-center gap-1.5 text-xs sm:text-custom-sm text-dark-4 whitespace-nowrap overflow-hidden">
+              <li className="hover:text-blue shrink-0">
                 <Link href="/">{isArabic ? "الرئيسية" : "Home"}</Link>
               </li>
-
-              <li className="text-custom-sm text-dark-4">/</li>
-
-              {pages.length > 0 &&
-                pages.map((page, key) => (
-                  <li className="text-custom-sm last:text-blue capitalize" key={key}>
+              {trail.map((page, key) => (
+                <React.Fragment key={key}>
+                  <li aria-hidden className="text-gray-5">/</li>
+                  <li className={`truncate capitalize ${key === trail.length - 1 ? "text-blue" : ""}`} aria-current={key === trail.length - 1 ? "page" : undefined}>
                     {page}
                   </li>
-                ))}
-            </ul>
-          </div>
+                </React.Fragment>
+              ))}
+            </ol>
+          </nav>
         </div>
       </div>
     </div>

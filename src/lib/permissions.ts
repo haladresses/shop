@@ -45,6 +45,7 @@ export const ADMIN_NAV_ITEMS: NavPermissionItem[] = [
   { href: "/admin/inventory", label: "Inventory", permission: "admin.inventory.view" },
   { href: "/pos", label: "POS", permission: "pos.access" },
   { href: "/admin/users", label: "Users", permission: "admin.users.view" },
+  { href: "/admin/roles", label: "Roles & Permissions", permission: "admin.roles.view" },
   { href: "/admin/payments", label: "Payments", permission: "admin.payments.view" },
   { href: "/admin/coupons", label: "Coupons", permission: "admin.coupons.view" },
   { href: "/admin/shipping", label: "Shipping", permission: "admin.shipping.view" },
@@ -59,7 +60,6 @@ export const ADMIN_NAV_ITEMS: NavPermissionItem[] = [
   { href: "/admin/navigation", label: "Navigation Menu", permission: "admin.navigation.manage" },
   { href: "/admin/settings", label: "Settings", permission: "admin.settings.manage" },
   { href: "/admin/help", label: "Help", permission: "admin.help.view" },
-  { href: "/admin/roles", label: "Roles", permission: "admin.roles.view" },
 ];
 
 export const SELLER_NAV_ITEMS: NavPermissionItem[] = [
@@ -315,4 +315,48 @@ export async function getPermissionsForRole(role: Role): Promise<string[]> {
 export async function roleHasPermission(role: Role, permission: string): Promise<boolean> {
   const permissions = await getPermissionsForRole(role);
   return permissions.includes(permission);
+}
+
+
+// ─────────────────────────────────────────────
+// Per-user overrides & role ranking
+// ─────────────────────────────────────────────
+
+export type PermissionOverrides = { grant: string[]; revoke: string[] };
+
+export function parseOverrides(raw: unknown): PermissionOverrides {
+  const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  return { grant: sanitizePermissions(o.grant), revoke: sanitizePermissions(o.revoke) };
+}
+
+/** Role permissions, plus this user's extra grants, minus their revokes. */
+export async function getEffectivePermissions(user: { role: Role; permissionOverrides?: unknown }): Promise<string[]> {
+  const base = await getPermissionsForRole(user.role);
+  if (user.role === Role.SUPER_ADMIN) return base; // always everything
+  const { grant, revoke } = parseOverrides(user.permissionOverrides);
+  const set = new Set([...base, ...grant]);
+  for (const r of revoke) set.delete(r);
+  return Array.from(set).sort();
+}
+
+/** Higher number = more senior. Used to stop privilege escalation. */
+export const ROLE_RANK: Record<Role, number> = {
+  [Role.SUPER_ADMIN]: 4,
+  [Role.ADMIN]: 3,
+  [Role.STAFF]: 2,
+  [Role.SELLER]: 1,
+  [Role.CUSTOMER]: 0,
+};
+
+/** Actor may edit/deactivate/delete the target account. */
+export function canManageUser(actor: { id: string; role: Role }, target: { id: string; role: Role }): boolean {
+  if (actor.id === target.id) return false;
+  if (actor.role === Role.SUPER_ADMIN) return true;
+  return ROLE_RANK[actor.role] > ROLE_RANK[target.role];
+}
+
+/** Actor may give someone this role (never above — or, except super admins, equal to — their own). */
+export function canAssignRole(actor: { role: Role }, role: Role): boolean {
+  if (actor.role === Role.SUPER_ADMIN) return true;
+  return ROLE_RANK[role] < ROLE_RANK[actor.role];
 }

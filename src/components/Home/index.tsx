@@ -19,7 +19,7 @@ const Home = () => {
       <div data-reveal><BestSeller /></div>
       <div data-reveal><CounDown /></div>
       <div data-reveal><Testimonials /></div>
-      <div data-reveal className="pb-16 sm:pb-20">
+      <div data-reveal className="pb-12 sm:pb-16">
         <Newsletter />
       </div>
     </main>

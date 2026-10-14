@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
 import { hashPassword, createSession } from "@/lib/auth";
-import { registerSchema } from "@/lib/validations/auth";
+import { normalizePhone, parseIdentifier, phoneCandidates, PHONE_ACCOUNT_DOMAIN, registerSchema } from "@/lib/validations/auth";
 import { created, error, serverError } from "@/lib/api/response";
 import { cookies } from "next/headers";
 
@@ -11,12 +11,26 @@ export async function POST(req: NextRequest) {
     const parsed = registerSchema.safeParse(body);
     if (!parsed.success) return error(parsed.error.issues[0].message);
 
-    const { email, password, nameEn, nameAr, phone } = parsed.data;
+    const { password, nameEn, nameAr } = parsed.data;
+    const id = parseIdentifier(parsed.data.identifier || parsed.data.email || "");
+    if (id.kind === "invalid") return error("Enter a valid email or mobile number");
+
+    // A separate optional phone (older clients) is normalised too.
+    const extraPhone = parsed.data.phone ? normalizePhone(parsed.data.phone) : null;
+    const phone = id.kind === "phone" ? id.phone : extraPhone;
+    const email = id.kind === "email" ? id.email : `${phone!.replace(/\D/g, "")}@${PHONE_ACCOUNT_DOMAIN}`;
 
     const existing = await prisma.user.findFirst({
-      where: { OR: [{ email }, ...(phone ? [{ phone }] : [])] },
+      where: {
+        OR: [
+          { email: { equals: email, mode: "insensitive" } },
+          ...(phone ? [{ phone: { in: phoneCandidates(phone) } }] : []),
+        ],
+      },
     });
-    if (existing) return error("Email or phone already registered");
+    if (existing) {
+      return error(id.kind === "phone" ? "This mobile number already has an account — sign in instead." : "This email already has an account — sign in instead.", 409);
+    }
 
     const passwordHash = await hashPassword(password);
     const user = await prisma.user.create({

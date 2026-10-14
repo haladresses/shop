@@ -132,23 +132,6 @@ export default function HeroView({
               centered ? "items-center text-center mx-auto max-w-[760px]" : "items-center text-center md:items-start md:text-start"
             } ${fullbleed ? "max-w-[640px]" : ""}`}
           >
-            {t(slide.badgeEn, slide.badgeAr) && (
-              <span
-                className="hero-rise inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold tracking-wide mb-5 backdrop-blur-sm"
-                style={{
-                  ["--d" as string]: "0ms",
-                  color: lightText ? "#fff" : accent,
-                  background: lightText ? "rgba(255,255,255,.14)" : `color-mix(in srgb, ${accent} 10%, white)`,
-                  boxShadow: lightText ? "inset 0 0 0 1px rgba(255,255,255,.25)" : `inset 0 0 0 1px color-mix(in srgb, ${accent} 18%, transparent)`,
-                }}
-              >
-                <span className="relative flex w-2 h-2">
-                  <span className="absolute inset-0 rounded-full animate-ping opacity-60" style={{ background: lightText ? "#fff" : accent }} />
-                  <span className="relative w-2 h-2 rounded-full" style={{ background: lightText ? "#fff" : accent }} />
-                </span>
-                {t(slide.badgeEn, slide.badgeAr)}
-              </span>
-            )}
 
             <h1
               className={`hero-rise font-bold tracking-tight text-[30px] leading-[1.15] xsm:text-[34px] sm:text-[42px] lg:text-[52px] xl:text-[58px] lg:leading-[1.08] mb-5 ${lightText ? "text-white" : "text-dark"} ${isArabic ? "leading-[1.35] lg:leading-[1.3]" : ""}`}
