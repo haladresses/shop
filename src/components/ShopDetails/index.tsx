@@ -498,7 +498,7 @@ const ShopDetails = () => {
                           onClick={() => setActiveSize(active ? "" : s)}
                           aria-pressed={active}
                           className={`relative min-w-[52px] h-12 px-3 rounded-xl border text-sm font-medium duration-200 ${
-                            active ? "border-dark bg-dark text-white" : "border-gray-3 text-dark hover:border-dark"
+                            active ? "border-dark bg-dark text-white" : "border-gray-3 text-dark hover:border-blue/50"
                           } disabled:opacity-40 disabled:line-through disabled:cursor-not-allowed disabled:hover:border-gray-3`}
                         >
                           {s}

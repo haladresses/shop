@@ -1,529 +1,224 @@
 "use client";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { LuCheck, LuLock, LuMinus, LuSearch } from "react-icons/lu";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  LuCheck,
-  LuChevronDown,
-  LuLock,
-  LuSave,
-  LuSearch,
-  LuShield,
-  LuUsers,
-  LuX,
-} from "react-icons/lu";
+type RoleKey = "SUPER_ADMIN" | "ADMIN" | "STAFF" | "SELLER" | "CUSTOMER";
+type RoleInfo = { key: RoleKey; labelEn: string; labelAr: string; editable: boolean; users?: number };
+type Perm = { key: string; label: string; description: string; area: "admin" | "seller" | "system"; group: string };
+type Payload = { roles: RoleInfo[]; permissions: Perm[]; matrix: Record<string, string[]> };
 
-type RoleInfo = {
-  key: string;
-  labelEn: string;
-  labelAr: string;
-  editable: boolean;
-  users?: number;
-};
+// Plain-language sections instead of the internal permission groups.
+const SECTIONS: { title: string; hint: string; groups: string[] }[] = [
+  { title: "Sign-in", hint: "Which panels this role can open", groups: ["Admin Panel", "Seller Portal"] },
+  { title: "Sales", hint: "Orders, till, payments and delivery", groups: ["Dashboard", "Orders", "Point of Sale", "Payments", "Shipping", "Marketing"] },
+  { title: "Money", hint: "Profit & loss and expenses", groups: ["Finance"] },
+  { title: "Products & stock", hint: "Catalog and warehouse", groups: ["Products", "Catalog", "Inventory"] },
+  { title: "Website", hint: "Homepage, pages and messages", groups: ["Content", "Contact"] },
+  { title: "People & security", hint: "Accounts and permissions", groups: ["Users", "Roles & Permissions"] },
+  { title: "System", hint: "Settings, backups and help", groups: ["Settings", "Backups", "Help & Onboarding"] },
+  { title: "Seller portal", hint: "For marketplace sellers", groups: ["Seller Dashboard", "Seller Products", "Seller Orders", "Seller Inventory", "Seller Analytics", "Seller Operations"] },
+];
 
-type PermissionInfo = {
-  key: string;
-  label: string;
-  description: string;
-  area: "admin" | "seller" | "system";
-  group: string;
-};
+// Shorter, friendlier wording for the row labels.
+function friendly(p: Perm): string {
+  const l = p.label
+    .replace(/^Admin Panel Access$/, "Open the admin panel")
+    .replace(/^Seller Portal Access$/, "Open the seller portal")
+    .replace(/^Use POS$/, "Sell at the till (POS)")
+    .replace(/^View /, "See ")
+    .replace(/^Manage /, "Edit ")
+    .replace(/^Seller /, "");
+  return l.charAt(0).toUpperCase() + l.slice(1);
+}
 
-type Payload = {
-  roles: RoleInfo[];
-  permissions: PermissionInfo[];
-  matrix: Record<string, string[]>;
-};
-
-const AREA_META: Record<PermissionInfo["area"], { badge: string; icon: typeof LuShield }> = {
-  admin: { badge: "bg-sky-50 text-sky-600", icon: LuShield },
-  seller: { badge: "bg-emerald-50 text-emerald-600", icon: LuUsers },
-  system: { badge: "bg-violet-50 text-violet-600", icon: LuLock },
+const COLUMN_TONE: Record<RoleKey, string> = {
+  SUPER_ADMIN: "text-fuchsia-700",
+  ADMIN: "text-violet-700",
+  STAFF: "text-emerald-700",
+  SELLER: "text-sky-700",
+  CUSTOMER: "text-slate-600",
 };
 
 export default function RolesPage() {
   const [data, setData] = useState<Payload | null>(null);
   const [matrix, setMatrix] = useState<Record<string, string[]>>({});
-  const [loading, setLoading] = useState(true);
+  const [q, setQ] = useState("");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [query, setQuery] = useState("");
-  const [area, setArea] = useState<"all" | PermissionInfo["area"]>("all");
-  const [activeRole, setActiveRole] = useState<string>("");
+  const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
 
-  useEffect(() => {
-    fetch("/api/admin/roles")
-      .then((r) => r.json())
-      .then((json) => {
-        if (!json.success) throw new Error(json.error || "Failed to load roles");
-        setData(json.data);
-        setMatrix(json.data.matrix);
-        const roles: RoleInfo[] = json.data.roles ?? [];
-        const firstEditable = roles.find((role) => role.editable) ?? roles[0];
-        if (firstEditable) setActiveRole(firstEditable.key);
-      })
-      .catch((e: Error) => setMessage({ type: "error", text: e.message }))
-      .finally(() => setLoading(false));
+  const load = useCallback(async () => {
+    const d = await fetch("/api/admin/roles", { cache: "no-store" }).then((r) => r.json()).catch(() => null);
+    if (!d?.success) return setToast({ ok: false, text: d?.error || "Could not load roles" });
+    setData(d.data);
+    setMatrix(d.data.matrix);
   }, []);
+  useEffect(() => {
+    load();
+  }, [load]);
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(t);
+  }, [toast]);
 
-  const groupedPermissions = useMemo(() => {
-    if (!data) return [] as Array<{ group: string; items: PermissionInfo[] }>;
-    const map = new Map<string, PermissionInfo[]>();
-    const normalizedQuery = query.trim().toLowerCase();
-    for (const permission of data.permissions) {
-      if (area !== "all" && permission.area !== area) continue;
+  const has = (role: RoleKey, key: string) => role === "SUPER_ADMIN" || (matrix[role] ?? []).includes(key);
+  const set = (role: RoleKey, keys: string[], on: boolean) =>
+    setMatrix((prev) => {
+      const s = new Set(prev[role] ?? []);
+      keys.forEach((k) => (on ? s.add(k) : s.delete(k)));
+      return { ...prev, [role]: Array.from(s).sort() };
+    });
 
-      if (normalizedQuery) {
-        const haystack = [permission.label, permission.description, permission.group, permission.key, permission.area]
-          .join(" ")
-          .toLowerCase();
-        if (!haystack.includes(normalizedQuery)) continue;
-      }
+  const sections = useMemo(() => {
+    if (!data) return [];
+    const term = q.trim().toLowerCase();
+    const used = new Set<string>();
+    const out = SECTIONS.map((sec) => {
+      const perms = data.permissions.filter((p) => sec.groups.includes(p.group));
+      perms.forEach((p) => used.add(p.key));
+      return { ...sec, perms };
+    });
+    // Anything not mapped above still shows up, never silently hidden.
+    const rest = data.permissions.filter((p) => !used.has(p.key));
+    if (rest.length) out.push({ title: "Other", hint: "", groups: [], perms: rest });
+    return out
+      .map((s) => ({ ...s, perms: term ? s.perms.filter((p) => `${friendly(p)} ${p.description}`.toLowerCase().includes(term)) : s.perms }))
+      .filter((s) => s.perms.length);
+  }, [data, q]);
 
-      const list = map.get(permission.group) ?? [];
-      list.push(permission);
-      map.set(permission.group, list);
-    }
-    return Array.from(map.entries()).map(([group, items]) => ({ group, items }));
-  }, [area, data, query]);
-
-  const dirty = useMemo(() => {
-    if (!data) return false;
-
-    const roleKeys = new Set([...Object.keys(data.matrix), ...Object.keys(matrix)]);
-    for (const roleKey of roleKeys) {
-      const before = [...(data.matrix[roleKey] ?? [])].sort();
-      const after = [...(matrix[roleKey] ?? [])].sort();
-      if (before.length !== after.length) return true;
-      for (let index = 0; index < before.length; index += 1) {
-        if (before[index] !== after[index]) return true;
-      }
-    }
-
-    return false;
-  }, [data, matrix]);
-
-  const activeRoleInfo = useMemo(
-    () => data?.roles.find((role) => role.key === activeRole) ?? null,
-    [activeRole, data],
+  const dirty = useMemo(
+    () => (data ? data.roles.filter((r) => (matrix[r.key] ?? []).slice().sort().join() !== (data.matrix[r.key] ?? []).slice().sort().join()) : []),
+    [data, matrix],
   );
-
-  const activeRoleCount = (matrix[activeRole] ?? []).length;
-
-  const togglePermission = (role: string, permission: string) => {
-    setMatrix((current) => {
-      const next = new Set(current[role] ?? []);
-      if (next.has(permission)) next.delete(permission);
-      else next.add(permission);
-      return { ...current, [role]: Array.from(next).sort() };
-    });
-  };
-
-  const setGroupForRole = (role: string, permissionKeys: string[], value: boolean) => {
-    setMatrix((current) => {
-      const next = new Set(current[role] ?? []);
-      permissionKeys.forEach((key) => {
-        if (value) next.add(key);
-        else next.delete(key);
-      });
-      return { ...current, [role]: Array.from(next).sort() };
-    });
-  };
-
-  const resetFilters = () => {
-    setQuery("");
-    setArea("all");
-  };
 
   const save = async () => {
     setSaving(true);
-    setMessage(null);
-    try {
-      const res = await fetch("/api/admin/roles", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ matrix }),
-      });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error || "Failed to save roles");
-      setData(json.data);
-      setMatrix(json.data.matrix);
-      setMessage({ type: "success", text: "Role permissions updated." });
-    } catch (e) {
-      setMessage({ type: "error", text: e instanceof Error ? e.message : "Failed to save roles" });
-    } finally {
-      setSaving(false);
-    }
+    const d = await fetch("/api/admin/roles", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ matrix }) }).then((r) => r.json()).catch(() => null);
+    setSaving(false);
+    if (!d?.success) return setToast({ ok: false, text: d?.error || "Could not save" });
+    setData(d.data);
+    setMatrix(d.data.matrix);
+    setToast({ ok: true, text: "Saved" });
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="spinner" />
-      </div>
-    );
-  }
+  if (!data) return <div className="h-[60vh] rounded-2xl bg-white ring-1 ring-slate-200 animate-pulse" />;
 
-  if (!data) {
-    return <div className="admin-card p-6 text-sm text-red-600">Failed to load roles configuration.</div>;
-  }
-
-  const hasFilters = query.trim() !== "" || area !== "all";
+  const roles = data.roles;
+  const cols = `minmax(220px,1.6fr) repeat(${roles.length}, minmax(84px,1fr))`;
 
   return (
-    <div className="space-y-6 pb-24 lg:pb-6">
-      {message && (
-        <div
-          className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-medium shadow-sm ${
-            message.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-          }`}
-        >
-          <span>{message.text}</span>
-          <button type="button" onClick={() => setMessage(null)} aria-label="Dismiss" className="rounded-full p-1 hover:bg-black/5">
-            <LuX size={14} />
-          </button>
-        </div>
-      )}
-
-      {/* Hero */}
-      <section className="admin-card border border-slate-200 p-5 sm:p-6">
-        <div className="max-w-3xl space-y-3">
-          <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
-            Define exactly what every team role can access
-          </h1>
-          <p className="text-sm leading-6 text-slate-500">
-            Control menu visibility, page entry, and operational capabilities from one central matrix. Super Admin always keeps full
-            access so the control surface cannot be locked accidentally.
+    <div className="space-y-4 pb-24">
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">Roles & permissions</h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Tick what each role may do. For one person only, use{" "}
+            <Link href="/admin/users" className="text-slate-900 underline underline-offset-2">People</Link>.
           </p>
         </div>
-      </section>
-
-      {/* Toolbar */}
-      <section className="admin-card p-4 sm:p-5">
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Search */}
-          <div className="group relative min-w-0 flex-1">
-            <LuSearch size={16} className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-focus-within:text-slate-700" />
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              style={{ paddingLeft: "3rem", paddingRight: query ? "2.25rem" : "0.875rem" }}
-              className="admin-input !rounded-full border-slate-200 bg-white transition-colors duration-200 focus:border-slate-300"
-              placeholder="Search permissions"
-            />
-            {query ? (
-              <button
-                type="button"
-                onClick={() => setQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-                aria-label="Clear search"
-              >
-                <LuX size={14} />
-              </button>
-            ) : null}
-          </div>
-
-          {/* Area filter */}
-          <div className="w-28 shrink-0 sm:w-44">
-            <select
-              value={area}
-              onChange={(event) => setArea(event.target.value as "all" | PermissionInfo["area"])}
-              className="admin-input admin-select w-full !rounded-full border-slate-200 bg-white transition-colors duration-200 focus:border-slate-300"
-            >
-              <option value="all">All areas</option>
-              <option value="admin">Admin</option>
-              <option value="seller">Seller</option>
-              <option value="system">System</option>
-            </select>
-          </div>
-
-          {/* Reset */}
-          {hasFilters ? (
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-900"
-              aria-label="Reset filters"
-              title="Reset filters"
-            >
-              <LuX size={16} />
-            </button>
-          ) : null}
+        <div className="relative sm:w-72">
+          <LuSearch size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…" className="w-full h-10 rounded-xl bg-white ring-1 ring-slate-200 ps-9 pe-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/15" />
         </div>
-      </section>
+      </div>
 
-      {groupedPermissions.length === 0 ? (
-        <section className="admin-card p-10 text-center">
-          <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-            <LuSearch size={22} />
-          </div>
-          <div className="text-lg font-semibold text-slate-800">No matching permissions</div>
-          <div className="mt-2 text-sm text-slate-500">Try a broader search term or switch the area filter back to all.</div>
-        </section>
-      ) : (
-        <>
-          {/* Mobile / tablet: role-focused view */}
-          <div className="space-y-4 lg:hidden">
-            <section className="admin-card border border-slate-200 p-4">
-              <div className="flex items-center justify-between gap-2">
-                <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Select a role to edit</div>
-                {activeRoleInfo ? (
-                  <span className="text-xs font-semibold text-slate-500">
-                    {activeRoleCount} granted
-                  </span>
-                ) : null}
+      <div className="rounded-2xl bg-white ring-1 ring-slate-200 overflow-auto max-h-[calc(100vh-210px)]">
+        <div role="table" className="min-w-[640px]">
+          {/* Column headers */}
+          <div role="row" className="grid sticky top-0 z-20 bg-white border-b border-slate-200" style={{ gridTemplateColumns: cols }}>
+            <div className="sticky start-0 bg-white px-5 py-4 text-xs font-medium text-slate-400 uppercase tracking-wider">Permission</div>
+            {roles.map((r) => (
+              <div key={r.key} className="px-2 py-3 text-center">
+                <p className={`text-sm font-semibold inline-flex items-center gap-1 ${COLUMN_TONE[r.key]}`}>
+                  {r.labelEn}
+                  {!r.editable && <LuLock size={11} className="text-slate-400" />}
+                  {dirty.some((d) => d.key === r.key) && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                </p>
+                <p className="text-[11px] text-slate-400">{r.users ?? 0} {r.users === 1 ? "person" : "people"}</p>
               </div>
-              <div className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
-                {data.roles.map((role) => {
-                  const isActive = role.key === activeRole;
+            ))}
+          </div>
+
+          {sections.map((sec) => (
+            <Fragment key={sec.title}>
+              {/* Section row — click a cell to switch the whole section for that role */}
+              <div role="row" className="grid bg-slate-50 border-y border-slate-100" style={{ gridTemplateColumns: cols }}>
+                <div className="sticky start-0 bg-slate-50 px-5 py-2.5">
+                  <p className="text-sm font-semibold text-slate-800">{sec.title}</p>
+                  {sec.hint && <p className="text-[11px] text-slate-400">{sec.hint}</p>}
+                </div>
+                {roles.map((r) => {
+                  const keys = sec.perms.map((p) => p.key);
+                  const n = keys.filter((k) => has(r.key, k)).length;
+                  const state = n === 0 ? "none" : n === keys.length ? "all" : "some";
                   return (
-                    <button
-                      key={role.key}
-                      type="button"
-                      onClick={() => setActiveRole(role.key)}
-                      className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-medium transition-colors duration-200 ${
-                        isActive
-                          ? "border-slate-900 bg-slate-900 text-white"
-                          : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
-                      }`}
-                    >
-                      <span>{role.labelEn}</span>
-                      {typeof role.users === "number" && (
-                        <span className={`text-[11px] tabular-nums rounded-full px-1.5 ${isActive ? "bg-white/20" : "bg-slate-100 text-slate-500"}`}>{role.users}</span>
-                      )}
-                      {!role.editable ? <LuLock size={12} className={isActive ? "text-white/70" : "text-slate-400"} /> : null}
-                    </button>
+                    <div key={r.key} className="flex items-center justify-center">
+                      <button
+                        disabled={!r.editable}
+                        onClick={() => set(r.key, keys, state !== "all")}
+                        title={r.editable ? (state === "all" ? "Turn the whole section off" : "Turn the whole section on") : undefined}
+                        className="text-[11px] tabular-nums font-medium text-slate-400 rounded-md px-2 py-1 enabled:hover:bg-white enabled:hover:text-slate-800 disabled:cursor-default"
+                      >
+                        {n}/{keys.length}
+                      </button>
+                    </div>
                   );
                 })}
               </div>
-              {activeRoleInfo && !activeRoleInfo.editable ? (
-                <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
-                  <LuLock size={14} className="mt-0.5 shrink-0" />
-                  <span>{activeRoleInfo.key === "SUPER_ADMIN" ? `${activeRoleInfo.labelEn} always has every permission.` : `${activeRoleInfo.labelEn} is at or above your own level, so only someone more senior can change it.`} To adjust one person, open them in Users → Role & access.</span>
-                </div>
-              ) : null}
-            </section>
 
-            {activeRoleInfo
-              ? groupedPermissions.map((group) => {
-                  const groupKeys = group.items.map((item) => item.key);
-                  const grantedInGroup = groupKeys.filter((key) => (matrix[activeRole] ?? []).includes(key)).length;
-                  const allGranted = grantedInGroup === groupKeys.length;
-                  const editable = activeRoleInfo.editable;
-
-                  return (
-                    <section key={group.group} className="admin-card border border-slate-200 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h3 className="text-base font-semibold text-slate-900">{group.group}</h3>
-                          <p className="mt-0.5 text-xs text-slate-500">
-                            {grantedInGroup} of {groupKeys.length} granted
-                          </p>
-                        </div>
-                        {editable ? (
-                          <button
-                            type="button"
-                            onClick={() => setGroupForRole(activeRole, groupKeys, !allGranted)}
-                            disabled={saving}
-                            className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-                          >
-                            {allGranted ? "Clear all" : "Grant all"}
-                          </button>
-                        ) : null}
+              {sec.perms.map((p) => (
+                <div key={p.key} role="row" className="grid border-b border-slate-100 last:border-b-0 hover:bg-slate-50/70 group" style={{ gridTemplateColumns: cols }}>
+                  <div className="sticky start-0 bg-white group-hover:bg-slate-50/70 px-5 py-3 text-sm text-slate-700" title={p.description}>
+                    {friendly(p)}
+                  </div>
+                  {roles.map((r) => {
+                    const on = has(r.key, p.key);
+                    return (
+                      <div key={r.key} className="flex items-center justify-center">
+                        <button
+                          role="checkbox"
+                          aria-checked={on}
+                          aria-label={`${friendly(p)} — ${r.labelEn}`}
+                          disabled={!r.editable}
+                          onClick={() => set(r.key, [p.key], !on)}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition ${
+                            on ? "bg-slate-900 text-white" : "ring-1 ring-inset ring-slate-200 text-transparent enabled:hover:ring-slate-400"
+                          } disabled:cursor-not-allowed ${!r.editable && on ? "bg-slate-300" : ""}`}
+                        >
+                          {on ? <LuCheck size={15} /> : <LuMinus size={12} className="text-slate-200" />}
+                        </button>
                       </div>
-
-                      <div className="mt-3 divide-y divide-slate-100">
-                        {group.items.map((permission) => {
-                          const checked = (matrix[activeRole] ?? []).includes(permission.key);
-                          const areaMeta = AREA_META[permission.area];
-                          const AreaIcon = areaMeta.icon;
-                          return (
-                            <div key={permission.key} className="flex items-start justify-between gap-3 py-3">
-                              <div className="flex min-w-0 items-start gap-3">
-                                <span className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${areaMeta.badge}`}>
-                                  <AreaIcon size={15} />
-                                </span>
-                                <div className="min-w-0">
-                                  <div className="text-sm font-medium text-slate-800">{permission.label}</div>
-                                  <div className="mt-0.5 text-xs leading-5 text-slate-500">{permission.description}</div>
-                                  <div className="mt-1.5 truncate text-[10px] text-slate-400">{permission.key}</div>
-                                </div>
-                              </div>
-                              <ToggleSwitch
-                                checked={checked}
-                                disabled={!editable || saving}
-                                onChange={() => togglePermission(activeRole, permission.key)}
-                                label={`${permission.label} for ${activeRoleInfo.labelEn}`}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  );
-                })
-              : null}
-          </div>
-
-          {/* Desktop: full matrix */}
-          <div className="hidden space-y-6 lg:block">
-            {groupedPermissions.map((group) => (
-              <section key={group.group} className="admin-card border border-slate-200 p-6">
-                <div className="mb-5">
-                  <h3 className="text-lg font-semibold text-slate-900">{group.group}</h3>
-                  <p className="mt-1 text-sm text-slate-500">Set access for each role in this section.</p>
+                    );
+                  })}
                 </div>
+              ))}
+            </Fragment>
+          ))}
 
-                <div className="overflow-x-auto">
-                  <table className="admin-table min-w-[900px]">
-                    <thead>
-                      <tr>
-                        <th className="sticky left-0 z-10 bg-slate-50">Permission</th>
-                        {data.roles.map((role) => (
-                          <th key={role.key}>
-                            <div className="flex flex-col items-center gap-1 text-center">
-                              <span>{role.labelEn}</span>
-                              <span className="text-[11px] font-medium normal-case tracking-normal text-slate-400">
-                                {role.editable ? "Editable" : "Locked"}
-                              </span>
-                            </div>
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {group.items.map((permission) => {
-                        const areaMeta = AREA_META[permission.area];
-                        const AreaIcon = areaMeta.icon;
-                        return (
-                          <tr key={permission.key} className="transition-colors duration-200 hover:bg-slate-50/70">
-                            <td className="sticky left-0 z-10 bg-white">
-                              <div className="flex items-start gap-3">
-                                <span className={`mt-1 inline-flex h-9 w-9 items-center justify-center rounded-2xl ${areaMeta.badge}`}>
-                                  <AreaIcon size={16} />
-                                </span>
-                                <div>
-                                  <div className="font-medium text-slate-800">{permission.label}</div>
-                                  <div className="mt-1 text-xs text-slate-500">{permission.description}</div>
-                                  <div className="mt-2 text-[11px] text-slate-400">{permission.key}</div>
-                                </div>
-                              </div>
-                            </td>
-                            {data.roles.map((role) => {
-                              const checked = (matrix[role.key] ?? []).includes(permission.key);
-                              return (
-                                <td key={`${permission.key}-${role.key}`}>
-                                  <div className="flex items-center justify-center">
-                                    <CheckToggle
-                                      checked={checked}
-                                      disabled={!role.editable || saving}
-                                      onChange={() => togglePermission(role.key, permission.key)}
-                                      label={`${permission.label} for ${role.labelEn}`}
-                                    />
-                                  </div>
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Sticky save bar */}
-      <div className="sticky bottom-4 z-30">
-        <div className="admin-card flex flex-col gap-3 border border-slate-200 p-4 shadow-lg sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${dirty ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"}`}>
-              {dirty ? <LuChevronDown size={18} className="rotate-0" /> : <LuCheck size={18} />}
-            </span>
-            <div className="min-w-0">
-              <div className="text-sm font-semibold text-slate-900">
-                {dirty ? "You have unsaved permission changes" : "All permission changes are saved"}
-              </div>
-              <div className="hidden text-xs text-slate-500 sm:block">
-                Changes apply across menus, routes, and protected APIs. Review carefully before saving.
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={save}
-            disabled={saving || !dirty}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto sm:min-w-48"
-          >
-            <LuSave size={16} /> {saving ? "Saving..." : dirty ? "Save permissions" : "No changes"}
-          </button>
+          {sections.length === 0 && <p className="text-sm text-slate-400 text-center py-12">Nothing matches “{q}”.</p>}
         </div>
       </div>
+
+      <p className="text-xs text-slate-400 flex items-center gap-1.5">
+        <LuLock size={12} /> Locked columns: Super Admin always has everything; roles at or above your own level can only be changed by someone more senior.
+      </p>
+
+      {dirty.length > 0 && (
+        <div className="fixed bottom-5 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-40 flex items-center gap-3 rounded-2xl bg-slate-900 text-white ps-5 pe-2 py-2 shadow-2xl">
+          <span className="text-sm">Changes to <strong>{dirty.map((r) => r.labelEn).join(", ")}</strong></span>
+          <button onClick={() => setMatrix(data.matrix)} className="rounded-xl px-3 py-1.5 text-sm text-white/70 hover:text-white">Discard</button>
+          <button onClick={save} disabled={saving} className="rounded-xl bg-white text-slate-900 px-4 py-1.5 text-sm font-semibold disabled:opacity-60">
+            {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      )}
+
+      {toast && (
+        <div className={`fixed top-20 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-50 rounded-xl px-4 py-2.5 text-sm font-medium shadow-lg ${toast.ok ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"}`}>
+          {toast.text}
+        </div>
+      )}
     </div>
-  );
-}
-
-function ToggleSwitch({
-  checked,
-  disabled,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  disabled?: boolean;
-  onChange: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onChange}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 ${
-        disabled ? "cursor-not-allowed bg-slate-200" : checked ? "bg-emerald-500" : "bg-slate-300"
-      }`}
-    >
-      <span
-        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${
-          checked ? "translate-x-[22px]" : "translate-x-0.5"
-        }`}
-      />
-    </button>
-  );
-}
-
-function CheckToggle({
-  checked,
-  disabled,
-  onChange,
-  label,
-}: {
-  checked: boolean;
-  disabled?: boolean;
-  onChange: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={checked}
-      aria-label={label}
-      disabled={disabled}
-      onClick={onChange}
-      className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border transition-colors duration-200 ${
-        disabled
-          ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-300"
-          : checked
-            ? "border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
-            : "border-slate-200 bg-white text-transparent hover:bg-slate-50"
-      }`}
-    >
-      <LuCheck size={18} className={checked ? "opacity-100" : "opacity-0"} />
-    </button>
   );
 }

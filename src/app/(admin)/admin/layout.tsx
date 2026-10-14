@@ -14,7 +14,7 @@ type MeResponse = {
 };
 const pageTitles: Record<string, string> = {
   "/admin": "Dashboard",
-  "/admin/users": "Users Management",
+  "/admin/users": "People",
   "/admin/products": "Products Management",
   "/admin/products/new": "Add Product",
   "/admin/products/labels": "Barcode Labels",
@@ -32,6 +32,14 @@ const pageTitles: Record<string, string> = {
   "/admin/help": "Help Center",
   "/admin/roles": "Roles & Permissions",
   "/admin/settings": "Settings",
+  "/admin/legal-pages": "Legal Pages",
+  "/admin/testimonials": "Testimonials",
+  "/admin/countdown": "Countdown Deal",
+  "/admin/navigation": "Navigation Menu",
+  "/admin/newsletter": "Newsletter",
+  "/admin/promo-banner": "Promo Banner",
+  "/admin/shipping": "Shipping",
+  "/admin/seller": "Seller",
 };
 
 function resolveTitle(pathname: string): string {

@@ -564,7 +564,7 @@ function WhatsAppTab() {
     setValues((prev) => (prev ? { ...prev, [key]: v } : prev));
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 w-full">
       <div className="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-lg px-4 py-2.5">
         Every order placed with Wasellee shipping is automatically sent to the Bousher office over WhatsApp via a
         self-hosted <strong>WAHA</strong> (WhatsApp HTTP API) instance — no Meta Business API or template approval

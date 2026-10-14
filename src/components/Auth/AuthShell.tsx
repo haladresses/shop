@@ -58,7 +58,7 @@ export default function AuthShell({
 }
 
 const inputCls =
-  "w-full h-[52px] rounded-2xl border border-gray-3 bg-white px-4 text-[16px] text-dark placeholder:text-dark-5 outline-none transition focus:border-dark focus:ring-4 focus:ring-dark/5";
+  "w-full h-[52px] rounded-2xl border border-gray-3 bg-white px-4 text-[16px] text-dark placeholder:text-dark-5 outline-none transition focus:border-blue/40 focus:ring-4 focus:ring-blue/10";
 
 export function AuthField({
   label,

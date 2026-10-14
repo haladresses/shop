@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
   };
 
   const input =
-    "w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-[15px] text-slate-800 placeholder:text-slate-400 outline-none transition focus:border-slate-800 focus:ring-4 focus:ring-slate-800/5";
+    "w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-[15px] text-slate-800 placeholder:text-slate-400 outline-none transition focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/10";
 
   return (
     <div className="min-h-[100dvh] bg-[#F7F2EE] flex items-center justify-center p-4">

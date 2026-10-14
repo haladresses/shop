@@ -137,7 +137,7 @@ export default function QuickAddSheet({ item, onClose }: { item: Product; onClos
                       aria-label={c}
                       aria-pressed={color === c}
                       title={c}
-                      className={`relative w-10 h-10 rounded-full p-[3px] transition ${color === c ? "ring-2 ring-dark" : "ring-1 ring-gray-3 hover:ring-dark-4"} ${anyStock ? "" : "opacity-40"}`}
+                      className={`relative w-10 h-10 rounded-full p-[3px] transition ${color === c ? "ring-2 ring-blue/50" : "ring-1 ring-gray-3 hover:ring-dark-4"} ${anyStock ? "" : "opacity-40"}`}
                     >
                       <span className="block w-full h-full rounded-full border border-black/10" style={{ background: hex || "#ddd" }} />
                       {!anyStock && <span className="absolute inset-0 m-auto w-[120%] h-px bg-dark-4 rotate-45" />}
@@ -159,7 +159,7 @@ export default function QuickAddSheet({ item, onClose }: { item: Product; onClos
                     onClick={() => setSize(o.size)}
                     aria-pressed={size === o.size}
                     className={`relative h-11 rounded-xl text-sm font-medium border transition ${
-                      size === o.size ? "bg-dark text-white border-dark" : "border-gray-3 text-dark hover:border-dark"
+                      size === o.size ? "bg-dark text-white border-dark" : "border-gray-3 text-dark hover:border-blue/50"
                     } disabled:opacity-40 disabled:line-through disabled:hover:border-gray-3`}
                   >
                     {o.size}

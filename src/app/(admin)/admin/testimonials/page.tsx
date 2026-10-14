@@ -78,7 +78,7 @@ export default function TestimonialsAdminPage() {
   if (loading) return <div className="flex justify-center py-12"><div className="spinner" /></div>;
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full">
       <p className="text-sm text-slate-500">
         Customer reviews shown in the &ldquo;User Feedbacks&rdquo; carousel on the homepage.
       </p>

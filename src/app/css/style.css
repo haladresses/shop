@@ -345,3 +345,8 @@ html.reveal-ready [data-reveal].is-revealed { opacity: 1; transform: none }
 .logo-draw { animation: logo-draw 1.1s cubic-bezier(.2,.8,.2,1) both }
 .auth-quote { animation: auth-in .8s .5s cubic-bezier(.2,.8,.2,1) both }
 @media (prefers-reduced-motion: reduce) { .logo-ring, .logo-float, .logo-draw, .auth-quote { animation: none } }
+
+/* Soft, on-brand focus — never the browser's harsh black outline. */
+input:focus, textarea:focus, select:focus { outline: none; }
+*:focus-visible { outline: 2px solid rgba(140, 59, 73, .35); outline-offset: 2px; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }

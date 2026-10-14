@@ -78,7 +78,7 @@ export default function PromoBannerAdminPage() {
   if (loading) return <div className="flex justify-center py-12"><div className="spinner" /></div>;
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full">
       <p className="text-sm text-slate-500">
         The two lifestyle tiles shown on the homepage between New Arrivals and Best Sellers (e.g. &ldquo;Women&apos;s Edit&rdquo; / &ldquo;Girls&apos; Edit&rdquo;). Leave empty to hide the section.
       </p>

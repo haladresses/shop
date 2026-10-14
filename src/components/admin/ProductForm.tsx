@@ -297,7 +297,7 @@ export default function ProductForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 max-w-4xl">
+    <form onSubmit={handleSubmit} className="space-y-5 w-full">
       {error && (
         <div className="bg-rose-50 text-rose-700 text-sm px-4 py-3 rounded-xl border border-rose-100">{error}</div>
       )}

@@ -184,7 +184,7 @@ export default function AdminContactPage() {
 
       {/* Hero */}
       <section className="admin-card border border-slate-200 p-5 sm:p-6">
-        <div className="max-w-3xl space-y-2">
+        <div className="w-full space-y-2">
           <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">Contact Us</h1>
           <p className="text-sm leading-6 text-slate-500">
             Read and manage messages sent from the storefront contact form, and keep the public contact details accurate across the

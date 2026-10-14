@@ -67,7 +67,7 @@ export default function NavigationAdminPage() {
   if (loading) return <div className="flex justify-center py-12"><div className="spinner" /></div>;
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full">
       <p className="text-sm text-slate-500">
         The main header navigation. Top-level items without a submenu link directly to their path; items with a submenu open a dropdown on desktop and expand in the mobile menu.
       </p>

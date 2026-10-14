@@ -5,13 +5,16 @@ import {
   LuChevronRight,
   LuKeyRound,
   LuLogOut,
+  LuMail,
+  LuMessageCircle,
+  LuPhone,
+  LuUsers,
   LuMinus,
   LuPlus,
   LuSearch,
   LuShield,
   LuTrash2,
   LuUserPlus,
-  LuX,
 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
 
@@ -65,132 +68,178 @@ export default function UsersPage() {
   const [roleCounts, setRoleCounts] = useState<Record<string, number>>({});
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ search: "", group: "", role: "", status: "" });
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const p = new URLSearchParams({ page: String(page) });
-    Object.entries(filters).forEach(([k, v]) => v && p.set(k, v));
-    const d = await fetch(`/api/users?${p}`, { cache: "no-store" }).then((r) => r.json()).catch(() => null);
-    if (d?.success) {
-      setRows(d.data.items);
-      setTotal(d.data.meta.total);
-      setTotalPages(Math.max(1, d.data.meta.totalPages));
-      setRoleCounts(d.data.roleCounts);
-    }
-    setLoading(false);
-  }, [page, filters]);
-
+  // Deep link: /admin/users?id=…
   useEffect(() => {
-    const t = setTimeout(load, 200);
-    return () => clearTimeout(t);
-  }, [load]);
-
-  const setF = (k: keyof typeof filters, v: string) => {
-    setPage(1);
-    setFilters((f) => ({ ...f, [k]: v }));
+    const id = new URLSearchParams(window.location.search).get("id");
+    if (id) setSelected(id);
+  }, []);
+  const select = (id: string | null) => {
+    setSelected(id);
+    window.history.replaceState(null, "", id ? `/admin/users?id=${id}` : "/admin/users");
   };
+
+  const fetchPage = useCallback(
+    async (p: number) => {
+      setLoading(true);
+      const q = new URLSearchParams({ page: String(p), pageSize: "30" });
+      Object.entries(filters).forEach(([k, v]) => v && q.set(k, v));
+      const d = await fetch(`/api/users?${q}`, { cache: "no-store" }).then((r) => r.json()).catch(() => null);
+      if (d?.success) {
+        setRows((prev) => (p === 1 ? d.data.items : [...prev, ...d.data.items]));
+        setTotal(d.data.meta.total);
+        setHasMore(p < d.data.meta.totalPages);
+        setRoleCounts(d.data.roleCounts);
+        setPage(p);
+      }
+      setLoading(false);
+    },
+    [filters],
+  );
+  useEffect(() => {
+    const t = setTimeout(() => fetchPage(1), 200);
+    return () => clearTimeout(t);
+  }, [fetchPage]);
+
   const staffCount = (roleCounts.SUPER_ADMIN ?? 0) + (roleCounts.ADMIN ?? 0) + (roleCounts.STAFF ?? 0) + (roleCounts.SELLER ?? 0);
+  const everyone = Object.values(roleCounts).reduce((a, b) => a + b, 0);
+  const segments: [string, string, number][] = [
+    ["", "All", everyone],
+    ["customers", "Customers", roleCounts.CUSTOMER ?? 0],
+    ["staff", "Team", staffCount],
+  ];
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-2xl bg-white ring-1 ring-slate-200/70 p-3 flex flex-col md:flex-row gap-2">
-        <div className="relative flex-1">
-          <LuSearch size={16} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input value={filters.search} onChange={(e) => setF("search", e.target.value)} placeholder="Search name, email or mobile" className="admin-input !py-2 !ps-9 text-sm" />
+    <div className="-m-4 sm:-m-6 lg:h-[calc(100vh-64px)] flex flex-col lg:flex-row bg-white lg:overflow-hidden">
+      {/* ── List ── */}
+      <section className={`${selected ? "hidden lg:flex" : "flex"} flex-col w-full lg:w-[380px] xl:w-[420px] lg:border-e border-slate-200 min-h-0`}>
+        <div className="p-4 space-y-3 border-b border-slate-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-semibold text-slate-900">People</h1>
+              <p className="text-xs text-slate-500">{total} {total === 1 ? "person" : "people"}</p>
+            </div>
+            <button onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-3 py-1.5">
+              <LuUserPlus size={15} /> Add
+            </button>
+          </div>
+          <div className="relative">
+            <LuSearch size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              value={filters.search}
+              onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+              placeholder="Search name, email or mobile"
+              className="w-full h-9 rounded-lg bg-slate-100 ps-9 pe-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500/15"
+            />
+          </div>
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            {segments.map(([g, label, n]) => {
+              const on = filters.group === g && !filters.role;
+              return (
+                <button key={label} onClick={() => setFilters((f) => ({ ...f, group: g, role: "" }))} className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${on ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                  {label} <span className={on ? "text-white/60" : "text-slate-400"}>{n}</span>
+                </button>
+              );
+            })}
+            <select value={filters.role} onChange={(e) => setFilters((f) => ({ ...f, role: e.target.value, group: "" }))} className="shrink-0 rounded-full bg-slate-100 text-xs font-medium text-slate-600 px-3 py-1 outline-none">
+              <option value="">Role…</option>
+              {ROLES.map((r) => <option key={r} value={r}>{ROLE_META[r].label} ({roleCounts[r] ?? 0})</option>)}
+            </select>
+            <select value={filters.status} onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))} className="shrink-0 rounded-full bg-slate-100 text-xs font-medium text-slate-600 px-3 py-1 outline-none">
+              <option value="">Status…</option>
+              <option value="active">Active</option>
+              <option value="inactive">Deactivated</option>
+            </select>
+          </div>
         </div>
-        <select
-          value={filters.group ? `group:${filters.group}` : filters.role}
-          onChange={(e) => {
-            const v = e.target.value;
-            setPage(1);
-            setFilters((f) => ({ ...f, group: v.startsWith("group:") ? v.slice(6) : "", role: v.startsWith("group:") ? "" : v }));
-          }}
-          className="admin-input admin-select !py-2 text-sm md:!w-48"
-        >
-          <option value="">Everyone ({Object.values(roleCounts).reduce((a, b) => a + b, 0)})</option>
-          <option value="group:customers">Customers ({roleCounts.CUSTOMER ?? 0})</option>
-          <option value="group:staff">Team ({staffCount})</option>
-          <optgroup label="By role">
-            {ROLES.map((r) => <option key={r} value={r}>{ROLE_META[r].label} ({roleCounts[r] ?? 0})</option>)}
-          </optgroup>
-        </select>
-        <select value={filters.status} onChange={(e) => setF("status", e.target.value)} className="admin-input admin-select !py-2 text-sm md:!w-40">
-          <option value="">Any status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Deactivated</option>
-        </select>
-        <button onClick={() => setCreating(true)} className="admin-btn admin-btn-primary !py-2 text-sm shrink-0">
-          <LuUserPlus size={16} /> Add user
-        </button>
-      </div>
 
-      <div className="admin-card overflow-hidden">
-        {loading && rows.length === 0 ? (
-          <div className="flex justify-center py-14"><div className="spinner" /></div>
-        ) : rows.length === 0 ? (
-          <p className="text-center text-slate-400 py-14">No users match these filters.</p>
-        ) : (
-          <ul className="divide-y divide-slate-100">
-            {rows.map((u) => (
+        <ul className="flex-1 overflow-y-auto">
+          {rows.map((u) => {
+            const on = selected === u.id;
+            return (
               <li key={u.id}>
-                <button onClick={() => setSelected(u.id)} className="w-full flex items-center gap-3 px-4 sm:px-5 py-3.5 text-start hover:bg-slate-50 transition">
-                  <span className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold shrink-0 ${u.isActive ? "bg-slate-100 text-slate-700" : "bg-slate-50 text-slate-300"}`}>
-                    {(u.nameEn || u.email || u.phone || "?").charAt(0).toUpperCase()}
-                  </span>
+                <button onClick={() => select(u.id)} className={`w-full flex items-center gap-3 px-4 py-3 text-start border-s-2 transition ${on ? "bg-indigo-50/50 border-indigo-500" : "border-transparent hover:bg-slate-50"}`}>
+                  <Avatar name={u.nameEn || u.email || u.phone || "?"} role={u.role} muted={!u.isActive} />
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span className={`font-medium truncate ${u.isActive ? "text-slate-800" : "text-slate-400 line-through"}`}>{u.nameEn || "—"}</span>
-                      {u.hasOverrides && <span title="Custom permissions"><LuShield size={13} className="text-amber-500 shrink-0" /></span>}
+                    <span className="flex items-center gap-1.5">
+                      <span className={`text-sm font-medium truncate ${u.isActive ? "text-slate-900" : "text-slate-400"}`}>{u.nameEn || "Unnamed"}</span>
+                      {!u.isActive && <span className="text-[10px] font-semibold text-rose-600">· Off</span>}
+                      {u.hasOverrides && <span title="Custom permissions"><LuShield size={12} className="text-amber-500" /></span>}
                     </span>
-                    <span className="block text-xs text-slate-500 truncate" dir="ltr">{[u.email, u.phone].filter(Boolean).join(" · ")}</span>
+                    <span className="block text-xs text-slate-500 truncate" dir="ltr">{u.email || u.phone}</span>
                   </span>
-                  <span className={`hidden sm:inline-flex text-[11px] font-semibold rounded-full px-2.5 py-1 ring-1 ${ROLE_META[u.role].cls}`}>{ROLE_META[u.role].label}</span>
-                  <span className="hidden md:block w-28 text-end text-xs text-slate-500">
-                    {u.role === "CUSTOMER" ? <>{u._count.orders} orders<br /><span className="text-slate-800 font-medium tabular-nums">{num(u.totalSpent)}</span></> : <>Last login<br />{ago(u.lastLoginAt)}</>}
+                  <span className="text-end shrink-0">
+                    <span className={`block text-[10px] font-semibold rounded-full px-2 py-0.5 ring-1 ${ROLE_META[u.role].cls}`}>{ROLE_META[u.role].label}</span>
+                    {u.role === "CUSTOMER" && u._count.orders > 0 && <span className="block text-[11px] text-slate-400 mt-1 tabular-nums">{u._count.orders} orders</span>}
                   </span>
-                  <LuChevronRight size={16} className="text-slate-300 rtl:rotate-180" />
                 </button>
               </li>
-            ))}
-          </ul>
-        )}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 text-sm">
-            <span className="text-slate-500">{total} users</span>
-            <div className="flex items-center gap-2">
-              <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Prev</button>
-              <span className="text-slate-500">{page} / {totalPages}</span>
-              <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Next</button>
-            </div>
+            );
+          })}
+          {loading && <li className="p-4 space-y-3">{[0, 1, 2].map((i) => <div key={i} className="h-11 rounded-lg bg-slate-100 animate-pulse" />)}</li>}
+          {!loading && rows.length === 0 && <li className="p-10 text-center text-sm text-slate-400">No one matches these filters.</li>}
+          {hasMore && !loading && (
+            <li className="p-3"><button onClick={() => fetchPage(page + 1)} className="w-full py-2 text-sm text-slate-500 hover:text-slate-900">Load more</button></li>
+          )}
+        </ul>
+      </section>
+
+      {/* ── Detail ── */}
+      <section className={`${selected ? "flex" : "hidden lg:flex"} flex-1 min-w-0 min-h-0 bg-slate-50/60`}>
+        {selected ? (
+          <UserWorkspace key={selected} id={selected} onBack={() => select(null)} onChanged={() => fetchPage(1)} onDeleted={() => { select(null); fetchPage(1); }} />
+        ) : (
+          <div className="m-auto text-center px-6">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-white ring-1 ring-slate-200 flex items-center justify-center text-slate-400 mb-4"><LuUsers size={26} /></div>
+            <p className="font-medium text-slate-800">Select a person</p>
+            <p className="text-sm text-slate-500 mt-1">Their profile, access and orders appear here.</p>
           </div>
         )}
-      </div>
+      </section>
 
-      {selected && <UserPanel id={selected} onClose={() => setSelected(null)} onChanged={load} />}
-      {creating && <CreateUser onClose={() => setCreating(false)} onCreated={(id) => { setCreating(false); load(); setSelected(id); }} />}
+      {creating && <CreateUser onClose={() => setCreating(false)} onCreated={(id) => { setCreating(false); fetchPage(1); select(id); }} />}
     </div>
   );
 }
 
-// ───────── User detail slide-over ─────────
+const AVATAR_TONE: Record<Role, string> = {
+  SUPER_ADMIN: "bg-fuchsia-100 text-fuchsia-700",
+  ADMIN: "bg-violet-100 text-violet-700",
+  STAFF: "bg-emerald-100 text-emerald-700",
+  SELLER: "bg-sky-100 text-sky-700",
+  CUSTOMER: "bg-slate-100 text-slate-600",
+};
 
-function UserPanel({ id, onClose, onChanged }: { id: string; onClose: () => void; onChanged: () => void }) {
+function Avatar({ name, role, muted, size = "md" }: { name: string; role: Role; muted?: boolean; size?: "md" | "lg" }) {
+  const initials = name.trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("") || "?";
+  return (
+    <span className={`rounded-full flex items-center justify-center font-semibold shrink-0 ${size === "lg" ? "w-16 h-16 text-xl" : "w-10 h-10 text-sm"} ${muted ? "bg-slate-100 text-slate-300" : AVATAR_TONE[role]}`}>
+      {initials}
+    </span>
+  );
+}
+
+function UserWorkspace({ id, onBack, onChanged, onDeleted }: { id: string; onBack: () => void; onChanged: () => void; onDeleted: () => void }) {
   const [u, setU] = useState<Detail | null>(null);
-  const [tab, setTab] = useState<"profile" | "access" | "security" | "activity">("profile");
+  const [tab, setTab] = useState<"overview" | "access" | "security" | "orders">("overview");
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const load = useCallback(() => {
     fetch(`/api/users/${id}`, { cache: "no-store" }).then((r) => r.json()).then((d) => d.success && setU(d.data));
   }, [id]);
   useEffect(load, [load]);
+  useEffect(() => {
+    if (!msg) return;
+    const t = setTimeout(() => setMsg(null), 4000);
+    return () => clearTimeout(t);
+  }, [msg]);
 
   const patch = async (body: object, okText = "Saved") => {
-    setMsg(null);
     const d = await fetch(`/api/users/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then((r) => r.json());
     setMsg(d.success ? { ok: true, text: okText } : { ok: false, text: d.error });
     if (d.success) {
@@ -200,52 +249,103 @@ function UserPanel({ id, onClose, onChanged }: { id: string; onClose: () => void
     return d.success as boolean;
   };
 
-  const locked = !!u && !u.canManage && !u.isSelf;
+  if (!u) {
+    return (
+      <div className="flex-1 p-6 space-y-4">
+        <div className="h-36 rounded-2xl bg-white animate-pulse" />
+        <div className="h-64 rounded-2xl bg-white animate-pulse" />
+      </div>
+    );
+  }
+
+  const locked = !u.canManage && !u.isSelf;
+  const digits = (u.phone || "").replace(/\D/g, "");
+  const tabs: [typeof tab, string][] = [
+    ["overview", "Overview"],
+    ["access", "Role & access"],
+    ["security", "Security"],
+    ["orders", `Orders · ${u._count.orders}`],
+  ];
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} />
-      <aside className="relative w-full max-w-[560px] h-full bg-white shadow-2xl flex flex-col">
-        <header className="px-5 py-4 border-b border-slate-100 flex items-start gap-3">
-          {u ? (
-            <>
-              <span className="w-12 h-12 rounded-full bg-slate-100 text-slate-700 text-lg font-semibold flex items-center justify-center">{(u.nameEn || "?").charAt(0).toUpperCase()}</span>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-slate-900 truncate">{u.nameEn}</p>
-                <p className="text-xs text-slate-500 truncate" dir="ltr">{[u.email, u.phone].filter(Boolean).join(" · ")}</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ring-1 ${ROLE_META[u.role].cls}`}>{ROLE_META[u.role].label}</span>
-                  {!u.isActive && <span className="text-[11px] font-semibold rounded-full px-2 py-0.5 bg-rose-50 text-rose-700">Deactivated</span>}
-                  {u.isSelf && <span className="text-[11px] text-slate-400">You</span>}
-                </div>
+    <div className="flex-1 min-w-0 overflow-y-auto">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200">
+        <div className="px-4 sm:px-8 pt-5 pb-0">
+          <button onClick={onBack} className="lg:hidden inline-flex items-center gap-1 text-sm text-slate-500 mb-3">
+            <LuChevronRight size={15} className="rotate-180 rtl:rotate-0" /> People
+          </button>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <Avatar name={u.nameEn || u.email || "?"} role={u.role} muted={!u.isActive} size="lg" />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-xl font-semibold text-slate-900 truncate">{u.nameEn || "Unnamed"}</h2>
+                {u.nameAr && <span className="text-sm text-slate-400" dir="rtl">{u.nameAr}</span>}
               </div>
-            </>
-          ) : (
-            <div className="flex-1 h-12 rounded-xl bg-slate-100 animate-pulse" />
-          )}
-          <button onClick={onClose} className="p-2 -m-1 rounded-lg text-slate-400 hover:bg-slate-100" aria-label="Close"><LuX size={18} /></button>
-        </header>
-
-        {u && (
-          <>
-            <nav className="flex gap-1 px-5 pt-3 border-b border-slate-100">
-              {(["profile", "access", "security", "activity"] as const).map((k) => (
-                <button key={k} onClick={() => { setTab(k); setMsg(null); }} className={`px-3 py-2 text-sm font-medium capitalize border-b-2 -mb-px ${tab === k ? "border-slate-900 text-slate-900" : "border-transparent text-slate-500"}`}>
-                  {k === "access" ? "Role & access" : k}
-                </button>
-              ))}
-            </nav>
-            <div className="flex-1 overflow-y-auto p-5 space-y-4">
-              {locked && <p className="rounded-xl bg-amber-50 text-amber-800 text-sm px-4 py-3">This account is at or above your level — view only.</p>}
-              {msg && <p className={`rounded-xl text-sm px-4 py-3 ${msg.ok ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>{msg.text}</p>}
-              {tab === "profile" && <ProfileTab u={u} locked={locked} onSave={patch} />}
-              {tab === "access" && <AccessTab u={u} onSave={patch} />}
-              {tab === "security" && <SecurityTab u={u} locked={locked} onDone={(t) => { setMsg(t); load(); onChanged(); }} onClose={onClose} />}
-              {tab === "activity" && <ActivityTab u={u} />}
+              <div className="flex flex-wrap items-center gap-2 mt-1.5">
+                <span className={`text-[11px] font-semibold rounded-full px-2.5 py-0.5 ring-1 ${ROLE_META[u.role].cls}`}>{ROLE_META[u.role].label}</span>
+                <span className={`inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2.5 py-0.5 ${u.isActive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${u.isActive ? "bg-emerald-500" : "bg-rose-500"}`} />
+                  {u.isActive ? "Active" : "Deactivated"}
+                </span>
+                {u.isSelf && <span className="text-[11px] font-semibold rounded-full px-2.5 py-0.5 bg-slate-100 text-slate-600">You</span>}
+                {u.overrides.grant.length + u.overrides.revoke.length > 0 && (
+                  <span className="text-[11px] font-semibold rounded-full px-2.5 py-0.5 bg-amber-50 text-amber-700">Custom permissions</span>
+                )}
+              </div>
             </div>
-          </>
-        )}
-      </aside>
+            <div className="flex gap-2">
+              {u.phone && (
+                <>
+                  <a href={`tel:${u.phone}`} className="w-9 h-9 rounded-lg ring-1 ring-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50" title="Call"><LuPhone size={16} /></a>
+                  <a href={`https://wa.me/${digits}`} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-lg ring-1 ring-slate-200 flex items-center justify-center text-emerald-600 hover:bg-emerald-50" title="WhatsApp"><LuMessageCircle size={16} /></a>
+                </>
+              )}
+              {u.email && <a href={`mailto:${u.email}`} className="w-9 h-9 rounded-lg ring-1 ring-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50" title="Email"><LuMail size={16} /></a>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-slate-200 rounded-xl overflow-hidden ring-1 ring-slate-200 mt-5">
+            {[
+              ["Orders", String(u._count.orders)],
+              ["Total spent", `${num(u.totalSpent)}`],
+              ["Member since", new Date(u.createdAt).toLocaleDateString("en-GB", { month: "short", year: "numeric" })],
+              ["Last sign-in", ago(u.lastLoginAt)],
+            ].map(([k, v]) => (
+              <div key={k} className="bg-white px-4 py-3">
+                <p className="text-[11px] uppercase tracking-wide text-slate-400">{k}</p>
+                <p className="text-sm font-semibold text-slate-900 mt-0.5 tabular-nums">{v}</p>
+              </div>
+            ))}
+          </div>
+
+          <nav className="flex gap-5 mt-4 -mb-px overflow-x-auto no-scrollbar">
+            {tabs.map(([k, label]) => (
+              <button key={k} onClick={() => setTab(k)} className={`shrink-0 pb-3 text-sm font-medium border-b-2 transition ${tab === k ? "border-indigo-500 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-800"}`}>
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="px-4 sm:px-8 py-6 space-y-4">
+        {locked && <p className="rounded-xl bg-amber-50 text-amber-800 text-sm px-4 py-3">This account is at or above your level — view only.</p>}
+        <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-5 sm:p-6">
+          {tab === "overview" && <ProfileTab u={u} locked={locked} onSave={patch} />}
+          {tab === "access" && <AccessTab u={u} onSave={patch} />}
+          {tab === "security" && <SecurityTab u={u} locked={locked} onDone={(m) => { setMsg(m); load(); onChanged(); }} onClose={onDeleted} />}
+          {tab === "orders" && <ActivityTab u={u} />}
+        </div>
+      </div>
+
+      {/* Toast */}
+      {msg && (
+        <div className={`fixed bottom-5 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-50 rounded-xl px-4 py-2.5 text-sm font-medium shadow-lg ${msg.ok ? "bg-slate-900 text-white" : "bg-rose-600 text-white"}`}>
+          {msg.text}
+        </div>
+      )}
     </div>
   );
 }
@@ -259,11 +359,6 @@ function ProfileTab({ u, locked, onSave }: { u: Detail; locked: boolean; onSave:
         <L label="Name (Arabic)"><input className="admin-input" dir="rtl" disabled={locked} value={f.nameAr} onChange={(e) => setF({ ...f, nameAr: e.target.value })} /></L>
         <L label="Email"><input className="admin-input" dir="ltr" disabled={locked} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="—" /></L>
         <L label="Mobile"><input className="admin-input" dir="ltr" disabled={locked} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="—" /></L>
-      </div>
-      <div className="grid grid-cols-3 gap-3 text-center">
-        <Mini label="Orders" value={String(u._count.orders)} />
-        <Mini label="Spent" value={num(u.totalSpent)} />
-        <Mini label="Last login" value={ago(u.lastLoginAt)} />
       </div>
       {!locked && <button className="admin-btn admin-btn-primary">Save profile</button>}
     </form>
@@ -312,7 +407,7 @@ function AccessTab({ u, onSave }: { u: Detail; onSave: (b: object, t?: string) =
           {ROLES.map((r) => {
             const allowed = canEdit && (u.assignableRoles.includes(r) || r === u.role);
             return (
-              <button key={r} disabled={!allowed} onClick={() => setRole(r)} className={`rounded-xl px-3 py-2.5 text-sm font-medium ring-1 text-start transition ${role === r ? "ring-2 ring-slate-900 bg-slate-50" : "ring-slate-200"} disabled:opacity-40`}>
+              <button key={r} disabled={!allowed} onClick={() => setRole(r)} className={`rounded-xl px-3 py-2.5 text-sm font-medium ring-1 text-start transition ${role === r ? "ring-1 ring-indigo-300 bg-indigo-50 text-indigo-700" : "ring-slate-200"} disabled:opacity-40`}>
                 {ROLE_META[r].label}
               </button>
             );
@@ -512,14 +607,6 @@ function L({ label, children }: { label: string; children: React.ReactNode }) {
       <span className="block text-sm font-medium text-slate-700 mb-1.5">{label}</span>
       {children}
     </label>
-  );
-}
-function Mini({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl bg-slate-50 py-2.5">
-      <p className="text-sm font-semibold text-slate-800 tabular-nums">{value}</p>
-      <p className="text-[11px] text-slate-500">{label}</p>
-    </div>
   );
 }
 function Box({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {

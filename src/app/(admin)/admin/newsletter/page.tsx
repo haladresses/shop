@@ -102,7 +102,7 @@ export default function NewsletterAdminPage() {
   const totalPages = Math.max(1, Math.ceil(subTotal / pageSize));
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 w-full">
       <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => setTab("content")}

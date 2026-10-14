@@ -153,7 +153,7 @@ export default function MyAccount() {
                       key={id}
                       onClick={() => go(id)}
                       className={`shrink-0 text-start px-4 py-2.5 lg:py-3 rounded-full lg:rounded-2xl text-sm font-medium transition ${
-                        tab === id ? "bg-dark text-white" : "bg-white text-dark-3 ring-1 ring-gray-3 hover:ring-dark/30"
+                        tab === id ? "bg-dark text-white" : "bg-white text-dark-3 ring-1 ring-gray-3 hover:ring-blue/30"
                       }`}
                     >
                       {label}
@@ -242,7 +242,7 @@ function useOrders(status: string) {
 function OrderCard({ o, t, onOpen }: { o: OrderRow; t: T; onOpen: (id: string) => void }) {
   const { isArabic } = useLanguage();
   return (
-    <button onClick={() => onOpen(o.id)} className="w-full text-start rounded-2xl ring-1 ring-gray-3 bg-white p-4 hover:ring-dark/30 transition flex items-center gap-4">
+    <button onClick={() => onOpen(o.id)} className="w-full text-start rounded-2xl ring-1 ring-gray-3 bg-white p-4 hover:ring-blue/30 transition flex items-center gap-4">
       <div className="flex -space-x-3 rtl:space-x-reverse shrink-0">
         {(o.thumbs.length ? o.thumbs.slice(0, 3) : [null]).map((src, i) => (
           <span key={i} className="relative w-12 h-16 rounded-xl overflow-hidden ring-2 ring-white bg-[#F4EFEB]">
@@ -486,7 +486,7 @@ function Row({ label, value }: { label: string; value: number }) {
   );
 }
 
-const inputCls = "w-full h-12 rounded-2xl border border-gray-3 bg-white px-4 text-[16px] text-dark outline-none focus:border-dark focus:ring-4 focus:ring-dark/5";
+const inputCls = "w-full h-12 rounded-2xl border border-gray-3 bg-white px-4 text-[16px] text-dark outline-none focus:border-blue/40 focus:ring-4 focus:ring-blue/10";
 
 function Field({ label, ...p }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
@@ -570,7 +570,7 @@ function Addresses({ t }: { t: T }) {
       ) : (
         <div className="grid sm:grid-cols-2 gap-3">
           {items.map((a) => (
-            <div key={a.id} className={`rounded-2xl p-4 ring-1 ${a.isDefault ? "ring-dark" : "ring-gray-3"}`}>
+            <div key={a.id} className={`rounded-2xl p-4 ring-1 ${a.isDefault ? "ring-blue/40" : "ring-gray-3"}`}>
               <div className="flex items-start justify-between gap-2">
                 <p className="font-medium text-dark">{a.nameEn}</p>
                 {a.isDefault && <span className="text-[11px] font-semibold rounded-full bg-dark text-white px-2 py-0.5">{t("Default", "الافتراضي")}</span>}
