@@ -104,6 +104,8 @@ type FetchProductsParams = {
   maxPrice?: number;
   sizes?: string[];
   colors?: string[];
+  /** latest | oldest | price-asc | price-desc | bestseller | name */
+  sort?: string;
   signal?: AbortSignal;
 };
 
@@ -137,6 +139,7 @@ export async function fetchProducts(
     maxPrice,
     sizes,
     colors,
+    sort,
     signal,
   } = params;
 
@@ -155,6 +158,7 @@ export async function fetchProducts(
   if (maxPrice !== undefined) query.set("maxPrice", String(maxPrice));
   if (sizes && sizes.length) query.set("sizes", sizes.join(","));
   if (colors && colors.length) query.set("colors", colors.join(","));
+  if (sort) query.set("sort", sort);
 
   const res = await fetch(`/api/products?${query.toString()}`, { signal });
   const json = await res.json();

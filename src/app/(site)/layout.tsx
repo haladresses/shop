@@ -15,6 +15,7 @@ import { LanguageProvider } from "../context/LanguageContext";
 import PreviewSliderModal from "@/components/Common/PreviewSlider";
 
 import ScrollToTop from "@/components/Common/ScrollToTop";
+import RevealController from "@/components/Common/Reveal";
 import PwaRegister from "@/components/PwaRegister";
 
 export default function RootLayout({
@@ -67,6 +68,7 @@ export default function RootLayout({
             </CartModalProvider>
           </ReduxProvider>
           <ScrollToTop />
+          <RevealController />
           <Footer />
         </LanguageProvider>
       </body>

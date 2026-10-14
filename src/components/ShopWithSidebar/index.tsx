@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Breadcrumb from "../Common/Breadcrumb";
 import CustomSelect from "./CustomSelect";
@@ -30,6 +30,10 @@ const ShopWithSidebarContent = () => {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [sort, setSort] = useState(searchParams.get("sort") || "latest");
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const requestId = useRef(0);
   const [priceBounds, setPriceBounds] = useState<{ min: number; max: number } | null>(null);
   const [priceValue, setPriceValue] = useState<{ from: number; to: number } | null>(null);
   const [appliedPrice, setAppliedPrice] = useState<{ from: number; to: number } | null>(null);
@@ -40,7 +44,6 @@ const ShopWithSidebarContent = () => {
 
   // reset to first page (and clear filters) whenever the category changes
   useEffect(() => {
-    setPage(1);
     setPriceValue(null);
     setAppliedPrice(null);
     setSelectedSizes([]);
@@ -49,12 +52,10 @@ const ShopWithSidebarContent = () => {
 
   const toggleSize = (size: string) => {
     setSelectedSizes((prev) => (prev.includes(size) ? prev.filter((s) => s !== size) : [...prev, size]));
-    setPage(1);
   };
 
   const toggleColor = (color: string) => {
     setSelectedColors((prev) => (prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]));
-    setPage(1);
   };
 
   const clearAllFilters = () => {
@@ -70,51 +71,88 @@ const ShopWithSidebarContent = () => {
     if (!priceValue) return;
     const t = setTimeout(() => {
       setAppliedPrice(priceValue);
-      setPage(1);
     }, 400);
     return () => clearTimeout(t);
   }, [priceValue]);
 
+  // Infinite scroll: any filter/sort change reloads page 1; reaching the end
+  // of the grid appends the next page.
+  const loadPage = useCallback(
+    async (target: number, signal?: AbortSignal) => {
+      const id = ++requestId.current;
+      const hasFilters = !!appliedPrice || selectedSizes.length > 0 || selectedColors.length > 0;
+      if (target === 1) setLoading(true);
+      else setLoadingMore(true);
+      try {
+        const res = await fetchProducts({
+          page: target,
+          pageSize: PAGE_SIZE,
+          category: activeCategory,
+          language,
+          minPrice: appliedPrice?.from,
+          maxPrice: appliedPrice?.to,
+          sizes: selectedSizes,
+          colors: selectedColors,
+          sort,
+          signal,
+        });
+        if (id !== requestId.current) return;
+        if (target === 1) {
+          const list = res.products.length ? res.products : !activeCategory && !hasFilters ? shopData : [];
+          setProducts(list);
+          setTotal(res.total || list.length);
+          if (res.priceMin != null && res.priceMax != null) {
+            const min = Math.floor(res.priceMin);
+            const max = Math.ceil(res.priceMax);
+            setPriceBounds((prev) => (prev && prev.min === min && prev.max === max ? prev : { min, max }));
+          }
+          setSizeOptions(res.sizes);
+          setColorOptions(res.colors);
+        } else {
+          setProducts((prev) => {
+            const seen = new Set(prev.map((p) => p.id));
+            return [...prev, ...res.products.filter((p) => !seen.has(p.id))];
+          });
+        }
+        setTotalPages(Math.max(1, res.totalPages || 1));
+        setPage(target);
+      } catch {
+        if (id !== requestId.current || signal?.aborted) return;
+        if (target === 1) {
+          const hasAny = !!activeCategory || hasFilters;
+          setProducts(hasAny ? [] : shopData);
+          setTotal(hasAny ? 0 : shopData.length);
+          setTotalPages(1);
+        }
+      } finally {
+        if (id === requestId.current) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
+      }
+    },
+    [language, activeCategory, appliedPrice, selectedSizes, selectedColors, sort],
+  );
+
   useEffect(() => {
     const controller = new AbortController();
-    setLoading(true);
-    const hasFilters = !!appliedPrice || selectedSizes.length > 0 || selectedColors.length > 0;
-    fetchProducts({
-      page,
-      pageSize: PAGE_SIZE,
-      category: activeCategory,
-      language,
-      minPrice: appliedPrice?.from,
-      maxPrice: appliedPrice?.to,
-      sizes: selectedSizes,
-      colors: selectedColors,
-      signal: controller.signal,
-    })
-      .then((res) => {
-        const list = res.products.length ? res.products : !activeCategory && page === 1 && !hasFilters ? shopData : [];
-        setProducts(list);
-        setTotal(res.total || list.length);
-        setTotalPages(Math.max(1, res.totalPages || 1));
-        if (res.priceMin != null && res.priceMax != null) {
-          const min = Math.floor(res.priceMin);
-          const max = Math.ceil(res.priceMax);
-          setPriceBounds((prev) => (prev && prev.min === min && prev.max === max ? prev : { min, max }));
-        }
-        setSizeOptions(res.sizes);
-        setColorOptions(res.colors);
-      })
-      .catch(() => {
-        if (!activeCategory && page === 1 && !hasFilters) {
-          setProducts(shopData);
-          setTotal(shopData.length);
-          setTotalPages(1);
-        } else {
-          setProducts([]);
-        }
-      })
-      .finally(() => setLoading(false));
+    loadPage(1, controller.signal);
     return () => controller.abort();
-  }, [language, page, activeCategory, appliedPrice, selectedSizes, selectedColors]);
+  }, [loadPage]);
+
+  const hasMore = page < totalPages;
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading && !loadingMore) loadPage(page + 1);
+      },
+      { rootMargin: "800px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMore, loading, loadingMore, page, loadPage]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -139,14 +177,18 @@ const ShopWithSidebarContent = () => {
 
   const options = isArabic
     ? [
-        { label: "الأحدث", value: "0" },
-        { label: "الأكثر مبيعاً", value: "1" },
-        { label: "الأقدم", value: "2" },
+        { label: "الأحدث", value: "latest" },
+        { label: "الأكثر مبيعاً", value: "bestseller" },
+        { label: "السعر: من الأقل", value: "price-asc" },
+        { label: "السعر: من الأعلى", value: "price-desc" },
+        { label: "الأقدم", value: "oldest" },
       ]
     : [
-        { label: "Latest Products", value: "0" },
-        { label: "Best Selling", value: "1" },
-        { label: "Old Products", value: "2" },
+        { label: "Latest", value: "latest" },
+        { label: "Best selling", value: "bestseller" },
+        { label: "Price: low to high", value: "price-asc" },
+        { label: "Price: high to low", value: "price-desc" },
+        { label: "Oldest", value: "oldest" },
       ];
 
   const fallbackCategories = isArabic
@@ -300,7 +342,7 @@ const ShopWithSidebarContent = () => {
                       {isArabic ? "الفلاتر" : "Filters"}
                     </button>
 
-                    <CustomSelect options={options} />
+                    <CustomSelect options={options} value={sort} onChange={setSort} />
 
                     <p className="hidden sm:block">
                       {isArabic ? (
@@ -435,58 +477,20 @@ const ShopWithSidebarContent = () => {
               )}
               {/* <!-- Products Grid Tab Content End --> */}
 
-              {/* <!-- Products Pagination Start --> */}
-              {!loading && products.length > 0 && totalPages > 1 && (
-                <div className="flex justify-center mt-15">
-                  <div className="bg-white shadow-1 rounded-md p-2">
-                    <ul className="flex items-center gap-1">
-                      <li>
-                        <button
-                          aria-label="previous page"
-                          type="button"
-                          disabled={page <= 1}
-                          onClick={() => setPage((p) => Math.max(1, p - 1))}
-                          className="flex items-center justify-center w-8 h-9 ease-out duration-200 rounded-[3px] hover:text-white hover:bg-blue disabled:text-gray-4 disabled:hover:bg-transparent disabled:hover:text-gray-4 disabled:cursor-not-allowed"
-                        >
-                          <svg className="fill-current rtl:rotate-180" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12.1782 16.1156C12.0095 16.1156 11.8407 16.0594 11.7282 15.9187L5.37197 9.45C5.11885 9.19687 5.11885 8.80312 5.37197 8.55L11.7282 2.08125C11.9813 1.82812 12.3751 1.82812 12.6282 2.08125C12.8813 2.33437 12.8813 2.72812 12.6282 2.98125L6.72197 9L12.6563 15.0187C12.9095 15.2719 12.9095 15.6656 12.6563 15.9187C12.4876 16.0312 12.347 16.1156 12.1782 16.1156Z" fill="" />
-                          </svg>
-                        </button>
-                      </li>
-
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                        <li key={n}>
-                          <button
-                            type="button"
-                            onClick={() => setPage(n)}
-                            aria-current={n === page ? "page" : undefined}
-                            className={`flex py-1.5 px-3.5 duration-200 rounded-[3px] ${
-                              n === page ? "bg-blue text-white" : "hover:text-white hover:bg-blue"
-                            }`}
-                          >
-                            {n}
-                          </button>
-                        </li>
-                      ))}
-
-                      <li>
-                        <button
-                          aria-label="next page"
-                          type="button"
-                          disabled={page >= totalPages}
-                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                          className="flex items-center justify-center w-8 h-9 ease-out duration-200 rounded-[3px] hover:text-white hover:bg-blue disabled:text-gray-4 disabled:hover:bg-transparent disabled:hover:text-gray-4 disabled:cursor-not-allowed"
-                        >
-                          <svg className="fill-current rtl:rotate-180" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5.82197 16.1156C5.65322 16.1156 5.5126 16.0594 5.37197 15.9469C5.11885 15.6937 5.11885 15.3 5.37197 15.0469L11.2782 9L5.37197 2.98125C5.11885 2.72812 5.11885 2.33437 5.37197 2.08125C5.6251 1.82812 6.01885 1.82812 6.27197 2.08125L12.6282 8.55C12.8813 8.80312 12.8813 9.19687 12.6282 9.45L6.27197 15.9187C6.15947 16.0312 5.99072 16.1156 5.82197 16.1156Z" fill="" />
-                          </svg>
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
+              {/* Infinite scroll sentinel */}
+              {!loading && products.length > 0 && (
+                <div ref={sentinelRef} className="flex flex-col items-center justify-center mt-10 min-h-[60px]">
+                  {loadingMore ? (
+                    <span className="inline-block w-7 h-7 border-2 border-gray-3 border-t-blue rounded-full animate-spin" />
+                  ) : hasMore ? (
+                    <button type="button" onClick={() => loadPage(page + 1)} className="text-sm font-medium text-blue hover:underline">
+                      {isArabic ? "عرض المزيد" : "Load more"}
+                    </button>
+                  ) : total > PAGE_SIZE ? (
+                    <p className="text-sm text-dark-4">{isArabic ? `عرضنا كل المنتجات (${total})` : `You've seen all ${total} products`}</p>
+                  ) : null}
                 </div>
               )}
-              {/* <!-- Products Pagination End --> */}
             </div>
             {/* // <!-- Content End --> */}
           </div>

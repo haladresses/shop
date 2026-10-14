@@ -25,6 +25,16 @@ export async function GET(req: NextRequest) {
     const maxPrice = sp.get("maxPrice");
     const sizes = (sp.get("sizes") || "").split(",").map((s) => s.trim()).filter(Boolean);
     const colors = (sp.get("colors") || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const SORTS: Record<string, Prisma.ProductOrderByWithRelationInput[]> = {
+      latest: [{ createdAt: "desc" }],
+      oldest: [{ createdAt: "asc" }],
+      "price-asc": [{ basePrice: "asc" }, { createdAt: "desc" }],
+      "price-desc": [{ basePrice: "desc" }, { createdAt: "desc" }],
+      bestseller: [{ isBestSeller: "desc" }, { orderItems: { _count: "desc" } }, { createdAt: "desc" }],
+      name: [{ nameEn: "asc" }],
+    };
+    // A stable tiebreaker keeps infinite-scroll pages from overlapping.
+    const orderBy = [...(SORTS[sp.get("sort") || "latest"] ?? SORTS.latest), { id: "asc" as const }];
 
     // Filters shared by the product query and the facet/price-bounds aggregates.
     const baseWhere: Prisma.ProductWhereInput = {
@@ -72,7 +82,7 @@ export async function GET(req: NextRequest) {
         where,
         skip,
         take: pageSize,
-        orderBy: { createdAt: "desc" },
+        orderBy,
         include: {
           category: { select: { nameEn: true, nameAr: true } },
           images: { where: { isPrimary: true }, take: 1 },
@@ -82,11 +92,20 @@ export async function GET(req: NextRequest) {
       prisma.product.count({ where }),
       // Price range across the category/search (ignores the current price/size/color selection).
       prisma.product.aggregate({ where: baseWhere, _min: { basePrice: true }, _max: { basePrice: true } }),
-      // Available sizes/colors for the current category/search.
-      prisma.productVariant.findMany({
-        where: { isActive: true, product: baseWhere },
-        select: { size: true, color: true, colorHex: true },
-      }),
+      // Available sizes/colors for the current category/search — DISTINCT so
+      // this stays small however many products/variants the catalogue has.
+      Promise.all([
+        prisma.productVariant.findMany({
+          where: { isActive: true, size: { not: null }, product: baseWhere },
+          select: { size: true },
+          distinct: ["size"],
+        }),
+        prisma.productVariant.findMany({
+          where: { isActive: true, color: { not: null }, product: baseWhere },
+          select: { color: true, colorHex: true },
+          distinct: ["color"],
+        }),
+      ]).then(([sizes, cols]) => [...sizes.map((v) => ({ size: v.size, color: null, colorHex: null })), ...cols.map((v) => ({ size: null, ...v }))]),
     ]);
 
     const priceMin = bounds._min.basePrice != null ? Number(bounds._min.basePrice) : null;

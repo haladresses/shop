@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import HeroCarousel from "./HeroCarousel";
+import HeroView from "./HeroView";
 import HeroFeature from "./HeroFeature";
 import { fetchHero, HeroConfig } from "@/lib/hero";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 const Hero = () => {
   const [config, setConfig] = useState<HeroConfig | null>(null);
+  const { isArabic } = useLanguage();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -14,21 +16,29 @@ const Hero = () => {
     return () => controller.abort();
   }, []);
 
-  return (
-    <section className="relative overflow-hidden pb-12 lg:pb-16 pt-24 xl:pt-[150px] bg-gradient-to-b from-[#FBF3EF] via-[#F7EDE7] to-white">
-      {/* decorative accents */}
-      <div aria-hidden className="pointer-events-none absolute -top-16 -left-20 w-64 h-64 sm:w-80 sm:h-80 rounded-full bg-blue/10 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute top-24 -right-16 w-56 h-56 sm:w-72 sm:h-72 rounded-full bg-yellow/20 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute bottom-0 left-1/3 w-52 h-52 rounded-full bg-blue-light-4/30 blur-3xl hidden lg:block" />
-
-      <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0 relative z-10">
-        <div className="relative z-1 rounded-2xl sm:rounded-[20px] bg-white overflow-hidden shadow-[0_18px_50px_-20px_rgba(47,36,31,0.25)] ring-1 ring-blue/10">
-          <HeroCarousel slides={config?.slides ?? null} />
+  if (!config) {
+    return (
+      <section className="relative overflow-hidden pt-[88px] xl:pt-[110px] bg-[#F7F2EE]">
+        <div className="max-w-[1170px] mx-auto px-4 sm:px-8 xl:px-0 min-h-[600px] lg:min-h-[680px] grid md:grid-cols-2 items-center gap-10 animate-pulse">
+          <div className="flex flex-col items-center md:items-start gap-4">
+            <div className="h-7 w-44 rounded-full bg-white/70" />
+            <div className="h-12 w-full max-w-[460px] rounded-xl bg-white/70" />
+            <div className="h-12 w-3/4 max-w-[340px] rounded-xl bg-white/70" />
+            <div className="h-12 w-44 rounded-full bg-white/70 mt-4" />
+          </div>
+          <div className="order-first md:order-last flex justify-center">
+            <div className="w-[260px] sm:w-[320px] lg:w-[400px] aspect-[4/5] rounded-t-full rounded-b-[40px] bg-white/70" />
+          </div>
         </div>
-      </div>
+      </section>
+    );
+  }
 
-      <HeroFeature features={config?.features ?? null} />
-    </section>
+  return (
+    <>
+      <HeroView config={config} isArabic={isArabic} />
+      {config.settings.showFeatures && <HeroFeature features={config.features} />}
+    </>
   );
 };
 

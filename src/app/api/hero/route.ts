@@ -3,8 +3,10 @@ import { ok, serverError } from "@/lib/api/response";
 import {
   HERO_SLIDES_KEY,
   HERO_FEATURES_KEY,
+  HERO_SETTINGS_KEY,
   normalizeSlides,
   normalizeFeatures,
+  normalizeSettings,
 } from "@/lib/hero";
 
 /**
@@ -14,7 +16,7 @@ import {
 export async function GET() {
   try {
     const settings = await prisma.setting.findMany({
-      where: { key: { in: [HERO_SLIDES_KEY, HERO_FEATURES_KEY] } },
+      where: { key: { in: [HERO_SLIDES_KEY, HERO_FEATURES_KEY, HERO_SETTINGS_KEY] } },
     });
 
     const parse = (key: string): unknown => {
@@ -30,6 +32,7 @@ export async function GET() {
     return ok({
       slides: normalizeSlides(parse(HERO_SLIDES_KEY)),
       features: normalizeFeatures(parse(HERO_FEATURES_KEY)),
+      settings: normalizeSettings(parse(HERO_SETTINGS_KEY)),
     });
   } catch (e) {
     return serverError(e);

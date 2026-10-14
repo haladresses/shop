@@ -1027,7 +1027,7 @@ export default function PosPage() {
                         )}
                       </div>
                       {inCart > 0 && (
-                        <span className="absolute top-2 right-2 min-w-6 h-6 px-1.5 rounded-full bg-rose-500 text-white text-xs font-bold flex items-center justify-center shadow">
+                        <span className="absolute top-2 right-2 min-w-[24px] h-6 px-1.5 rounded-full bg-rose-500 text-white text-xs font-bold flex items-center justify-center shadow">
                           {inCart}
                         </span>
                       )}
@@ -1202,10 +1202,8 @@ export default function PosPage() {
 
 function PosBackdrop({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-gradient-to-br from-rose-50 via-amber-50/60 to-slate-100 relative overflow-hidden">
-      <div aria-hidden className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-rose-200/40 blur-3xl" />
-      <div aria-hidden className="absolute -bottom-40 -right-24 w-[28rem] h-[28rem] rounded-full bg-amber-200/40 blur-3xl" />
-      <div className="relative z-10 flex flex-col items-center w-full">{children}</div>
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-[#F7F2EE]">
+      <div className="flex flex-col items-center w-full">{children}</div>
     </div>
   );
 }

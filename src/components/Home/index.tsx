@@ -12,13 +12,14 @@ const Home = () => {
   return (
     <main>
       <Hero />
-      <Categories />
-      <NewArrival />
-      <PromoBanner />
-      <BestSeller />
-      <CounDown />
-      <Testimonials />
-      <div className="pb-16 sm:pb-20">
+      {/* Each section rises into view on scroll (see Common/Reveal). */}
+      <div data-reveal><Categories /></div>
+      <div data-reveal><NewArrival /></div>
+      <div data-reveal><PromoBanner /></div>
+      <div data-reveal><BestSeller /></div>
+      <div data-reveal><CounDown /></div>
+      <div data-reveal><Testimonials /></div>
+      <div data-reveal className="pb-16 sm:pb-20">
         <Newsletter />
       </div>
     </main>

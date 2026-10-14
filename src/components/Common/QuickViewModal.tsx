@@ -14,6 +14,7 @@ import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { updateproductDetails } from "@/redux/features/product-details";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { fetchProductBySlug, mapApiProduct } from "@/lib/storefront";
+import { flyToCart } from "@/lib/cartFx";
 
 const PLACEHOLDER_IMAGE = "/images/products/p1.png";
 
@@ -83,7 +84,8 @@ const QuickViewModal = () => {
   };
 
   // add to cart
-  const handleAddToCart = () => {
+  const handleAddToCart = (e?: React.MouseEvent) => {
+    flyToCart(e?.currentTarget ?? null, product.imgs?.previews?.[0]);
     dispatch(
       addItemToCart({
         ...product,
@@ -483,7 +485,7 @@ const QuickViewModal = () => {
               <div className="flex flex-wrap items-center gap-4">
                 <button
                   disabled={quantity === 0 && true}
-                  onClick={() => handleAddToCart()}
+                  onClick={handleAddToCart}
                   className={`inline-flex font-medium text-white bg-blue py-3 px-7 rounded-md ease-out duration-200 hover:bg-blue-dark
                   `}
                 >

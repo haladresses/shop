@@ -9,7 +9,6 @@ import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { AppDispatch } from "@/redux/store";
 import { addItemToCart } from "@/redux/features/cart-slice";
-import { addItemToWishlist } from "@/redux/features/wishlist-slice";
 import { updateproductDetails } from "@/redux/features/product-details";
 import {
   fetchProductBySlug,
@@ -23,6 +22,8 @@ import {
   type ProductAttributes,
   type CategoryAttribute,
 } from "@/lib/attributes";
+import { flyToCart } from "@/lib/cartFx";
+import { WishlistButton } from "@/components/Common/ProductActions";
 
 const StarIcon = ({ filled }: { filled: boolean }) => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className={filled ? "fill-[#FFA645]" : "fill-gray-4"}>
@@ -200,8 +201,9 @@ const ShopDetails = () => {
   const title = api ? pick(api.nameEn, api.nameAr, isArabic) : "";
   const description = api ? pick(api.descriptionEn ?? "", api.descriptionAr ?? "", isArabic) : "";
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e?: React.MouseEvent) => {
     if (!product) return;
+    flyToCart(e?.currentTarget ?? null, product.imgs?.previews?.[0]);
     dispatch(
       addItemToCart({
         ...product,
@@ -216,11 +218,6 @@ const ShopDetails = () => {
         quantity,
       } as never)
     );
-  };
-
-  const handleAddToWishlist = () => {
-    if (!product) return;
-    dispatch(addItemToWishlist({ ...product, status: "available", quantity } as never));
   };
 
   const handleZoom = () => {
@@ -471,15 +468,13 @@ const ShopDetails = () => {
                   {isArabic ? "أضف إلى السلة" : "Add to Cart"}
                 </button>
 
-                <button
-                  onClick={handleAddToWishlist}
-                  aria-label="add to wishlist"
-                  className="flex items-center justify-center w-12 h-12 rounded-md border border-gray-3 text-dark hover:text-blue hover:border-blue duration-200"
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 21s-7.5-4.6-10-9.2C.6 9.1 1.3 5.6 4.3 4.5c2-.7 4 .1 5.2 1.7L12 9l2.5-2.8c1.2-1.6 3.2-2.4 5.2-1.7 3 1.1 3.7 4.6 2.3 7.3C19.5 16.4 12 21 12 21Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
-                  </svg>
-                </button>
+                {product && (
+                  <WishlistButton
+                    item={product}
+                    size={22}
+                    className="flex items-center justify-center w-12 h-12 rounded-md border border-gray-3 text-dark hover:text-blue hover:border-blue duration-200"
+                  />
+                )}
               </div>
 
               {api.sku && (
