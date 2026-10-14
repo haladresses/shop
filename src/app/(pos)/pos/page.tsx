@@ -203,7 +203,7 @@ export default function PosPage() {
   const [colorFacets, setColorFacets] = useState<ColorFacet[]>([]);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [colorFilter, setColorFilter] = useState("");
-  const [inStockOnly, setInStockOnly] = useState(false);
+  const [inStockOnly, setInStockOnly] = useState(true);
   const [catalog, setCatalog] = useState<PosLine[]>([]);
   const [catalogPage, setCatalogPage] = useState(1);
   const [catalogHasMore, setCatalogHasMore] = useState(false);
@@ -1020,18 +1020,24 @@ export default function PosPage() {
                 {groupLines(catalog).map((g) => {
                   const r = g[0];
                   const stock = g.every((l) => l.stock === null) ? null : g.reduce((n, l) => n + (l.stock ?? 0), 0);
-                  const outOfStock = stock !== null && stock <= 0;
                   const inCart = cart.filter((l) => l.productId === r.productId).reduce((n, l) => n + l.quantity, 0);
+                  const outOfStock = stock !== null && stock <= 0;
+                  // Everything available is already in this sale.
+                  const allInCart = !outOfStock && stock !== null && inCart >= stock;
+                  const blocked = outOfStock || allInCart;
                   const colors = Array.from(new Set(g.map((l) => l.color).filter(Boolean)));
                   const sizes = Array.from(new Set(g.map((l) => l.size).filter(Boolean)));
                   return (
                     <button
                       key={r.productId}
-                      onClick={() => !outOfStock && (g.length === 1 ? addLine(r) : setPicker(g))}
-                      disabled={outOfStock}
-                      className="relative text-left rounded-2xl bg-white overflow-hidden shadow-sm ring-1 ring-slate-200/70 hover:ring-rose-300 hover:shadow-md active:scale-[0.98] transition-all disabled:opacity-45 disabled:active:scale-100"
+                      onClick={() => !blocked && (g.length === 1 ? addLine(r) : setPicker(g))}
+                      disabled={blocked}
+                      aria-disabled={blocked}
+                      className={`relative text-left rounded-2xl bg-white overflow-hidden shadow-sm ring-1 ring-slate-200/70 transition-all ${
+                        blocked ? "cursor-not-allowed" : "hover:ring-rose-300 hover:shadow-md active:scale-[0.98]"
+                      }`}
                     >
-                      <div className="aspect-[4/5] bg-slate-50 flex items-center justify-center overflow-hidden">
+                      <div className={`relative aspect-[4/5] bg-slate-50 flex items-center justify-center overflow-hidden ${blocked ? "grayscale opacity-50" : ""}`}>
                         {r.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={r.imageUrl} alt={r.nameEn} loading="lazy" className="w-full h-full object-cover" />
@@ -1039,6 +1045,11 @@ export default function PosPage() {
                           <LuShoppingBag size={22} className="text-slate-300" />
                         )}
                       </div>
+                      {blocked && (
+                        <span className="absolute inset-x-0 top-[38%] mx-auto w-fit rounded-full bg-slate-900/80 text-white text-[11px] font-semibold px-3 py-1">
+                          {outOfStock ? "Sold out" : "All in cart"}
+                        </span>
+                      )}
                       {inCart > 0 && (
                         <span className="absolute top-2 right-2 min-w-[24px] h-6 px-1.5 rounded-full bg-rose-500 text-white text-xs font-bold flex items-center justify-center shadow">{inCart}</span>
                       )}
@@ -1046,7 +1057,7 @@ export default function PosPage() {
                         <span className="absolute top-2 left-2 text-[10px] font-semibold rounded-full bg-white/95 text-slate-700 px-2 py-0.5 shadow-sm">{g.length} options</span>
                       )}
                       <div className="px-2.5 py-2">
-                        <p className="text-[12px] font-medium text-slate-800 truncate leading-tight">{r.nameEn}</p>
+                        <p className={`text-[12px] font-medium truncate leading-tight ${blocked ? "text-slate-400" : "text-slate-800"}`}>{r.nameEn}</p>
                         <p className="text-[11px] text-slate-400 truncate leading-tight min-h-[14px]">
                           {g.length === 1 ? formatVariantLabel(r) : [colors.length > 1 ? `${colors.length} colours` : colors[0], sizes.length > 1 ? `${sizes[0]}–${sizes[sizes.length - 1]}` : sizes[0]].filter(Boolean).join(" · ")}
                         </p>
@@ -1786,7 +1797,9 @@ function OptionPicker({
                   key={c || "none"}
                   onClick={() => { setColor(c); setSelected(lines.filter((l) => (l.color ?? "") === c).find((l) => left(l) > 0) ?? null); setQty(1); }}
                   disabled={!any}
-                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition ${color === c ? "bg-rose-50 text-rose-700 ring-1 ring-rose-300" : "bg-slate-100 text-slate-700"} disabled:opacity-35 disabled:line-through`}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                    !any ? "bg-slate-50 text-slate-300 line-through cursor-not-allowed" : color === c ? "bg-rose-50 text-rose-700 ring-1 ring-rose-300" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
                 >
                   {c || "Standard"}
                 </button>
@@ -1808,11 +1821,13 @@ function OptionPicker({
                   key={lineKey(l)}
                   onClick={() => { setSelected(l); setQty(1); }}
                   disabled={n <= 0}
-                  className={`relative h-14 rounded-xl text-sm font-semibold transition flex flex-col items-center justify-center ${on ? "bg-rose-500 text-white" : "bg-slate-100 text-slate-800"} disabled:opacity-35`}
+                  className={`relative h-14 rounded-xl text-sm font-semibold transition flex flex-col items-center justify-center ${
+                    n <= 0 ? "bg-slate-50 text-slate-300 line-through cursor-not-allowed" : on ? "bg-rose-500 text-white" : "bg-slate-100 text-slate-800 hover:bg-slate-200"
+                  }`}
                 >
                   {l.size || "—"}
                   <span className={`text-[10px] font-medium ${on ? "text-white/80" : n <= 2 ? "text-amber-600" : "text-slate-400"}`}>
-                    {n === Infinity ? "" : n <= 0 ? "0 left" : `${n} left`}
+                    {n === Infinity ? "" : n <= 0 ? "none" : `${n} left`}
                   </span>
                 </button>
               );

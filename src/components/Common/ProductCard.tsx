@@ -73,7 +73,7 @@ export default function ProductCard({ item, priority = false }: { item: Product;
               fill
               priority={priority}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 290px"
-              className={`object-cover object-top transition duration-[900ms] ease-out group-hover:scale-[1.04] ${secondary ? "[@media(hover:hover)]:group-hover:opacity-0" : ""} ${soldOut ? "grayscale-[35%]" : ""}`}
+              className={`object-cover object-top transition duration-[900ms] ease-out group-hover:scale-[1.04] ${secondary ? "[@media(hover:hover)]:group-hover:opacity-0" : ""} ${soldOut ? "grayscale opacity-60" : ""}`}
             />
           )}
           {secondary && (

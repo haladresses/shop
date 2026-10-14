@@ -102,7 +102,18 @@ export async function GET(req: NextRequest) {
     // Paged so the grid can scroll through a very large catalogue.
     const products = await prisma.product.findMany({
       where: {
-        ...(inStockOnly && { variants: { some: { isActive: true, inventory: { quantity: { gt: 0 } } } } }),
+        // In stock = has an option with stock, or is a simple product (no
+        // options, not stock-tracked) — those must stay sellable.
+        ...(inStockOnly && {
+          AND: [
+            {
+              OR: [
+                { variants: { some: { isActive: true, inventory: { quantity: { gt: 0 } } } } },
+                { variants: { none: { isActive: true } } },
+              ],
+            },
+          ],
+        }),
         isActive: true,
         ...(categoryId && { categoryId }),
         ...(color && { variants: { some: { isActive: true, color } } }),
