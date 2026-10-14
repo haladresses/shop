@@ -4,6 +4,7 @@ import { LuCheck } from "react-icons/lu";
 import FooterSettings from "@/components/admin/FooterSettings";
 import BackupSettings from "@/components/admin/BackupSettings";
 import PaymentGatewaySettings from "@/components/admin/PaymentGatewaySettings";
+import WhatsAppSettings from "@/components/admin/WhatsAppSettings";
 
 const DEFAULT_SETTINGS = [
   { key: "store_name_en", group: "general", labelEn: "Store Name (English)", type: "string", defaultValue: "Hala Dresses" },
@@ -23,7 +24,7 @@ const DEFAULT_SETTINGS = [
   { key: "whatsapp_number", group: "social", labelEn: "WhatsApp Number", type: "string", defaultValue: "" },
 ];
 
-const groups = ["general", "shipping", "checkout", "payment gateway", "notifications", "social", "footer", "backup"];
+const groups = ["general", "shipping", "checkout", "payment gateway", "whatsapp", "notifications", "social", "footer", "backup"];
 
 export default function SettingsPage() {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -94,7 +95,9 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      {activeGroup === "payment gateway" ? (
+      {activeGroup === "whatsapp" ? (
+        <WhatsAppSettings />
+      ) : activeGroup === "payment gateway" ? (
         permissions.includes("admin.payments.manage") ? <PaymentGatewaySettings /> : null
       ) : activeGroup === "footer" ? (
         <FooterSettings />

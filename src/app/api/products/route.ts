@@ -84,8 +84,21 @@ export async function GET(req: NextRequest) {
         take: pageSize,
         orderBy,
         include: {
-          category: { select: { nameEn: true, nameAr: true } },
-          images: { where: { isPrimary: true }, take: 1 },
+          category: { select: { nameEn: true, nameAr: true, slug: true } },
+          // Primary + one alternate photo (hover swap on product cards).
+          images: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], take: 2 },
+          // Active options so cards can show swatches/stock and quick-add a size.
+          variants: {
+            where: { isActive: true },
+            select: {
+              id: true,
+              color: true,
+              colorHex: true,
+              size: true,
+              priceAdjustment: true,
+              inventory: { select: { quantity: true } },
+            },
+          },
           _count: { select: { variants: true, reviews: true } },
         },
       }),

@@ -16,6 +16,8 @@ import PreviewSliderModal from "@/components/Common/PreviewSlider";
 
 import ScrollToTop from "@/components/Common/ScrollToTop";
 import RevealController from "@/components/Common/Reveal";
+import MobileNav from "@/components/Common/MobileNav";
+import WhatsAppWidget from "@/components/Common/WhatsAppWidget";
 import PwaRegister from "@/components/PwaRegister";
 
 export default function RootLayout({
@@ -45,7 +47,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#8C3B49" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
       </head>
-      <body>
+      <body className="has-mobile-nav">
         <PwaRegister />
         <LanguageProvider>
           <ReduxProvider>
@@ -63,6 +65,8 @@ export default function RootLayout({
                   <QuickViewModal />
                   <CartSidebarModal />
                   <PreviewSliderModal />
+                  <MobileNav />
+                  <WhatsAppWidget />
                 </PreviewSliderProvider>
               </ModalProvider>
             </CartModalProvider>

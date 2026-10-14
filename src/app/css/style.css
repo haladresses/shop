@@ -308,3 +308,29 @@ html.reveal-ready [data-reveal].is-revealed { opacity: 1; transform: none }
 .fx-heart-pop { animation: fx-heart-pop .5s cubic-bezier(.3,.7,.4,1.4) }
 .fx-press:active { animation: fx-btn-press .25s ease }
 @media (prefers-reduced-motion: reduce) { .fx-badge-pop, .fx-heart-pop { animation: none } }
+
+/* ───────── Quick-add sheet ───────── */
+@keyframes qa-fade { from { opacity: 0 } }
+@keyframes qa-up { from { transform: translateY(100%) } }
+@keyframes qa-pop { from { opacity: 0; transform: translateY(16px) scale(.97) } }
+@keyframes qa-down { to { transform: translateY(100%) } }
+@keyframes qa-shrink { to { opacity: 0; transform: translateY(12px) scale(.97) } }
+.qa-fade { animation: qa-fade .2s ease-out }
+.qa-in { animation: qa-up .32s cubic-bezier(.2,.9,.3,1) }
+.qa-out { animation: qa-down .22s ease-in forwards }
+@media (min-width: 640px) { .qa-in { animation-name: qa-pop } .qa-out { animation-name: qa-shrink } }
+
+/* ───────── Mobile bottom bar (components/Common/MobileNav.tsx) ───────── */
+@media (max-width: 1023px) {
+  body.has-mobile-nav { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+  body.has-mobile-nav .scroll-top-btn { bottom: calc(80px + env(safe-area-inset-bottom)) !important; }
+}
+@keyframes pdp-img-in { from { opacity: .4; transform: scale(1.02) } }
+.pdp-img-in { animation: pdp-img-in .45s ease-out }
+@keyframes cd-tick { from { opacity: 0; transform: translateY(-40%) } }
+.cd-tick { animation: cd-tick .35s cubic-bezier(.2,.8,.2,1) }
+@media (prefers-reduced-motion: reduce) { .cd-tick { animation: none } }
+@keyframes wa-card-in { from { opacity: 0; transform: translateY(14px) scale(.96) } }
+@keyframes wa-bubble-in { from { opacity: 0; transform: translateY(8px) } }
+.wa-card { animation: wa-card-in .3s cubic-bezier(.2,.9,.3,1.15); transform-origin: bottom right }
+.wa-bubble { animation: wa-bubble-in .4s .15s cubic-bezier(.2,.8,.2,1) both }

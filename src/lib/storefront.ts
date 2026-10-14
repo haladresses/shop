@@ -76,6 +76,19 @@ export function mapApiProduct(
     sortedImages.length > 0 ? sortedImages.map((img) => img.url) : [PLACEHOLDER]
   ).filter(Boolean);
 
+  const options = (p.variants ?? [])
+    .filter((v) => v.isActive !== false)
+    .map((v) => ({
+      variantId: v.id,
+      color: v.color ?? null,
+      colorHex: v.colorHex ?? null,
+      size: v.size ?? null,
+      priceAdjustment: Number(v.priceAdjustment ?? 0) || 0,
+      stock: v.inventory?.quantity ?? 0,
+    }));
+  const colorMap = new Map<string, string | null>();
+  for (const o of options) if (o.color && !colorMap.has(o.color)) colorMap.set(o.color, o.colorHex);
+
   return {
     id: p.id,
     slug: p.slug,
@@ -87,6 +100,13 @@ export function mapApiProduct(
       thumbnails: urls,
       previews: urls,
     },
+    isNew: p.isNew,
+    isBestSeller: p.isBestSeller,
+    categoryName: p.category ? (isArabic ? p.category.nameAr || p.category.nameEn : p.category.nameEn) : undefined,
+    options,
+    colors: Array.from(colorMap, ([name, hex]) => ({ name, hex })),
+    // Products without variants aren't stock-tracked, so they stay sellable.
+    inStock: options.length === 0 || options.some((o) => o.stock > 0),
   };
 }
 

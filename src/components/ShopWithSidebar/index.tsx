@@ -24,6 +24,7 @@ const ShopWithSidebarContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const activeCategory = searchParams.get("category") || "";
+  const searchTerm = (searchParams.get("search") || "").trim();
   const [products, setProducts] = useState<Product[]>([]);
   const [dbCategories, setDbCategories] = useState<StoreCategory[]>([]);
   const [page, setPage] = useState(1);
@@ -80,7 +81,7 @@ const ShopWithSidebarContent = () => {
   const loadPage = useCallback(
     async (target: number, signal?: AbortSignal) => {
       const id = ++requestId.current;
-      const hasFilters = !!appliedPrice || selectedSizes.length > 0 || selectedColors.length > 0;
+      const hasFilters = !!searchTerm || !!appliedPrice || selectedSizes.length > 0 || selectedColors.length > 0;
       if (target === 1) setLoading(true);
       else setLoadingMore(true);
       try {
@@ -88,6 +89,7 @@ const ShopWithSidebarContent = () => {
           page: target,
           pageSize: PAGE_SIZE,
           category: activeCategory,
+          search: searchTerm,
           language,
           minPrice: appliedPrice?.from,
           maxPrice: appliedPrice?.to,
@@ -131,7 +133,7 @@ const ShopWithSidebarContent = () => {
         }
       }
     },
-    [language, activeCategory, appliedPrice, selectedSizes, selectedColors, sort],
+    [language, activeCategory, searchTerm, appliedPrice, selectedSizes, selectedColors, sort],
   );
 
   useEffect(() => {
@@ -438,6 +440,17 @@ const ShopWithSidebarContent = () => {
                 </div>
               </div>
 
+              {searchTerm && (
+                <div className="flex items-center justify-between gap-3 mb-5">
+                  <p className="text-dark text-sm sm:text-base min-w-0 truncate">
+                    {isArabic ? "نتائج البحث عن" : "Results for"} <strong>&ldquo;{searchTerm}&rdquo;</strong>
+                    <span className="text-dark-4"> · {total}</span>
+                  </p>
+                  <button type="button" onClick={() => router.push(activeCategory ? `/shop?category=${encodeURIComponent(activeCategory)}` : "/shop", { scroll: false })} className="shrink-0 text-sm text-blue hover:underline">
+                    {isArabic ? "مسح البحث" : "Clear search"}
+                  </button>
+                </div>
+              )}
               {/* <!-- Products Grid Tab Content Start --> */}
               {loading ? (
                 <div className="flex flex-col items-center justify-center bg-white shadow-1 rounded-lg py-20">
@@ -462,7 +475,7 @@ const ShopWithSidebarContent = () => {
                 <div
                   className={`${
                     productStyle === "grid"
-                      ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-7.5 gap-y-9"
+                      ? "grid grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-8 sm:gap-x-6 sm:gap-y-10"
                       : "flex flex-col gap-7.5"
                   }`}
                 >

@@ -1,136 +1,101 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { fetchCountdown, normalizeCountdown, CountdownConfig } from "@/lib/countdown";
+import { fetchCountdown, CountdownConfig } from "@/lib/countdown";
 
+type Left = { d: number; h: number; m: number; s: number; done: boolean };
+
+const remaining = (deadline: number): Left => {
+  const t = Math.max(deadline - Date.now(), 0);
+  return {
+    d: Math.floor(t / 86400000),
+    h: Math.floor((t / 3600000) % 24),
+    m: Math.floor((t / 60000) % 60),
+    s: Math.floor((t / 1000) % 60),
+    done: t <= 0,
+  };
+};
+
+/**
+ * Limited-time offer banner. Solid surface, photo mirrors in RTL, stacks on
+ * phones. It hides itself once the deadline has passed (never shows 00:00).
+ */
 const CounDown = () => {
   const { isArabic } = useLanguage();
-  const [config, setConfig] = useState<CountdownConfig>(() => normalizeCountdown(null));
-  const [days, setDays] = useState(0);
-  const [hours, setHours] = useState(0);
-  const [minutes, setMinutes] = useState(0);
-  const [seconds, setSeconds] = useState(0);
+  const [config, setConfig] = useState<CountdownConfig | null>(null);
+  const [left, setLeft] = useState<Left | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchCountdown(controller.signal)
-      .then(setConfig)
-      .catch(() => setConfig(normalizeCountdown(null)));
+    fetchCountdown(controller.signal).then(setConfig).catch(() => {});
     return () => controller.abort();
   }, []);
 
-  const deadline = new Date(config.endsAt).getTime();
-
-  const getTime = useCallback(() => {
-    const time = Math.max(deadline - Date.now(), 0);
-
-    setDays(Math.floor(time / (1000 * 60 * 60 * 24)));
-    setHours(Math.floor((time / (1000 * 60 * 60)) % 24));
-    setMinutes(Math.floor((time / 1000 / 60) % 60));
-    setSeconds(Math.floor((time / 1000) % 60));
-  }, [deadline]);
-
   useEffect(() => {
-    getTime();
-    const interval = setInterval(getTime, 1000);
+    if (!config) return;
+    const deadline = new Date(config.endsAt).getTime();
+    const tick = () => setLeft(remaining(deadline));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [config]);
 
-    return () => clearInterval(interval);
-  }, [getTime]);
+  if (!config || !config.enabled || !left || left.done) return null;
 
-  if (!config.enabled) return null;
+  const t = (en: string, ar: string) => (isArabic ? ar || en : en || ar);
+  const units: [number, string, string][] = [
+    [left.d, "Days", "أيام"],
+    [left.h, "Hours", "ساعات"],
+    [left.m, "Minutes", "دقائق"],
+    [left.s, "Seconds", "ثواني"],
+  ];
 
   return (
-    <section className="overflow-hidden py-14 sm:py-20">
+    <section className="py-12 sm:py-20" dir={isArabic ? "rtl" : "ltr"}>
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
-        <div className="relative overflow-hidden z-1 rounded-2xl bg-gradient-to-br from-[#F3E3D9] to-[#EAD3E6] p-5 sm:p-7.5 lg:p-10 xl:p-15">
-          <div
-            className={`relative z-10 max-w-[422px] w-full ${
-              isArabic ? "text-right lg:ml-auto" : "lg:mr-auto"
-            }`}
-          >
-            <span className="block font-medium text-custom-1 text-blue mb-2.5">
-              {isArabic ? config.eyebrowAr : config.eyebrowEn}
+        <div className="grid md:grid-cols-[1.1fr_0.9fr] overflow-hidden rounded-3xl bg-[#F4EDE8] ring-1 ring-blue/10">
+          <div className="order-last md:order-first p-6 sm:p-10 lg:p-14 flex flex-col justify-center text-center md:text-start">
+            <span className="inline-flex self-center md:self-start items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-xs sm:text-sm font-semibold text-blue mb-4">
+              <span className="relative flex w-2 h-2">
+                <span className="absolute inset-0 rounded-full bg-blue animate-ping opacity-60" />
+                <span className="relative w-2 h-2 rounded-full bg-blue" />
+              </span>
+              {t(config.eyebrowEn, config.eyebrowAr)}
             </span>
 
-            <h2 className="font-bold text-dark text-xl lg:text-heading-4 xl:text-heading-3 mb-3">
-              {isArabic ? config.titleAr : config.titleEn}
-            </h2>
+            <h2 className="font-bold text-dark text-2xl sm:text-3xl lg:text-[40px] leading-tight mb-7">{t(config.titleEn, config.titleAr)}</h2>
 
-            {/* <!-- Countdown timer --> */}
-            <div
-              className={`flex flex-wrap gap-3 sm:gap-6 mt-6 ${
-                isArabic ? "justify-end" : "justify-start"
-              }`}
-            >
-              {/* <!-- timer day --> */}
-              <div>
-                <span className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2">
-                  {" "}
-                  {days < 10 ? "0" + days : days}{" "}
-                </span>
-                <span className="block text-custom-sm text-dark text-center">
-                  {isArabic ? "أيام" : "Days"}
-                </span>
-              </div>
-
-              {/* <!-- timer hours --> */}
-              <div>
-                <span className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2">
-                  {" "}
-                  {hours < 10 ? "0" + hours : hours}{" "}
-                </span>
-                <span className="block text-custom-sm text-dark text-center">
-                  {isArabic ? "ساعات" : "Hours"}
-                </span>
-              </div>
-
-              {/* <!-- timer minutes --> */}
-              <div>
-                <span className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2">
-                  {minutes < 10 ? "0" + minutes : minutes}{" "}
-                </span>
-                <span className="block text-custom-sm text-dark text-center">
-                  {isArabic ? "دقائق" : "Minutes"}
-                </span>
-              </div>
-
-              {/* <!-- timer seconds --> */}
-              <div>
-                <span className="min-w-[64px] h-14.5 font-semibold text-xl lg:text-3xl text-dark rounded-lg flex items-center justify-center bg-white shadow-2 px-4 mb-2">
-                  {seconds < 10 ? "0" + seconds : seconds}{" "}
-                </span>
-                <span className="block text-custom-sm text-dark text-center">
-                  {isArabic ? "ثوانٍ" : "Seconds"}
-                </span>
-              </div>
+            <div className="flex justify-center md:justify-start gap-2 sm:gap-3 mb-8" role="timer" aria-live="off">
+              {units.map(([v, en, ar], i) => (
+                <React.Fragment key={en}>
+                  <div className="flex flex-col items-center">
+                    <span className="relative w-[62px] sm:w-[76px] h-[64px] sm:h-[78px] rounded-2xl bg-white shadow-[0_10px_30px_-18px_rgba(47,36,31,.5)] flex items-center justify-center overflow-hidden">
+                      <span key={v} className="cd-tick font-bold text-2xl sm:text-[32px] text-dark tabular-nums">
+                        {String(v).padStart(2, "0")}
+                      </span>
+                    </span>
+                    <span className="mt-2 text-[11px] sm:text-xs font-medium uppercase tracking-wider text-dark-4">{t(en, ar)}</span>
+                  </div>
+                  {i < units.length - 1 && <span className="self-start mt-[20px] sm:mt-[26px] text-xl font-bold text-blue/40">:</span>}
+                </React.Fragment>
+              ))}
             </div>
-            {/* <!-- Countdown timer ends --> */}
 
             <a
               href={config.href}
-              className="inline-flex font-medium text-custom-sm text-white bg-blue py-3 px-9.5 rounded-md ease-out duration-200 hover:bg-blue-dark mt-7.5"
+              className="group self-center md:self-start inline-flex items-center gap-2.5 rounded-full bg-dark hover:bg-blue text-white font-semibold text-sm sm:text-[15px] py-3.5 px-8 transition-colors"
             >
-              {isArabic ? config.ctaAr : config.ctaEn}
+              {t(config.ctaEn, config.ctaAr)}
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1 rtl:-scale-x-100 rtl:group-hover:-translate-x-1">
+                <path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </a>
           </div>
 
           {config.image && (
-            <div
-              className={`hidden lg:block absolute bottom-0 -z-1 ${
-                isArabic ? "left-0" : "right-0"
-              }`}
-              style={{ width: 480, height: "100%" }}
-            >
-              <div className="relative w-full h-full">
-                <Image
-                  src={config.image}
-                  alt="featured product"
-                  fill
-                  className="object-cover object-top"
-                  sizes="480px"
-                />
-              </div>
+            <div className="relative min-h-[300px] sm:min-h-[380px] md:min-h-full bg-[#EDE5E0]">
+              <Image src={config.image} alt="" fill sizes="(max-width: 768px) 100vw, 520px" className="object-cover object-top" />
             </div>
           )}
         </div>
