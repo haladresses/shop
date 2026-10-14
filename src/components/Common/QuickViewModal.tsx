@@ -15,6 +15,7 @@ import { updateproductDetails } from "@/redux/features/product-details";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { fetchProductBySlug, mapApiProduct } from "@/lib/storefront";
 import { flyToCart } from "@/lib/cartFx";
+import { useSmartAdd } from "@/components/Common/QuickAddSheet";
 
 const PLACEHOLDER_IMAGE = "/images/products/p1.png";
 
@@ -84,15 +85,15 @@ const QuickViewModal = () => {
   };
 
   // add to cart
-  const handleAddToCart = (e?: React.MouseEvent) => {
+  // Products with sizes/colours go through the option picker (never added blind).
+  const smart = useSmartAdd(product);
+  const handleAddToCart = async (e?: React.MouseEvent<HTMLElement>) => {
+    if (product.options === undefined || product.options.length > 0) {
+      await smart.add(e);
+      return;
+    }
     flyToCart(e?.currentTarget ?? null, product.imgs?.previews?.[0]);
-    dispatch(
-      addItemToCart({
-        ...product,
-        quantity,
-      })
-    );
-
+    dispatch(addItemToCart({ ...product, quantity }));
     closeModal();
   };
 
@@ -120,6 +121,7 @@ const QuickViewModal = () => {
       className={`${isModalOpen ? "z-99999" : "hidden"
         } fixed top-0 left-0 overflow-y-auto no-scrollbar w-full h-screen sm:py-20 xl:py-25 2xl:py-[230px] bg-dark/70 sm:px-8 px-4 py-5`}
     >
+      {smart.sheet}
       <div className="flex items-center justify-center ">
         <div className="w-full max-w-[1100px] rounded-xl shadow-3 bg-white p-7.5 relative modal-content">
           <button

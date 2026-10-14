@@ -4,10 +4,9 @@ import { useDispatch } from "react-redux";
 import { useLanguage } from "@/app/context/LanguageContext";
 
 import { removeItemFromWishlist } from "@/redux/features/wishlist-slice";
-import { addItemToCart } from "@/redux/features/cart-slice";
 
 import Image from "next/image";
-import { flyToCart } from "@/lib/cartFx";
+import { useSmartAdd } from "@/components/Common/QuickAddSheet";
 
 const SingleItem = ({ item }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -31,15 +30,9 @@ const SingleItem = ({ item }) => {
     dispatch(removeItemFromWishlist(item.id));
   };
 
-  const handleAddToCart = (e?: React.MouseEvent) => {
-    flyToCart(e?.currentTarget ?? null, item.imgs?.thumbnails?.[0]);
-    dispatch(
-      addItemToCart({
-        ...item,
-        quantity: 1,
-      })
-    );
-  };
+  // Products with sizes/colours open the option picker first.
+  const smart = useSmartAdd(item as never);
+  const handleAddToCart = (e?: React.MouseEvent<HTMLElement>) => smart.add(e);
 
   return (
     <div dir={isArabic ? "rtl" : "ltr"} className="flex items-center border-t border-gray-3 py-5 px-10">
@@ -128,6 +121,7 @@ const SingleItem = ({ item }) => {
           {copy.addToCart}
         </button>
       </div>
+      {smart.sheet}
     </div>
   );
 };

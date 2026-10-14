@@ -133,6 +133,13 @@ type Sale = {
 
 const HELD_KEY = "hala-pos-held-carts";
 const lineKey = (l: { variantId: string | null; productId: string }) => l.variantId || l.productId;
+
+/** One catalogue tile per product — its sellable options grouped together. */
+function groupLines(lines: PosLine[]): PosLine[][] {
+  const m = new Map<string, PosLine[]>();
+  for (const l of lines) m.set(l.productId, [...(m.get(l.productId) ?? []), l]);
+  return Array.from(m.values());
+}
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
 
 function readHeld(): HeldCart[] {
@@ -210,6 +217,8 @@ export default function PosPage() {
   const [checkingOut, setCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   const [cartOpen, setCartOpen] = useState(false); // mobile drawer
+  // Option picker for a product with several colours/sizes.
+  const [picker, setPicker] = useState<PosLine[] | null>(null);
   const [heldOpen, setHeldOpen] = useState(false);
   const [held, setHeld] = useState<HeldCart[]>([]);
   const [salesOpen, setSalesOpen] = useState(false);
@@ -1008,13 +1017,17 @@ export default function PosPage() {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2.5">
-                {catalog.map((r) => {
-                  const outOfStock = r.stock !== null && r.stock <= 0;
-                  const inCart = cart.find((l) => lineKey(l) === lineKey(r))?.quantity ?? 0;
+                {groupLines(catalog).map((g) => {
+                  const r = g[0];
+                  const stock = g.every((l) => l.stock === null) ? null : g.reduce((n, l) => n + (l.stock ?? 0), 0);
+                  const outOfStock = stock !== null && stock <= 0;
+                  const inCart = cart.filter((l) => l.productId === r.productId).reduce((n, l) => n + l.quantity, 0);
+                  const colors = Array.from(new Set(g.map((l) => l.color).filter(Boolean)));
+                  const sizes = Array.from(new Set(g.map((l) => l.size).filter(Boolean)));
                   return (
                     <button
-                      key={`${r.productId}-${r.variantId ?? "base"}`}
-                      onClick={() => !outOfStock && addLine(r)}
+                      key={r.productId}
+                      onClick={() => !outOfStock && (g.length === 1 ? addLine(r) : setPicker(g))}
                       disabled={outOfStock}
                       className="relative text-left rounded-2xl bg-white overflow-hidden shadow-sm ring-1 ring-slate-200/70 hover:ring-rose-300 hover:shadow-md active:scale-[0.98] transition-all disabled:opacity-45 disabled:active:scale-100"
                     >
@@ -1027,24 +1040,22 @@ export default function PosPage() {
                         )}
                       </div>
                       {inCart > 0 && (
-                        <span className="absolute top-2 right-2 min-w-[24px] h-6 px-1.5 rounded-full bg-rose-500 text-white text-xs font-bold flex items-center justify-center shadow">
-                          {inCart}
-                        </span>
+                        <span className="absolute top-2 right-2 min-w-[24px] h-6 px-1.5 rounded-full bg-rose-500 text-white text-xs font-bold flex items-center justify-center shadow">{inCart}</span>
                       )}
-                      {r.stock !== null && r.stock > 0 && r.stock <= 3 && (
-                        <span className="absolute top-2 left-2 text-[10px] font-semibold rounded-full bg-amber-400/95 text-white px-2 py-0.5">
-                          {r.stock} left
-                        </span>
+                      {g.length > 1 && (
+                        <span className="absolute top-2 left-2 text-[10px] font-semibold rounded-full bg-white/95 text-slate-700 px-2 py-0.5 shadow-sm">{g.length} options</span>
                       )}
                       <div className="px-2.5 py-2">
                         <p className="text-[12px] font-medium text-slate-800 truncate leading-tight">{r.nameEn}</p>
-                        <p className="text-[11px] text-slate-400 truncate leading-tight min-h-[14px]">{formatVariantLabel(r)}</p>
+                        <p className="text-[11px] text-slate-400 truncate leading-tight min-h-[14px]">
+                          {g.length === 1 ? formatVariantLabel(r) : [colors.length > 1 ? `${colors.length} colours` : colors[0], sizes.length > 1 ? `${sizes[0]}–${sizes[sizes.length - 1]}` : sizes[0]].filter(Boolean).join(" · ")}
+                        </p>
                         <div className="flex items-center justify-between mt-1">
-                          <span className="text-[13px] font-semibold text-slate-800">{r.unitPrice.toFixed(3)}</span>
+                          <span className="text-[13px] font-semibold text-slate-800">{Math.min(...g.map((l) => l.unitPrice)).toFixed(3)}</span>
                           {outOfStock ? (
                             <span className="text-[10px] text-rose-500 font-medium">Sold out</span>
-                          ) : r.stock !== null ? (
-                            <span className="text-[10px] text-slate-400">{r.stock} pcs</span>
+                          ) : stock !== null ? (
+                            <span className={`text-[10px] ${stock <= 3 ? "text-amber-600 font-semibold" : "text-slate-400"}`}>{stock} pcs</span>
                           ) : null}
                         </div>
                       </div>
@@ -1160,6 +1171,18 @@ export default function PosPage() {
           {checkingOut ? <LuLoaderCircle size={20} className="animate-spin" /> : <>Complete sale · {omr(total)}</>}
         </button>
       </PosModal>
+
+      {picker && (
+        <OptionPicker
+          lines={picker}
+          inCart={(key) => cart.find((l) => lineKey(l) === key)?.quantity ?? 0}
+          onClose={() => setPicker(null)}
+          onAdd={(line, qty) => {
+            for (let i = 0; i < qty; i++) addLine(line);
+            setPicker(null);
+          }}
+        />
+      )}
 
       {/* Held carts */}
       <PosModal open={heldOpen} onClose={() => setHeldOpen(false)} title="Held sales">
@@ -1709,5 +1732,109 @@ function ShiftReport({ s, store }: { s: ShiftSummary; store: StoreInfo }) {
         </div>
       )}
     </div>
+  );
+}
+
+const SIZE_ORDER: Record<string, number> = { XXS: 0, XS: 1, S: 2, M: 3, L: 4, XL: 5, XXL: 6 };
+const bySize = (a: string, b: string) => (SIZE_ORDER[a.toUpperCase()] ?? 50 + (parseFloat(a) || 0)) - (SIZE_ORDER[b.toUpperCase()] ?? 50 + (parseFloat(b) || 0)) || a.localeCompare(b);
+
+/** Pick the exact colour + size (with live stock) so the right item is deducted. */
+function OptionPicker({
+  lines,
+  inCart,
+  onClose,
+  onAdd,
+}: {
+  lines: PosLine[];
+  inCart: (key: string) => number;
+  onClose: () => void;
+  onAdd: (line: PosLine, qty: number) => void;
+}) {
+  const p = lines[0];
+  const colors = Array.from(new Set(lines.map((l) => l.color ?? "")));
+  const firstAvailable = lines.find((l) => l.stock === null || l.stock - inCart(lineKey(l)) > 0) ?? lines[0];
+  const [color, setColor] = useState(firstAvailable.color ?? "");
+  const forColor = lines.filter((l) => (l.color ?? "") === color).sort((a, b) => bySize(a.size ?? "", b.size ?? ""));
+  const [selected, setSelected] = useState<PosLine | null>(forColor.length === 1 ? forColor[0] : firstAvailable);
+  const [qty, setQty] = useState(1);
+  const left = (l: PosLine) => (l.stock === null ? Infinity : l.stock - inCart(lineKey(l)));
+  const sel = selected && (selected.color ?? "") === color ? selected : null;
+  const maxQty = sel ? Math.min(99, left(sel)) : 0;
+
+  return (
+    <PosModal open onClose={onClose} title={p.nameEn} size="md">
+      <div className="flex gap-4 mb-5">
+        <div className="w-20 h-24 rounded-xl bg-slate-100 overflow-hidden shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {p.imageUrl && <img src={p.imageUrl} alt="" className="w-full h-full object-cover" />}
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-slate-900">{omr(sel?.unitPrice ?? p.unitPrice)}</p>
+          <p className="text-sm text-slate-500 mt-1">{sel ? formatVariantLabel(sel) || "Standard" : "Choose an option"}</p>
+          {sel?.sku && <p className="text-xs text-slate-400 font-mono mt-1">SKU {sel.sku}</p>}
+        </div>
+      </div>
+
+      {colors.length > 1 || colors[0] ? (
+        <div className="mb-5">
+          <p className="text-sm font-medium text-slate-700 mb-2">Colour</p>
+          <div className="flex flex-wrap gap-2">
+            {colors.map((c) => {
+              const any = lines.some((l) => (l.color ?? "") === c && left(l) > 0);
+              return (
+                <button
+                  key={c || "none"}
+                  onClick={() => { setColor(c); setSelected(lines.filter((l) => (l.color ?? "") === c).find((l) => left(l) > 0) ?? null); setQty(1); }}
+                  disabled={!any}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition ${color === c ? "bg-rose-50 text-rose-700 ring-1 ring-rose-300" : "bg-slate-100 text-slate-700"} disabled:opacity-35 disabled:line-through`}
+                >
+                  {c || "Standard"}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
+      {forColor.some((l) => l.size) && (
+        <div className="mb-5">
+          <p className="text-sm font-medium text-slate-700 mb-2">Size</p>
+          <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+            {forColor.map((l) => {
+              const n = left(l);
+              const on = sel && lineKey(sel) === lineKey(l);
+              return (
+                <button
+                  key={lineKey(l)}
+                  onClick={() => { setSelected(l); setQty(1); }}
+                  disabled={n <= 0}
+                  className={`relative h-14 rounded-xl text-sm font-semibold transition flex flex-col items-center justify-center ${on ? "bg-rose-500 text-white" : "bg-slate-100 text-slate-800"} disabled:opacity-35`}
+                >
+                  {l.size || "—"}
+                  <span className={`text-[10px] font-medium ${on ? "text-white/80" : n <= 2 ? "text-amber-600" : "text-slate-400"}`}>
+                    {n === Infinity ? "" : n <= 0 ? "0 left" : `${n} left`}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3">
+        <div className="flex items-center rounded-xl bg-slate-100">
+          <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="w-11 h-12 flex items-center justify-center text-slate-600" aria-label="Decrease"><LuMinus size={16} /></button>
+          <span className="w-8 text-center font-semibold tabular-nums">{qty}</span>
+          <button onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={qty >= maxQty} className="w-11 h-12 flex items-center justify-center text-slate-600 disabled:opacity-30" aria-label="Increase"><LuPlus size={16} /></button>
+        </div>
+        <button
+          onClick={() => sel && onAdd(sel, qty)}
+          disabled={!sel || maxQty <= 0}
+          className="flex-1 h-12 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 disabled:opacity-40"
+        >
+          {sel ? `Add ${qty} · ${omr(sel.unitPrice * qty)}` : "Choose a size"}
+        </button>
+      </div>
+    </PosModal>
   );
 }

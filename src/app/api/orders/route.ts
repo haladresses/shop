@@ -118,12 +118,18 @@ export async function POST(req: NextRequest) {
 
       let unitPrice = Number(product.salePrice || product.basePrice);
       let variant = null;
+      // A product sold in sizes/colours must be ordered as one exact option,
+      // otherwise stock can't be reduced and the order wouldn't say what was sold.
+      const activeOptions = product.variants.filter((v) => v.isActive);
+      if (!item.variantId && activeOptions.length > 0) {
+        return error(`Please choose the size / colour for ${product.nameEn}`);
+      }
       if (item.variantId) {
-        variant = product.variants.find((v) => v.id === item.variantId) || null;
+        variant = activeOptions.find((v) => v.id === item.variantId) || null;
         if (!variant) return error(`Variant not found for ${product.nameEn}`);
         if (variant) unitPrice += Number(variant.priceAdjustment);
         if ((variant.inventory?.quantity ?? 0) < item.quantity) {
-          return error(`Not enough stock for ${product.nameEn}${variant.color ? ` (${variant.color})` : ""}`);
+          return error(`Not enough stock for ${product.nameEn} (${[variant.color, variant.size].filter(Boolean).join(" / ") || "this option"}) — ${variant.inventory?.quantity ?? 0} left`);
         }
       }
 
@@ -215,11 +221,14 @@ export async function POST(req: NextRequest) {
 
       for (const item of items) {
         if (!item.variantId) continue;
+        const inv = await tx.inventory.findUnique({ where: { variantId: item.variantId }, select: { quantity: true } });
         await tx.inventoryTransaction.create({
           data: {
             inventory: { connect: { variantId: item.variantId } },
             type: "SALE",
             quantity: item.quantity,
+            reference: created.orderNumber,
+            balanceAfter: inv?.quantity ?? null,
             note: `Online order ${created.orderNumber}`,
             createdBy: sessionUser?.id || null,
           },

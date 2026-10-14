@@ -200,3 +200,42 @@ export default function QuickAddSheet({ item, onClose }: { item: Product; onClos
     document.body,
   );
 }
+
+/**
+ * Add-to-cart that never skips the size/colour choice: products with options
+ * open the picker; simple products are added directly. When the caller only
+ * has a thin product (e.g. from the wishlist), its options are fetched first.
+ */
+export function useSmartAdd(item: Product) {
+  const dispatch = useDispatch<AppDispatch>();
+  const [sheetItem, setSheetItem] = useState<Product | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const add = async (e?: React.MouseEvent<HTMLElement>) => {
+    const from = e?.currentTarget ?? null;
+    let full = item;
+    if (!item.options) {
+      setBusy(true);
+      try {
+        const d = await fetch(`/api/products/${item.id}`).then((r) => r.json());
+        if (d.success) {
+          const { mapApiProduct } = await import("@/lib/storefront");
+          full = { ...mapApiProduct(d.data), title: item.title || mapApiProduct(d.data).title };
+        }
+      } catch {
+        /* fall back to the thin item */
+      } finally {
+        setBusy(false);
+      }
+    }
+    if (full.options && full.options.length > 0) {
+      setSheetItem(full);
+      return;
+    }
+    flyToCart(from, full.imgs?.previews?.[0]);
+    dispatch(addItemToCart({ ...full, quantity: 1 } as never));
+  };
+
+  const sheet = sheetItem ? <QuickAddSheet item={sheetItem} onClose={() => setSheetItem(null)} /> : null;
+  return { add, sheet, busy };
+}
