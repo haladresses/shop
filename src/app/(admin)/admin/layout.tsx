@@ -21,6 +21,8 @@ const pageTitles: Record<string, string> = {
   "/admin/categories": "Categories",
   "/admin/orders": "Orders",
   "/admin/reports": "Sales Report",
+  "/admin/finance": "Finance & Profit / Loss",
+  "/admin/returns": "Returns & Refunds",
   "/admin/inventory": "Inventory",
   "/admin/payments": "Payments",
   "/admin/coupons": "Coupons",

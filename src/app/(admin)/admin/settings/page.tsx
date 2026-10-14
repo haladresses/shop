@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { LuCheck } from "react-icons/lu";
 import FooterSettings from "@/components/admin/FooterSettings";
 import BackupSettings from "@/components/admin/BackupSettings";
+import PaymentGatewaySettings from "@/components/admin/PaymentGatewaySettings";
 
 const DEFAULT_SETTINGS = [
   { key: "store_name_en", group: "general", labelEn: "Store Name (English)", type: "string", defaultValue: "Hala Dresses" },
@@ -22,7 +23,7 @@ const DEFAULT_SETTINGS = [
   { key: "whatsapp_number", group: "social", labelEn: "WhatsApp Number", type: "string", defaultValue: "" },
 ];
 
-const groups = ["general", "shipping", "checkout", "notifications", "social", "footer", "backup"];
+const groups = ["general", "shipping", "checkout", "payment gateway", "notifications", "social", "footer", "backup"];
 
 export default function SettingsPage() {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -30,6 +31,20 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [activeGroup, setActiveGroup] = useState("general");
+  const [permissions, setPermissions] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Deep link, e.g. /admin/settings?tab=payment-gateway
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    if (tab) setActiveGroup(tab.replace(/-/g, " "));
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d) => d.success && setPermissions(d.data.permissions || []))
+      .catch(() => {});
+  }, []);
+
+  // The gateway holds payment secrets — only for payment managers.
+  const visibleGroups = groups.filter((g) => g !== "payment gateway" || permissions.includes("admin.payments.manage"));
 
   useEffect(() => {
     fetch("/api/settings")
@@ -66,7 +81,7 @@ export default function SettingsPage() {
     <div className="space-y-6 max-w-3xl">
       {/* Group Tabs */}
       <div className="flex gap-2 flex-wrap">
-        {groups.map((g) => (
+        {visibleGroups.map((g) => (
           <button
             key={g}
             onClick={() => setActiveGroup(g)}
@@ -79,7 +94,9 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      {activeGroup === "footer" ? (
+      {activeGroup === "payment gateway" ? (
+        permissions.includes("admin.payments.manage") ? <PaymentGatewaySettings /> : null
+      ) : activeGroup === "footer" ? (
         <FooterSettings />
       ) : activeGroup === "backup" ? (
         <BackupSettings />

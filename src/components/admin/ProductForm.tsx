@@ -52,6 +52,7 @@ export type ProductFormValue = {
   categoryId: string;
   basePrice: string;
   salePrice: string;
+  costPrice: string;
   sku: string;
   barcode: string;
   isActive: boolean;
@@ -67,7 +68,7 @@ type Category = { id: string; nameEn: string };
 
 export const emptyProductForm: ProductFormValue = {
   nameEn: "", nameAr: "", descriptionEn: "", descriptionAr: "",
-  categoryId: "", basePrice: "", salePrice: "", sku: "", barcode: "",
+  categoryId: "", basePrice: "", salePrice: "", costPrice: "", sku: "", barcode: "",
   isActive: true, isFeatured: false, isNew: true, isBestSeller: false,
   attributes: {}, images: [], variants: [],
 };
@@ -82,6 +83,7 @@ export function buildProductPayload(form: ProductFormValue) {
     categoryId: form.categoryId,
     basePrice: parseFloat(form.basePrice),
     salePrice: form.salePrice ? parseFloat(form.salePrice) : null,
+    costPrice: form.costPrice ? parseFloat(form.costPrice) : null,
     sku: form.sku || undefined,
     barcode: form.barcode || undefined,
     isActive: form.isActive,
@@ -384,17 +386,22 @@ export default function ProductForm({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <Label required>Base Price (OMR)</Label>
+              <Label>Purchase Price (OMR)</Label>
+              <input type="number" step="0.001" min="0" className="admin-input" value={form.costPrice} onChange={(e) => set("costPrice", e.target.value)} placeholder="What you paid per unit" />
+            </div>
+            <div>
+              <Label required>Selling Price (OMR)</Label>
               <input type="number" step="0.001" min="0" className="admin-input" value={form.basePrice} onChange={(e) => set("basePrice", e.target.value)} required />
             </div>
             <div>
               <Label>Sale Price (OMR)</Label>
-              <input type="number" step="0.001" min="0" className="admin-input" value={form.salePrice} onChange={(e) => set("salePrice", e.target.value)} />
+              <input type="number" step="0.001" min="0" className="admin-input" value={form.salePrice} onChange={(e) => set("salePrice", e.target.value)} placeholder="Discounted price (optional)" />
             </div>
-            <div>
-              <Label>SKU</Label>
-              <input className="admin-input" value={form.sku} onChange={(e) => set("sku", e.target.value)} />
-            </div>
+          </div>
+          <MarginPreview cost={form.costPrice} price={form.salePrice || form.basePrice} />
+          <div>
+            <Label>SKU</Label>
+            <input className="admin-input" value={form.sku} onChange={(e) => set("sku", e.target.value)} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
             <div>
@@ -690,6 +697,32 @@ function AttributeField({
     <div>
       {label}
       <input className="admin-input" value={(value as string) || ""} placeholder={def.placeholder || ""} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
+/** Live profit-per-unit preview from the purchase and selling price. */
+function MarginPreview({ cost, price }: { cost: string; price: string }) {
+  const c = parseFloat(cost);
+  const p = parseFloat(price);
+  if (!(p > 0)) return null;
+  if (!(c >= 0) || cost === "") {
+    return (
+      <p className="text-xs text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+        Add a purchase price to track profit &amp; loss and stock value for this product.
+      </p>
+    );
+  }
+  const profit = p - c;
+  const margin = (profit / p) * 100;
+  const markup = c > 0 ? (profit / c) * 100 : null;
+  const good = profit > 0;
+  return (
+    <div className={`flex flex-wrap items-center gap-x-6 gap-y-1 text-sm rounded-lg px-3 py-2 border ${good ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-rose-50 border-rose-100 text-rose-700"}`}>
+      <span>Profit / unit: <strong>{profit.toFixed(3)} OMR</strong></span>
+      <span>Margin: <strong>{margin.toFixed(1)}%</strong></span>
+      {markup !== null && <span>Markup: <strong>{markup.toFixed(1)}%</strong></span>}
+      {!good && <span className="font-medium">Selling below cost — this product loses money.</span>}
     </div>
   );
 }

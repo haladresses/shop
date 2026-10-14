@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { canViewCost, withoutCost } from "@/lib/productCost";
 import { getAuthFromRequest, userHasAnyPermission, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { slugify } from "@/lib/utils";
@@ -105,9 +106,11 @@ export async function GET(req: NextRequest) {
     }
     const facetColors = Array.from(colorMap.entries()).map(([value, hex]) => ({ value, hex }));
 
+    const showCost = await canViewCost(req);
+
     return NextResponse.json({
       success: true,
-      data: products,
+      data: showCost ? products : products.map(withoutCost),
       meta: {
         page,
         pageSize,

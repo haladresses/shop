@@ -37,6 +37,8 @@ export const productSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
   basePrice: z.number().positive("Price must be positive"),
   salePrice: z.number().positive().optional().nullable(),
+  // Purchase price per unit — used for profit & loss and stock valuation.
+  costPrice: z.number().min(0).optional().nullable(),
   sku: z.string().optional(),
   barcode: z.string().optional(),
   isActive: z.boolean().default(true),

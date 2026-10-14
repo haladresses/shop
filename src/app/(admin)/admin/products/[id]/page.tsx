@@ -33,6 +33,7 @@ type ApiProduct = {
   categoryId: string;
   basePrice: string | number;
   salePrice: string | number | null;
+  costPrice?: string | number | null;
   sku: string | null;
   barcode?: string | null;
   isActive: boolean;
@@ -53,6 +54,7 @@ function toFormValue(p: ApiProduct): ProductFormValue {
     categoryId: p.categoryId,
     basePrice: String(p.basePrice ?? ""),
     salePrice: p.salePrice == null ? "" : String(p.salePrice),
+    costPrice: p.costPrice == null ? "" : String(p.costPrice),
     sku: p.sku ?? "",
     barcode: p.barcode ?? "",
     isActive: p.isActive,

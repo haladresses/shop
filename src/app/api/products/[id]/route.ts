@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
+import { canViewCost, withoutCost } from "@/lib/productCost";
 import { getAuthFromRequest, userHasAnyPermission, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
 import { productUpdateSchema } from "@/lib/validations/product";
 import { Prisma } from "@prisma/client";
 
-export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const product = await prisma.product.findUnique({
@@ -32,7 +33,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
     });
 
     if (!product) return notFound("Product");
-    return ok(product);
+    return ok((await canViewCost(req)) ? product : withoutCost(product));
   } catch (e) {
     return serverError(e);
   }

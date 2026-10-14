@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, unauthorized, forbidden, serverError } from "@/lib/api/response";
@@ -77,6 +77,9 @@ export async function GET(req: NextRequest) {
     const q = (sp.get("q") || "").trim();
     const categoryId = (sp.get("categoryId") || "").trim();
     const color = (sp.get("color") || "").trim();
+    const page = Math.max(1, parseInt(sp.get("page") || "1"));
+    const inStockOnly = sp.get("inStock") === "true";
+    const PAGE_SIZE = 36;
 
     if (barcode) {
       const product = await prisma.product.findFirst({
@@ -96,8 +99,10 @@ export async function GET(req: NextRequest) {
 
     // Browse/search mode — combines free-text search with category/color
     // filters, or (with none set) just lists the catalogue for browsing.
+    // Paged so the grid can scroll through a very large catalogue.
     const products = await prisma.product.findMany({
       where: {
+        ...(inStockOnly && { variants: { some: { isActive: true, inventory: { quantity: { gt: 0 } } } } }),
         isActive: true,
         ...(categoryId && { categoryId }),
         ...(color && { variants: { some: { isActive: true, color } } }),
@@ -113,12 +118,16 @@ export async function GET(req: NextRequest) {
         }),
       },
       include: PRODUCT_INCLUDE,
-      orderBy: { nameEn: "asc" },
-      take: 40,
+      orderBy: [{ nameEn: "asc" }, { id: "asc" }],
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE + 1,
     });
 
-    const lines = products.flatMap(toLines);
-    return ok(color ? lines.filter((l) => l.color === color) : lines);
+    const hasMore = products.length > PAGE_SIZE;
+    let lines = products.slice(0, PAGE_SIZE).flatMap(toLines);
+    if (color) lines = lines.filter((l) => l.color === color);
+    if (inStockOnly) lines = lines.filter((l) => l.stock === null || l.stock > 0);
+    return NextResponse.json({ success: true, data: lines, meta: { page, hasMore } });
   } catch (e) {
     return serverError(e);
   }

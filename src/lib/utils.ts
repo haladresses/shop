@@ -11,7 +11,9 @@ export function generateOrderNumber(): string {
   const yy = date.getFullYear().toString().slice(-2);
   const mm = String(date.getMonth() + 1).padStart(2, "0");
   const dd = String(date.getDate()).padStart(2, "0");
-  const random = Math.floor(Math.random() * 9000) + 1000;
+  // 6 digits: a 4-digit suffix collides (unique violation) far too often
+  // once a busy day has a few hundred orders.
+  const random = Math.floor(Math.random() * 900000) + 100000;
   return `HD-${yy}${mm}${dd}-${random}`;
 }
 

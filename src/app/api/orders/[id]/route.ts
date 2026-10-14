@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
+import { canViewCost, withoutCost } from "@/lib/productCost";
 import { getAuthFromRequest, userHasAnyPermission, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
 import { updateOrderSchema } from "@/lib/validations/order";
@@ -24,6 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           },
         },
         payments: { orderBy: { createdAt: "desc" } },
+        refunds: { orderBy: { createdAt: "desc" } },
         waselleeBranch: true,
       },
     });
@@ -38,7 +40,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         ? await buildWaselleeManualWhatsAppLink(order, order.waselleeBranch, payment || "CASH_ON_DELIVERY")
         : null;
 
-    return ok({ ...order, waselleeManualWhatsAppLink });
+    // Purchase prices are internal — strip them for the shopper's own view.
+    const items = (await canViewCost(req))
+      ? order.items
+      : order.items.map((it) => {
+          const { unitCost, product, ...item } = it;
+          void unitCost;
+          return { ...item, product: withoutCost(product) };
+        });
+
+    return ok({ ...order, items, waselleeManualWhatsAppLink });
   } catch (e) {
     return serverError(e);
   }
@@ -63,7 +74,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         id: true,
         status: true,
         orderNumber: true,
-        items: { select: { variantId: true, quantity: true } },
+        items: { select: { id: true, variantId: true, quantity: true } },
+        refunds: { select: { items: true, restocked: true } },
       },
     });
     if (!existing) return notFound("Order");
@@ -100,16 +112,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const order = isNewlyReturned
       ? await prisma.$transaction(async (tx) => {
+          // Units already put back by an earlier (partial) return must not
+          // be restocked a second time.
+          const alreadyReturned = new Map<string, number>();
+          for (const r of existing.refunds) {
+            if (!r.restocked || !Array.isArray(r.items)) continue;
+            for (const raw of r.items) {
+              const ri = (raw ?? {}) as { orderItemId?: string; quantity?: number };
+              if (ri.orderItemId) alreadyReturned.set(ri.orderItemId, (alreadyReturned.get(ri.orderItemId) ?? 0) + Number(ri.quantity ?? 0));
+            }
+          }
           for (const item of existing.items) {
             if (!item.variantId) continue;
+            const qty = item.quantity - (alreadyReturned.get(item.id) ?? 0);
+            if (qty <= 0) continue;
             await tx.inventory.update({
               where: { variantId: item.variantId },
               data: {
-                quantity: { increment: item.quantity },
+                quantity: { increment: qty },
                 transactions: {
                   create: {
                     type: "RETURN",
-                    quantity: item.quantity,
+                    quantity: qty,
                     note: `Order ${existing.orderNumber} ${status?.toLowerCase()}`,
                     createdBy: user.id,
                   },

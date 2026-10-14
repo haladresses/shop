@@ -253,3 +253,23 @@ input[type='search']::-webkit-search-results-decoration {
 .range-slider__range {
   @apply !bg-blue;
 }
+/* ───────── POS ───────── */
+@keyframes pos-fade-in { from { opacity: 0 } to { opacity: 1 } }
+@keyframes pos-pop-in { from { opacity: 0; transform: translateY(12px) scale(.97) } to { opacity: 1; transform: none } }
+@keyframes pos-slide-up { from { transform: translateY(100%) } to { transform: none } }
+@keyframes pos-shake { 10%, 90% { transform: translateX(-1px) } 20%, 80% { transform: translateX(3px) } 30%, 50%, 70% { transform: translateX(-5px) } 40%, 60% { transform: translateX(5px) } }
+.pos-fade-in { animation: pos-fade-in .18s ease-out }
+.pos-pop-in { animation: pos-pop-in .22s cubic-bezier(.2, .9, .3, 1.2) }
+.pos-slide-up { animation: pos-slide-up .28s cubic-bezier(.2, .9, .3, 1) }
+.pos-shake { animation: pos-shake .4s both }
+
+@media print {
+  @page { size: 80mm auto; margin: 4mm; }
+  body * { visibility: hidden !important; }
+  .pos-receipt, .pos-receipt * { visibility: visible !important; }
+  .pos-receipt { position: fixed; left: 0; top: 0; width: 72mm !important; max-width: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pos-fade-in, .pos-pop-in, .pos-slide-up, .pos-shake { animation: none !important; }
+}

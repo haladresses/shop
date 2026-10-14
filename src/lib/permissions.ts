@@ -38,6 +38,8 @@ export const ADMIN_NAV_ITEMS: NavPermissionItem[] = [
   { href: "/admin", label: "Dashboard", permission: "admin.dashboard.view", exact: true },
   { href: "/admin/orders", label: "Orders", permission: "admin.orders.view" },
   { href: "/admin/reports", label: "Sales Report", permission: "admin.reports.view" },
+  { href: "/admin/finance", label: "Finance", permission: "admin.finance.view" },
+  { href: "/admin/returns", label: "Returns", permission: "admin.orders.view" },
   { href: "/admin/products", label: "Products", permission: "admin.products.view" },
   { href: "/admin/categories", label: "Categories", permission: "admin.categories.view" },
   { href: "/admin/inventory", label: "Inventory", permission: "admin.inventory.view" },
@@ -74,6 +76,8 @@ export const PERMISSION_CATALOG: PermissionDefinition[] = [
   { key: "admin.orders.view", label: "View Orders", description: "See order lists and details.", area: "admin", group: "Orders" },
   { key: "admin.orders.manage", label: "Manage Orders", description: "Update order statuses and operational actions.", area: "admin", group: "Orders" },
   { key: "admin.reports.view", label: "View Sales Report", description: "See revenue and order counts broken down by online vs POS.", area: "admin", group: "Orders" },
+  { key: "admin.finance.view", label: "View Finance", description: "See revenue, profit, expenses and daily/weekly/monthly/yearly finance reports.", area: "admin", group: "Finance" },
+  { key: "admin.finance.manage", label: "Manage Expenses", description: "Record, edit and delete operating expenses.", area: "admin", group: "Finance" },
   { key: "admin.products.view", label: "View Products", description: "See products inside admin screens.", area: "admin", group: "Products" },
   { key: "admin.products.manage", label: "Manage Products", description: "Create, edit, and delete products.", area: "admin", group: "Products" },
   { key: "admin.categories.view", label: "View Categories", description: "See categories and their attributes.", area: "admin", group: "Catalog" },
@@ -134,6 +138,8 @@ const DEFAULT_ROLE_PERMISSIONS: Record<Role, string[]> = {
     "admin.orders.view",
     "admin.orders.manage",
     "admin.reports.view",
+    "admin.finance.view",
+    "admin.finance.manage",
     "admin.products.view",
     "admin.products.manage",
     "admin.categories.view",
@@ -232,14 +238,33 @@ function buildDefaultMatrix(): RolePermissionsMatrix {
   }, {} as RolePermissionsMatrix);
 }
 
-export function normalizeRolePermissions(input: unknown): RolePermissionsMatrix {
+// Permissions added after a role matrix may already have been saved to the
+// database. A stored matrix that predates one of these gets it granted (once)
+// to the roles that have it by default; saving records them as known, so an
+// admin who later unticks one keeps it unticked.
+const LATER_PERMISSIONS = ["admin.finance.view", "admin.finance.manage"];
+const KNOWN_PERMISSIONS_FIELD = "__known";
+
+export function normalizeRolePermissions(input: unknown, applyLaterDefaults = false): RolePermissionsMatrix {
   const defaults = buildDefaultMatrix();
   if (!input || typeof input !== "object") return defaults;
+
+  const rawKnown = (input as Record<string, unknown>)[KNOWN_PERMISSIONS_FIELD];
+  const known = new Set(Array.isArray(rawKnown) ? rawKnown : []);
 
   for (const role of ROLE_ORDER) {
     const rolePermissions = (input as Record<string, unknown>)[role];
     if (rolePermissions !== undefined) {
-      defaults[role] = sanitizePermissions(rolePermissions);
+      const sanitized = sanitizePermissions(rolePermissions);
+      if (applyLaterDefaults) {
+        for (const key of LATER_PERMISSIONS) {
+          if (!known.has(key) && DEFAULT_ROLE_PERMISSIONS[role].includes(key) && !sanitized.includes(key)) {
+            sanitized.push(key);
+          }
+        }
+        sanitized.sort();
+      }
+      defaults[role] = sanitized;
     }
   }
 
@@ -251,7 +276,7 @@ export async function getRolePermissionsMatrix(): Promise<RolePermissionsMatrix>
   if (!row) return buildDefaultMatrix();
 
   try {
-    return normalizeRolePermissions(JSON.parse(row.value));
+    return normalizeRolePermissions(JSON.parse(row.value), true);
   } catch {
     return buildDefaultMatrix();
   }
@@ -259,10 +284,11 @@ export async function getRolePermissionsMatrix(): Promise<RolePermissionsMatrix>
 
 export async function saveRolePermissionsMatrix(matrix: RolePermissionsMatrix): Promise<RolePermissionsMatrix> {
   const normalized = normalizeRolePermissions(matrix);
+  const stored = JSON.stringify({ ...normalized, [KNOWN_PERMISSIONS_FIELD]: [...ALL_PERMISSION_KEYS] });
   await prisma.setting.upsert({
     where: { key: ROLE_PERMISSIONS_SETTING_KEY },
     update: {
-      value: JSON.stringify(normalized),
+      value: stored,
       type: "json",
       group: "security",
       labelEn: "Role permissions",
@@ -270,7 +296,7 @@ export async function saveRolePermissionsMatrix(matrix: RolePermissionsMatrix): 
     },
     create: {
       key: ROLE_PERMISSIONS_SETTING_KEY,
-      value: JSON.stringify(normalized),
+      value: stored,
       type: "json",
       group: "security",
       labelEn: "Role permissions",

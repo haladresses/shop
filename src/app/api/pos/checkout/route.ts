@@ -4,6 +4,8 @@ import prisma from "@/lib/db";
 import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { generateOrderNumber } from "@/lib/utils";
+import { round3 } from "@/lib/finance";
+import { getOpenShift } from "@/lib/posShift";
 
 const itemSchema = z.object({
   productId: z.string().min(1),
@@ -11,12 +13,22 @@ const itemSchema = z.object({
   quantity: z.number().int().positive(),
 });
 
+const paymentSchema = z.object({
+  method: z.enum(["CASH", "CARD", "BANK_TRANSFER"]),
+  amount: z.number().positive(),
+});
+
 const checkoutSchema = z.object({
   items: z.array(itemSchema).min(1, "Add at least one item"),
-  paymentMethod: z.enum(["CASH", "CARD"]),
+  // Either a single method (legacy) or a split across several.
+  paymentMethod: z.enum(["CASH", "CARD", "BANK_TRANSFER"]).optional(),
+  payments: z.array(paymentSchema).optional(),
+  // Cash handed over by the customer — anything above the cash share is change.
+  amountTendered: z.number().min(0).optional(),
   discount: z.number().min(0).default(0),
   customerPhone: z.string().optional(),
-  notes: z.string().optional(),
+  customerName: z.string().max(100).optional(),
+  notes: z.string().max(500).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -27,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     const parsed = checkoutSchema.safeParse(await req.json());
     if (!parsed.success) return error(parsed.error.issues[0].message);
-    const { items, paymentMethod, customerPhone, notes } = parsed.data;
+    const { items, customerPhone, customerName, notes } = parsed.data;
 
     const productIds = [...new Set(items.map((i) => i.productId))];
     const products = await prisma.product.findMany({
@@ -61,6 +73,7 @@ export async function POST(req: NextRequest) {
         variantId: item.variantId || null,
         quantity: item.quantity,
         unitPrice,
+        unitCost: product.costPrice,
         total: itemTotal,
         productSnapshot: {
           nameEn: product.nameEn,
@@ -75,8 +88,26 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const discount = Math.min(parsed.data.discount, subtotal);
-    const total = subtotal - discount;
+    const discount = round3(Math.min(parsed.data.discount, subtotal));
+    const total = round3(subtotal - discount);
+
+    // Payments must cover the total exactly (cash overpayment is change, and
+    // is tracked via amountTendered rather than as a payment).
+    const payments = parsed.data.payments?.length
+      ? parsed.data.payments.map((p) => ({ method: p.method, amount: round3(p.amount) }))
+      : [{ method: parsed.data.paymentMethod ?? "CASH", amount: total }];
+    const paid = round3(payments.reduce((s, p) => s + p.amount, 0));
+    if (Math.abs(paid - total) > 0.0005) {
+      return error(`Payments (${paid.toFixed(3)}) must equal the total (${total.toFixed(3)}).`);
+    }
+    const cashShare = payments.filter((p) => p.method === "CASH").reduce((s, p) => s + p.amount, 0);
+    const tendered = parsed.data.amountTendered;
+    if (tendered != null && cashShare > 0 && tendered + 0.0005 < cashShare) {
+      return error("Cash tendered is less than the cash amount due.");
+    }
+    const changeGiven = tendered != null && cashShare > 0 ? round3(tendered - cashShare) : null;
+
+    const shift = await getOpenShift(cashier.id);
 
     const customer = customerPhone
       ? await prisma.user.findUnique({ where: { phone: customerPhone } })
@@ -100,14 +131,14 @@ export async function POST(req: NextRequest) {
         data: {
           orderNumber: generateOrderNumber(),
           userId: customer?.id ?? null,
-          guestName: customer ? null : "Walk-in Customer",
+          guestName: customer ? null : customerName?.trim() || "Walk-in Customer",
           subtotal,
           shippingCost: 0,
           discount,
           total,
           notes,
           shippingAddress: {
-            nameEn: customer?.nameEn || "Walk-in Customer",
+            nameEn: customer?.nameEn || customerName?.trim() || "Walk-in Customer",
             phone: customerPhone || undefined,
             city: "In-Store",
             country: "OM",
@@ -117,9 +148,12 @@ export async function POST(req: NextRequest) {
           paymentStatus: "PAID",
           source: "POS",
           cashierId: cashier.id,
+          posShiftId: shift?.id ?? null,
+          amountTendered: tendered ?? null,
+          changeGiven,
           items: { create: orderItemsData },
           payments: {
-            create: { amount: total, method: paymentMethod, status: "PAID" },
+            create: payments.map((p) => ({ amount: p.amount, method: p.method, status: "PAID" as const })),
           },
         },
         include: { items: true, payments: true },
@@ -127,11 +161,14 @@ export async function POST(req: NextRequest) {
 
       for (const item of items) {
         if (!item.variantId) continue;
+        const inv = await tx.inventory.findUnique({ where: { variantId: item.variantId }, select: { quantity: true } });
         await tx.inventoryTransaction.create({
           data: {
             inventory: { connect: { variantId: item.variantId } },
             type: "SALE",
             quantity: item.quantity,
+            reference: created.orderNumber,
+            balanceAfter: inv?.quantity ?? null,
             note: `POS sale ${created.orderNumber}`,
             createdBy: cashier.id,
           },

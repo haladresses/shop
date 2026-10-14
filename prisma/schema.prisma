@@ -117,6 +117,7 @@ model User {
   auditLogs     AuditLog[]
   backups       Backup[]
   posSales      Order[]        @relation("PosCashier")
+  posShifts     PosShift[]
 
   @@map("users")
 }
@@ -198,6 +199,9 @@ model Product {
   categoryId    String
   basePrice     Decimal  @db.Decimal(10, 3)
   salePrice     Decimal? @db.Decimal(10, 3)
+  // Purchase/landed cost per unit — feeds COGS, gross profit and stock
+  // valuation in the finance & inventory reports. Optional.
+  costPrice     Decimal? @db.Decimal(10, 3)
   sku           String?  @unique
   // Barcode for the product itself — used when it has no variants (a variant's
   // own barcode takes precedence when one exists). Scanned at the POS.
@@ -211,8 +215,8 @@ model Product {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  category   Category         @relation(fields: [categoryId], references: [id])
-  seller     User?            @relation("SellerProducts", fields: [sellerId], references: [id])
+  category        Category                @relation(fields: [categoryId], references: [id])
+  seller          User?                   @relation("SellerProducts", fields: [sellerId], references: [id])
   images          ProductImage[]
   variants        ProductVariant[]
   orderItems      OrderItem[]
@@ -222,6 +226,8 @@ model Product {
 
   @@index([categoryId])
   @@index([sellerId])
+  @@index([isActive, createdAt])
+  @@index([basePrice])
   @@map("products")
 }
 
@@ -282,6 +288,8 @@ model ProductVariant {
   orderItems OrderItem[]
 
   @@index([productId])
+  @@index([color])
+  @@index([size])
   @@map("product_variants")
 }
 
@@ -305,26 +313,35 @@ model Order {
   notes           String?       @db.Text
   shippingAddress Json
 
-  shippingMethod       ShippingMethod        @default(STANDARD)
-  waselleeDeliveryType WaselleeDeliveryType?
-  waselleeBranchId     String?
-  waselleeBranch       WaselleeBranch?       @relation(fields: [waselleeBranchId], references: [id])
-  whatsappNotifiedAt   DateTime?
-  whatsappNotifyError  String?               @db.Text
+  shippingMethod         ShippingMethod        @default(STANDARD)
+  waselleeDeliveryType   WaselleeDeliveryType?
+  waselleeBranchId       String?
+  waselleeBranch         WaselleeBranch?       @relation(fields: [waselleeBranchId], references: [id])
+  whatsappNotifiedAt     DateTime?
+  whatsappNotifyError    String?               @db.Text
   // Manual WhatsApp-Web dispatch tracking (set when the admin sends the
   // prepared message to the driver / to Wasli from the order screen).
-  driverWhatsappSentAt    DateTime?
-  waselleeWhatsappSentAt  DateTime?
+  driverWhatsappSentAt   DateTime?
+  waselleeWhatsappSentAt DateTime?
 
   // In-store POS sales vs the online storefront; cashierId records which
   // staff member rang up a POS sale (see /pos).
-  source    OrderSource @default(ONLINE)
-  cashierId String?
+  source         OrderSource @default(ONLINE)
+  cashierId      String?
+  // POS register shift the sale was rung up in (see PosShift).
+  posShiftId     String?
+  // Sum of Refund rows for this order (partial or full returns).
+  refundedAmount Decimal     @default(0) @db.Decimal(10, 3)
+  // Cash tendered / change returned for POS cash sales.
+  amountTendered Decimal?    @db.Decimal(10, 3)
+  changeGiven    Decimal?    @db.Decimal(10, 3)
 
   user     User?       @relation(fields: [userId], references: [id])
   cashier  User?       @relation("PosCashier", fields: [cashierId], references: [id])
+  posShift PosShift?   @relation(fields: [posShiftId], references: [id])
   items    OrderItem[]
   payments Payment[]
+  refunds  Refund[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -333,17 +350,24 @@ model Order {
   @@index([orderNumber])
   @@index([waselleeBranchId])
   @@index([cashierId])
+  @@index([createdAt])
+  @@index([paymentStatus, createdAt])
+  @@index([source, createdAt])
+  @@index([posShiftId])
   @@map("orders")
 }
 
 model OrderItem {
-  id              String  @id @default(cuid())
+  id              String   @id @default(cuid())
   orderId         String
   productId       String
   variantId       String?
   quantity        Int
-  unitPrice       Decimal @db.Decimal(10, 3)
-  total           Decimal @db.Decimal(10, 3)
+  unitPrice       Decimal  @db.Decimal(10, 3)
+  // Product cost at the moment of sale, so later cost edits don't rewrite
+  // historical profit figures.
+  unitCost        Decimal? @db.Decimal(10, 3)
+  total           Decimal  @db.Decimal(10, 3)
   productSnapshot Json
 
   order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -351,6 +375,7 @@ model OrderItem {
   variant ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@index([orderId])
+  @@index([productId])
   @@map("order_items")
 }
 
@@ -372,6 +397,7 @@ model Payment {
   order Order @relation(fields: [orderId], references: [id])
 
   @@index([orderId])
+  @@index([createdAt])
   @@map("payments")
 }
 
@@ -455,21 +481,30 @@ model Inventory {
   variant      ProductVariant         @relation(fields: [variantId], references: [id], onDelete: Cascade)
   transactions InventoryTransaction[]
 
+  @@index([quantity])
   @@map("inventory")
 }
 
 model InventoryTransaction {
-  id          String          @id @default(cuid())
-  inventoryId String
-  type        InventoryTxType
-  quantity    Int
-  note        String?
-  createdBy   String?
-  createdAt   DateTime        @default(now())
+  id           String          @id @default(cuid())
+  inventoryId  String
+  type         InventoryTxType
+  quantity     Int
+  note         String?
+  // Supplier invoice / order number / etc. the movement belongs to.
+  reference    String?
+  // Unit cost for PURCHASE movements (stock receiving).
+  unitCost     Decimal?        @db.Decimal(10, 3)
+  // Stock level right after this movement — makes the ledger readable.
+  balanceAfter Int?
+  createdBy    String?
+  createdAt    DateTime        @default(now())
 
   inventory Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
 
   @@index([inventoryId])
+  @@index([createdAt])
+  @@index([type, createdAt])
   @@map("inventory_transactions")
 }
 
@@ -678,4 +713,73 @@ model ContactMessage {
   @@index([status])
   @@index([createdAt])
   @@map("contact_messages")
+}
+
+// ─────────────────────────────────────────────
+// FINANCE
+// ─────────────────────────────────────────────
+
+// Operating expenses (rent, salaries, marketing, …) — subtracted from gross
+// profit in the finance report to give net profit.
+model Expense {
+  id            String   @id @default(cuid())
+  category      String
+  amount        Decimal  @db.Decimal(10, 3)
+  description   String?
+  paymentMethod String   @default("CASH")
+  reference     String?
+  date          DateTime @default(now())
+  createdBy     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([date])
+  @@index([category])
+  @@map("expenses")
+}
+
+// Money returned to a customer for a (partial or full) return.
+model Refund {
+  id        String   @id @default(cuid())
+  orderId   String
+  amount    Decimal  @db.Decimal(10, 3)
+  method    String   @default("CASH")
+  reason    String?
+  // [{ orderItemId, variantId, productId, quantity, unitPrice, unitCost }]
+  items     Json?
+  restocked Boolean  @default(true)
+  createdBy String?
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([createdAt])
+  @@map("refunds")
+}
+
+// ─────────────────────────────────────────────
+// POS REGISTER SHIFTS
+// ─────────────────────────────────────────────
+
+model PosShift {
+  id           String    @id @default(cuid())
+  cashierId    String
+  status       String    @default("OPEN") // OPEN | CLOSED
+  openingCash  Decimal   @default(0) @db.Decimal(10, 3)
+  // Counted cash in the drawer at close, and what the system expected.
+  closingCash  Decimal?  @db.Decimal(10, 3)
+  expectedCash Decimal?  @db.Decimal(10, 3)
+  // Pay-ins / pay-outs during the shift: [{ type: "IN"|"OUT", amount, reason, at }]
+  movements    Json?
+  notes        String?
+  openedAt     DateTime  @default(now())
+  closedAt     DateTime?
+
+  cashier User    @relation(fields: [cashierId], references: [id])
+  orders  Order[]
+
+  @@index([cashierId, status])
+  @@index([openedAt])
+  @@map("pos_shifts")
 }

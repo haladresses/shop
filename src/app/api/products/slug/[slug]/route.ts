@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
+import { canViewCost, withoutCost } from "@/lib/productCost";
 import { ok, notFound, serverError } from "@/lib/api/response";
 
 export async function GET(
-  _: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
@@ -32,7 +33,7 @@ export async function GET(
     });
 
     if (!product) return notFound("Product");
-    return ok(product);
+    return ok((await canViewCost(req)) ? product : withoutCost(product));
   } catch (e) {
     return serverError(e);
   }

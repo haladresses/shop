@@ -135,6 +135,7 @@ export async function POST(req: NextRequest) {
         variantId: item.variantId || null,
         quantity: item.quantity,
         unitPrice,
+        unitCost: product.costPrice,
         total: itemTotal,
         // A durable copy of what was actually ordered (name, color, size, SKU)
         // so the admin always sees the exact selection even if the variant is

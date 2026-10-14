@@ -2,7 +2,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { LuUndo2 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
-import PaymentGatewaySettings from "@/components/admin/PaymentGatewaySettings";
+import Link from "next/link";
+import { LuSettings } from "react-icons/lu";
 
 type Payment = {
   id: string;
@@ -81,7 +82,14 @@ export default function PaymentsPage() {
 
   return (
     <div className="space-y-4">
-      {permissions.includes("admin.payments.manage") && <PaymentGatewaySettings />}
+      {permissions.includes("admin.payments.manage") && permissions.includes("admin.settings.manage") && (
+        <Link
+          href="/admin/settings?tab=payment-gateway"
+          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 hover:border-indigo-300 hover:text-indigo-700"
+        >
+          <LuSettings size={16} /> Payment gateway (Thawani) setup has moved to <strong>Settings → Payment gateway</strong>
+        </Link>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
