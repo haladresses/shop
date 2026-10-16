@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { SbcCredit } from "@/components/SiteDocument";
 import {
   DEFAULT_FOOTER_CONFIG,
   fetchFooter,
@@ -362,6 +363,7 @@ const Footer = () => {
               </div>
             </div>
           </div>
+          <SbcCredit className="mt-4 text-center sm:text-start" />
         </div>
       </div>
       {/* <!-- footer bottom end --> */}

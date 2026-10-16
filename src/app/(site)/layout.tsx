@@ -4,6 +4,7 @@ import "../css/euclid-circular-a-font.css";
 import "../css/style.css";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import SiteDocument from "@/components/SiteDocument";
 
 import { ModalProvider } from "../context/QuickViewModalContext";
 import { CartModalProvider } from "../context/CartSidebarModalContext";
@@ -26,56 +27,76 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning={true}>
-      <head>
-        <title>Hala Dresses | Women&apos;s &amp; Girls&apos; Fashion in Oman</title>
-        <meta
-          name="description"
-          content="Hala Dresses — women's and girls' fashion, evening wear, and accessories in Oman."
-        />
-        <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#8C3B49" />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Hala Dresses" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="msapplication-TileColor" content="#8C3B49" />
-        <meta name="msapplication-config" content="/browserconfig.xml" />
-      </head>
-      <body className="has-mobile-nav">
-        <PwaRegister />
-        <LanguageProvider>
-          <ReduxProvider>
-            <CartModalProvider>
-              <ModalProvider>
-                <PreviewSliderProvider>
-                  <Toaster
-                    position="top-center"
-                    containerStyle={{ top: 90, zIndex: 999999 }}
-                    toastOptions={{ duration: 3000, style: { zIndex: 999999 } }}
-                  />
-                  <Header />
-                  {children}
+    <SiteDocument
+      lang="en"
+      suppressHydrationWarning={true}
+      bodyClassName="has-mobile-nav"
+      footer={null}
+      head={
+        <>
+          <title>
+            Hala Dresses | Women&apos;s &amp; Girls&apos; Fashion in Oman
+          </title>
+          <meta
+            name="description"
+            content="Hala Dresses — women's and girls' fashion, evening wear, and accessories in Oman."
+          />
+          <link rel="manifest" href="/manifest.json" />
+          <meta name="theme-color" content="#8C3B49" />
+          <link rel="icon" href="/favicon.ico" sizes="any" />
+          <link
+            rel="icon"
+            type="image/png"
+            sizes="16x16"
+            href="/favicon-16x16.png"
+          />
+          <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            href="/favicon-32x32.png"
+          />
+          <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+          <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="default"
+          />
+          <meta name="apple-mobile-web-app-title" content="Hala Dresses" />
+          <meta name="mobile-web-app-capable" content="yes" />
+          <meta name="msapplication-TileColor" content="#8C3B49" />
+          <meta name="msapplication-config" content="/browserconfig.xml" />
+        </>
+      }
+    >
+      <PwaRegister />
+      <LanguageProvider>
+        <ReduxProvider>
+          <CartModalProvider>
+            <ModalProvider>
+              <PreviewSliderProvider>
+                <Toaster
+                  position="top-center"
+                  containerStyle={{ top: 90, zIndex: 999999 }}
+                  toastOptions={{ duration: 3000, style: { zIndex: 999999 } }}
+                />
+                <Header />
+                {children}
 
-                  <QuickViewModal />
-                  <CartSidebarModal />
-                  <PreviewSliderModal />
-                  <MobileNav />
-                  <WhatsAppWidget />
-                </PreviewSliderProvider>
-              </ModalProvider>
-            </CartModalProvider>
-          </ReduxProvider>
-          <ScrollToTop />
-          <RevealController />
-          <Footer />
-        </LanguageProvider>
-      </body>
-    </html>
+                <QuickViewModal />
+                <CartSidebarModal />
+                <PreviewSliderModal />
+                <MobileNav />
+                <WhatsAppWidget />
+              </PreviewSliderProvider>
+            </ModalProvider>
+          </CartModalProvider>
+        </ReduxProvider>
+        <ScrollToTop />
+        <RevealController />
+        <Footer />
+      </LanguageProvider>
+    </SiteDocument>
   );
 }
