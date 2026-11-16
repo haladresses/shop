@@ -271,13 +271,16 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
     guidance: [
       "Publish only after images, pricing, SKU structure, and inventory have all been checked.",
       "When changing category, review attributes immediately because category-specific fields can shift.",
+      "Use “Edit fields” in the Specifications card to add a field to the whole category without leaving the product.",
+      "Use “Extra specifications” for details only this one product has.",
+      "“Duplicate” on the products list creates a hidden copy (stock 0, SKUs and barcodes cleared) to start a similar product quickly.",
     ],
     level: "Core",
     tags: ["catalog", "media", "variants", "attributes"],
     steps: [
-      "Create a new product or open an existing one.",
+      "Create a new product, or duplicate a similar one from the list.",
       "Fill in the title, pricing, SKU, and images.",
-      "Configure variants and the category-specific attributes.",
+      "Answer the category's specification fields and add any extra specifications.",
       "Publish only after every field has been verified.",
     ],
     cautions: [
@@ -299,19 +302,20 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
     ],
     guidance: [
       "Do not delete categories that still contain products or child categories without a migration plan.",
-      "Keep attribute keys stable once products depend on them.",
+      "Start from a ready-made set (Dresses, Abayas, Accessories) and adjust — every field is bilingual and editable.",
+      "Sub-categories inherit their parent's fields, so define shared fields (fabric, care) once on the parent.",
     ],
     level: "Core",
     tags: ["taxonomy", "attributes", "navigation", "filters"],
     steps: [
       "Build the parent and child category trees.",
-      "Define attributes such as material, color, or size.",
+      "Open a category's Fields page and add fields from the ready-made library or build your own.",
+      "Check the live preview, then save.",
       "Set the sort order and visibility for each node.",
-      "Confirm products map to the correct categories.",
     ],
     cautions: [
       "Do not delete categories with products or children without a migration plan.",
-      "Keep attribute keys stable once products depend on them.",
+      "Deleting a field hides the answers products already have; adding a field with the same key brings them back.",
     ],
     related: ["/admin/products", "/admin/navigation"],
   },

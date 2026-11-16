@@ -3,7 +3,8 @@ import prisma from "@/lib/db";
 import { canViewCost, withoutCost } from "@/lib/productCost";
 import { getAuthFromRequest, userHasAnyPermission, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
-import { productUpdateSchema } from "@/lib/validations/product";
+import { cleanCustomSpecs, productUpdateSchema } from "@/lib/validations/product";
+import { withEffectiveCategoryAttributes } from "@/lib/categorySpecs";
 import { Prisma } from "@prisma/client";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -12,11 +13,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const product = await prisma.product.findUnique({
       where: { id },
       include: {
-        category: {
-          include: {
-            attributes: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
-          },
-        },
+        category: true,
         images: { orderBy: { sortOrder: "asc" } },
         variants: {
           include: { inventory: true },
@@ -33,7 +30,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
 
     if (!product) return notFound("Product");
-    return ok((await canViewCost(req)) ? product : withoutCost(product));
+    // Specification fields include those inherited from parent categories.
+    const full = await withEffectiveCategoryAttributes(product);
+    return ok((await canViewCost(req)) ? full : withoutCost(full));
   } catch (e) {
     return serverError(e);
   }
@@ -59,7 +58,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return forbidden();
     }
 
-    const { images, variants, attributes, ...scalar } = parsed.data;
+    const { images, variants, attributes, customSpecs, ...scalar } = parsed.data;
 
     const data: Prisma.ProductUpdateInput = { ...scalar };
 
@@ -72,6 +71,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         attributes && Object.keys(attributes).length
           ? (attributes as Prisma.InputJsonValue)
           : Prisma.JsonNull;
+    }
+
+    if (customSpecs !== undefined) {
+      const extraSpecs = cleanCustomSpecs(customSpecs);
+      data.customSpecs = extraSpecs.length ? (extraSpecs as Prisma.InputJsonValue) : Prisma.JsonNull;
     }
 
     // Replace images when an explicit images array is provided.

@@ -215,6 +215,10 @@ model Product {
   isNew         Boolean  @default(true)
   isBestSeller  Boolean  @default(false)
   attributes    Json? // { [attributeKey]: value } keyed by CategoryAttribute.key
+  // Extra specifications that belong to this product only (not defined on its
+  // category): [{ labelEn, labelAr, valueEn, valueAr }]. Shown after the
+  // category specifications on the storefront.
+  customSpecs   Json?
   sellerId      String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

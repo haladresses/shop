@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
 import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
+import { getSubtreeIds } from "@/lib/categorySpecs";
 import { z } from "zod";
 
 const updateSchema = z.object({
@@ -43,6 +44,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!parsed.success) return error(parsed.error.issues[0].message);
 
     if (parsed.data.parentId === id) return error("A category cannot be its own parent");
+    if (parsed.data.parentId) {
+      const subtree = await getSubtreeIds(id);
+      if (subtree.includes(parsed.data.parentId)) {
+        return error("A category cannot be moved under one of its own sub-categories");
+      }
+    }
 
     const category = await prisma.category.update({ where: { id }, data: parsed.data });
     return ok(category);

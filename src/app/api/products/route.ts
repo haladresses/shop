@@ -4,7 +4,7 @@ import { canViewCost, withoutCost } from "@/lib/productCost";
 import { getAuthFromRequest, userHasAnyPermission, userHasPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { slugify } from "@/lib/utils";
-import { productSchema } from "@/lib/validations/product";
+import { cleanCustomSpecs, productSchema } from "@/lib/validations/product";
 import { Prisma } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
@@ -172,7 +172,8 @@ export async function POST(req: NextRequest) {
     const parsed = productSchema.safeParse(body);
     if (!parsed.success) return error(parsed.error.issues[0].message);
 
-    const { variants, images, attributes, ...productData } = parsed.data;
+    const { variants, images, attributes, customSpecs, ...productData } = parsed.data;
+    const extraSpecs = cleanCustomSpecs(customSpecs);
 
     let slug = slugify(productData.nameEn);
     const existing = await prisma.product.findUnique({ where: { slug } });
@@ -186,6 +187,7 @@ export async function POST(req: NextRequest) {
         attributes: attributes && Object.keys(attributes).length
           ? (attributes as Prisma.InputJsonValue)
           : Prisma.JsonNull,
+        customSpecs: extraSpecs.length ? (extraSpecs as Prisma.InputJsonValue) : Prisma.JsonNull,
         sellerId: canAssignSeller ? (body.sellerId || null) : user.id,
         images: {
           create: images.map((img, i) => ({

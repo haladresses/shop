@@ -1,17 +1,25 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   LuX, LuImagePlus, LuStar, LuTrash2, LuPlus, LuChevronUp, LuChevronDown,
-  LuGripVertical, LuInfo,
+  LuGripVertical, LuInfo, LuSlidersHorizontal, LuCircleCheck, LuExternalLink,
 } from "react-icons/lu";
 import {
   type CategoryAttribute,
+  type CustomSpec,
   type ProductAttributes,
   type AttributeValue,
   fetchCategoryAttributes,
+  isEmptyAttributeValue,
+  normalizeCustomSpecs,
 } from "@/lib/attributes";
+import { categorySelectOptions, type FlatCategory } from "@/lib/categoryTree";
+import AdminModal from "./AdminModal";
 import BarcodePreview from "./BarcodePreview";
+import AttributeField from "./attributes/AttributeField";
+import CategoryAttributesEditor from "./attributes/CategoryAttributesEditor";
+import CustomSpecsEditor from "./attributes/CustomSpecsEditor";
 
 export type ProductImageState = {
   url: string;
@@ -60,17 +68,19 @@ export type ProductFormValue = {
   isNew: boolean;
   isBestSeller: boolean;
   attributes: ProductAttributes;
+  /** Specifications that only this product has. */
+  customSpecs: CustomSpec[];
   images: ProductImageState[];
   variants: VariantState[];
 };
 
-type Category = { id: string; nameEn: string };
+type Category = FlatCategory & { parentId: string | null; isActive: boolean };
 
 export const emptyProductForm: ProductFormValue = {
   nameEn: "", nameAr: "", descriptionEn: "", descriptionAr: "",
   categoryId: "", basePrice: "", salePrice: "", costPrice: "", sku: "", barcode: "",
   isActive: true, isFeatured: false, isNew: true, isBestSeller: false,
-  attributes: {}, images: [], variants: [],
+  attributes: {}, customSpecs: [], images: [], variants: [],
 };
 
 /** Build the JSON payload sent to the products API from a form value. */
@@ -91,6 +101,14 @@ export function buildProductPayload(form: ProductFormValue) {
     isNew: form.isNew,
     isBestSeller: form.isBestSeller,
     attributes: form.attributes,
+    customSpecs: form.customSpecs
+      .map((s) => ({
+        labelEn: s.labelEn.trim(),
+        labelAr: s.labelAr.trim(),
+        valueEn: s.valueEn.trim(),
+        valueAr: s.valueAr.trim(),
+      }))
+      .filter((s) => (s.labelEn || s.labelAr) && (s.valueEn || s.valueAr)),
     images: form.images.map((img, i) => ({
       url: img.url,
       isPrimary: img.isPrimary,
@@ -109,6 +127,83 @@ export function buildProductPayload(form: ProductFormValue) {
       priceAdjustment: parseFloat(v.priceAdjustment) || 0,
       isActive: v.isActive,
       stock: parseInt(v.stock) || 0,
+    })),
+  };
+}
+
+type ApiColorPart = { part: string; color: string; colorHex?: string | null };
+
+/** The product as returned by GET /api/products/[id] (only the fields the form uses). */
+export type ApiProductForForm = {
+  nameEn: string;
+  nameAr: string;
+  descriptionEn: string | null;
+  descriptionAr: string | null;
+  categoryId: string;
+  basePrice: string | number;
+  salePrice: string | number | null;
+  costPrice?: string | number | null;
+  sku: string | null;
+  barcode?: string | null;
+  isActive: boolean;
+  isFeatured: boolean;
+  isNew: boolean;
+  isBestSeller: boolean;
+  attributes: ProductAttributes | null;
+  customSpecs?: unknown;
+  images: { url: string; isPrimary: boolean; altEn?: string | null; altAr?: string | null; color?: string | null }[];
+  variants: {
+    color: string | null;
+    colorHex: string | null;
+    colorParts?: ApiColorPart[] | null;
+    size: string | null;
+    sku: string | null;
+    barcode?: string | null;
+    priceAdjustment: string | number | null;
+    isActive: boolean;
+    inventory?: { quantity: number } | null;
+  }[];
+};
+
+export function productToFormValue(p: ApiProductForForm): ProductFormValue {
+  return {
+    nameEn: p.nameEn,
+    nameAr: p.nameAr,
+    descriptionEn: p.descriptionEn ?? "",
+    descriptionAr: p.descriptionAr ?? "",
+    categoryId: p.categoryId,
+    basePrice: String(p.basePrice ?? ""),
+    salePrice: p.salePrice == null ? "" : String(p.salePrice),
+    costPrice: p.costPrice == null ? "" : String(p.costPrice),
+    sku: p.sku ?? "",
+    barcode: p.barcode ?? "",
+    isActive: p.isActive,
+    isFeatured: p.isFeatured,
+    isNew: p.isNew,
+    isBestSeller: p.isBestSeller,
+    attributes: p.attributes ?? {},
+    customSpecs: normalizeCustomSpecs(p.customSpecs),
+    images: (p.images ?? []).map((i) => ({
+      url: i.url,
+      isPrimary: i.isPrimary,
+      altEn: i.altEn ?? undefined,
+      altAr: i.altAr ?? undefined,
+      color: i.color ?? undefined,
+    })),
+    variants: (p.variants ?? []).map((v) => ({
+      color: v.color ?? "",
+      colorHex: v.colorHex ?? "",
+      colorParts: (v.colorParts ?? []).map((cp) => ({
+        part: cp.part,
+        color: cp.color,
+        colorHex: cp.colorHex ?? "",
+      })),
+      size: v.size ?? "",
+      sku: v.sku ?? "",
+      barcode: v.barcode ?? "",
+      priceAdjustment: v.priceAdjustment == null ? "0" : String(v.priceAdjustment),
+      stock: String(v.inventory?.quantity ?? 0),
+      isActive: v.isActive,
     })),
   };
 }
@@ -145,22 +240,32 @@ export default function ProductForm({
   const [categories, setCategories] = useState<Category[]>([]);
   const [attrDefs, setAttrDefs] = useState<CategoryAttribute[]>([]);
   const [attrLoading, setAttrLoading] = useState(false);
+  const [attrErrors, setAttrErrors] = useState<Record<string, string>>({});
+  const [fieldsOpen, setFieldsOpen] = useState(false);
+  const [fieldsDirty, setFieldsDirty] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const attrRequest = useRef(0);
 
   useEffect(() => {
-    fetch("/api/categories?all=true")
+    fetch("/api/categories?tree=true", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => { if (d.success) setCategories(d.data); });
   }, []);
 
-  // Load attribute definitions whenever the category changes.
+  const categoryOptions = useMemo(() => categorySelectOptions(categories), [categories]);
+  const selectedCategory = categoryOptions.find((c) => c.id === form.categoryId);
+
+  // Load the category's fields (inherited + own) whenever the category changes.
+  // A counter drops responses that arrive after a newer category was chosen.
   const loadAttrs = useCallback(async (categoryId: string) => {
-    if (!categoryId) { setAttrDefs([]); return; }
+    const req = ++attrRequest.current;
+    if (!categoryId) { setAttrDefs([]); setAttrLoading(false); return; }
     setAttrLoading(true);
     const defs = await fetchCategoryAttributes(categoryId);
+    if (req !== attrRequest.current) return;
     setAttrDefs(defs);
     setAttrLoading(false);
   }, []);
@@ -170,8 +275,37 @@ export default function ProductForm({
   const set = <K extends keyof ProductFormValue>(key: K, value: ProductFormValue[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
 
-  const setAttr = (key: string, value: AttributeValue) =>
+  const setAttr = (key: string, value: AttributeValue) => {
     setForm((f) => ({ ...f, attributes: { ...f.attributes, [key]: value } }));
+    if (attrErrors[key]) {
+      setAttrErrors((errs) => Object.fromEntries(Object.entries(errs).filter(([k]) => k !== key)));
+    }
+  };
+
+  const attrKeys = useMemo(() => new Set(attrDefs.map((d) => d.key)), [attrDefs]);
+  // Ready-made "extra spec" suggestions skip anything the category already asks for.
+  const takenForSuggestions = useMemo(
+    () => new Set([...attrKeys, ...attrDefs.map((d) => d.labelEn.trim().toLowerCase())]),
+    [attrKeys, attrDefs],
+  );
+  const answered = attrDefs.filter((d) => !isEmptyAttributeValue(form.attributes[d.key])).length;
+  const requiredLeft = attrDefs.filter((d) => d.isRequired && isEmptyAttributeValue(form.attributes[d.key]));
+  // Answers saved for fields this category doesn't have (e.g. after switching category).
+  const leftoverKeys = !attrLoading && form.categoryId
+    ? Object.keys(form.attributes).filter((k) => !attrKeys.has(k) && !isEmptyAttributeValue(form.attributes[k]))
+    : [];
+
+  const removeLeftovers = () =>
+    setForm((f) => ({
+      ...f,
+      attributes: Object.fromEntries(Object.entries(f.attributes).filter(([k]) => attrKeys.has(k))),
+    }));
+
+  const closeFields = () => {
+    if (fieldsDirty && !window.confirm("Discard your unsaved changes to the category fields?")) return;
+    setFieldsOpen(false);
+    setFieldsDirty(false);
+  };
 
   // Distinct variant colors, offered as the per-image color tag options.
   const variantColors = useMemo(() => {
@@ -276,13 +410,11 @@ export default function ProductForm({
     if (!form.categoryId) { setError("Please select a category"); return; }
     if (!form.basePrice || parseFloat(form.basePrice) <= 0) { setError("Base price must be greater than 0"); return; }
 
-    // Required attribute validation
-    for (const def of attrDefs) {
-      if (def.isRequired) {
-        const v = form.attributes[def.key];
-        const empty = v == null || v === "" || (Array.isArray(v) && v.length === 0);
-        if (empty) { setError(`"${def.labelEn}" is required`); return; }
-      }
+    if (requiredLeft.length) {
+      setAttrErrors(Object.fromEntries(requiredLeft.map((d) => [d.key, "This field is required."])));
+      setError(`Please answer the required specifications: ${requiredLeft.map((d) => d.labelEn || d.labelAr).join(", ")}`);
+      document.getElementById("product-specs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
     }
 
     setSaving(true);
@@ -295,6 +427,8 @@ export default function ProductForm({
     router.refresh();
     router.push("/admin/products");
   };
+
+  const pct = attrDefs.length ? Math.round((answered / attrDefs.length) * 100) : 0;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 w-full">
@@ -381,8 +515,11 @@ export default function ProductForm({
             <Label required>Category</Label>
             <select className="admin-input admin-select" value={form.categoryId} onChange={(e) => set("categoryId", e.target.value)} required>
               <option value="">Select category</option>
-              {categories.map((c) => <option key={c.id} value={c.id}>{c.nameEn}</option>)}
+              {categoryOptions.map((c) => (
+                <option key={c.id} value={c.id}>{c.label}{c.isActive ? "" : " (hidden)"}</option>
+              ))}
             </select>
+            <p className="text-xs text-slate-400 mt-1">The category decides which specification fields this product has.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
@@ -452,26 +589,89 @@ export default function ProductForm({
         </div>
       </Card>
 
-      <Card title="Specifications" desc="These fields are defined per category. Choose a category to load its specifications.">
+      <div id="product-specs" className="admin-card p-5 sm:p-6 scroll-mt-4">
+        <div className="flex flex-wrap items-start gap-3 mb-4">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-semibold text-slate-800">Specifications</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {selectedCategory
+                ? <>Fields from <span className="font-medium text-slate-700">{selectedCategory.label}</span>, shown in the Specifications tab of the product page.</>
+                : "Choose a category to load its fields."}
+            </p>
+          </div>
+          {form.categoryId && (
+            <button type="button" onClick={() => setFieldsOpen(true)} className="admin-btn admin-btn-secondary text-sm">
+              <LuSlidersHorizontal size={15} /> Edit fields
+            </button>
+          )}
+        </div>
+
+        {attrDefs.length > 0 && !attrLoading && (
+          <div className="mb-5">
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="text-slate-500">{answered} of {attrDefs.length} answered</span>
+              {requiredLeft.length > 0 ? (
+                <span className="text-rose-600 font-medium">{requiredLeft.length} required left</span>
+              ) : (
+                <span className="text-emerald-600 inline-flex items-center gap-1"><LuCircleCheck size={12} /> Required fields done</span>
+              )}
+            </div>
+            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+              <div className="h-full rounded-full bg-indigo-500 transition-[width] duration-300" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        )}
+
         {!form.categoryId ? (
           <div className="flex items-center gap-2 text-sm text-slate-400 py-2">
-            <LuInfo size={16} /> Select a category to see its specifications.
+            <LuInfo size={16} /> Select a category to see its fields.
           </div>
         ) : attrLoading ? (
           <div className="flex justify-center py-6"><span className="spinner" /></div>
         ) : attrDefs.length === 0 ? (
-          <div className="flex items-center gap-2 text-sm text-slate-400 py-2">
-            <LuInfo size={16} /> This category has no specifications defined.{" "}
-            <a href="/admin/categories" className="text-indigo-600 hover:underline">Manage attributes</a>
+          <div className="rounded-xl border border-dashed border-slate-300 px-4 py-6 text-center">
+            <p className="text-sm font-medium text-slate-700">This category has no fields yet</p>
+            <p className="text-xs text-slate-500 mt-1">Add fields like fabric or length once, and every product in the category gets them.</p>
+            <button type="button" onClick={() => setFieldsOpen(true)} className="admin-btn admin-btn-primary mt-3 text-sm">
+              <LuPlus size={15} /> Set up fields
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5">
             {attrDefs.map((def) => (
-              <AttributeField key={def.key} def={def} value={form.attributes[def.key]} onChange={(v) => setAttr(def.key, v)} />
+              <AttributeField
+                key={def.key}
+                def={def}
+                value={form.attributes[def.key]}
+                onChange={(v) => setAttr(def.key, v)}
+                error={attrErrors[def.key]}
+                showSource
+              />
             ))}
           </div>
         )}
-      </Card>
+
+        {leftoverKeys.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            <LuInfo size={14} className="flex-shrink-0" />
+            <span className="flex-1 min-w-[200px]">
+              This product still has {leftoverKeys.length} answer{leftoverKeys.length === 1 ? "" : "s"} for fields this category doesn&apos;t use
+              ({leftoverKeys.join(", ")}). They aren&apos;t shown to shoppers.
+            </span>
+            <button type="button" onClick={removeLeftovers} className="font-medium underline hover:no-underline">Remove them</button>
+          </div>
+        )}
+
+        <div className="mt-6 pt-5 border-t border-slate-100">
+          <h4 className="text-sm font-semibold text-slate-700">
+            Extra specifications <span className="font-normal text-slate-400">· this product only</span>
+          </h4>
+          <p className="text-xs text-slate-500 mt-0.5 mb-3">
+            For details other products in the category don&apos;t need. They appear after the category fields.
+          </p>
+          <CustomSpecsEditor specs={form.customSpecs} onChange={(s) => set("customSpecs", s)} takenKeys={takenForSuggestions} />
+        </div>
+      </div>
 
       <Card title="Variants & Stock" desc="Optional. Add color/size combinations with their own stock and price adjustment.">
         <div className="space-y-3">
@@ -583,121 +783,40 @@ export default function ProductForm({
         <button type="button" onClick={() => router.push("/admin/products")} className="admin-btn admin-btn-secondary">Cancel</button>
         {productId && <span className="text-xs text-slate-400 ml-auto">ID: {productId}</span>}
       </div>
+
+      <AdminModal
+        open={fieldsOpen}
+        onClose={closeFields}
+        className="!max-w-3xl"
+        title={selectedCategory ? `Fields for ${selectedCategory.label}` : "Category fields"}
+      >
+        {fieldsOpen && form.categoryId && (
+          <>
+            <p className="text-sm text-slate-500 mb-4">
+              Changes apply to every product in this category. Your product&apos;s answers are kept.{" "}
+              <a
+                href={`/admin/categories/${form.categoryId}/attributes`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-indigo-600 hover:underline"
+              >
+                Open the full page with live preview <LuExternalLink size={12} />
+              </a>
+            </p>
+            <CategoryAttributesEditor
+              categoryId={form.categoryId}
+              layout="modal"
+              onDirtyChange={setFieldsDirty}
+              onSaved={() => {
+                setFieldsDirty(false);
+                setFieldsOpen(false);
+                loadAttrs(form.categoryId);
+              }}
+            />
+          </>
+        )}
+      </AdminModal>
     </form>
-  );
-}
-
-/** Renders the correct input control for a single category attribute. */
-function AttributeField({
-  def,
-  value,
-  onChange,
-}: {
-  def: CategoryAttribute;
-  value: AttributeValue;
-  onChange: (v: AttributeValue) => void;
-}) {
-  const label = (
-    <Label required={def.isRequired}>
-      {def.labelEn}
-      {def.labelAr && <span className="text-slate-400 font-normal text-xs mr-1" dir="rtl"> ({def.labelAr})</span>}
-    </Label>
-  );
-
-  if (def.type === "BOOLEAN") {
-    return (
-      <div>
-        {label}
-        <label className="flex items-center gap-2 text-sm cursor-pointer h-[42px]">
-          <input type="checkbox" checked={Boolean(value)} onChange={(e) => onChange(e.target.checked)} className="rounded" />
-          <span className="text-slate-600">{value ? "Yes" : "No"}</span>
-        </label>
-      </div>
-    );
-  }
-
-  if (def.type === "NUMBER") {
-    return (
-      <div>
-        {label}
-        <div className="flex items-center gap-2">
-          <input type="number" className="admin-input" value={value == null ? "" : String(value)} placeholder={def.placeholder || ""} onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))} />
-          {def.unit && <span className="text-sm text-slate-400 flex-shrink-0">{def.unit}</span>}
-        </div>
-      </div>
-    );
-  }
-
-  if (def.type === "SELECT") {
-    return (
-      <div>
-        {label}
-        <select className="admin-input admin-select" value={(value as string) || ""} onChange={(e) => onChange(e.target.value || null)}>
-          <option value="">Select...</option>
-          {def.options.map((o) => <option key={o.value} value={o.value}>{o.labelEn}</option>)}
-        </select>
-      </div>
-    );
-  }
-
-  if (def.type === "COLOR") {
-    const selected = (value as string) || "";
-    return (
-      <div>
-        {label}
-        <div className="flex flex-wrap gap-2">
-          {def.options.map((o) => {
-            const active = selected === o.value;
-            return (
-              <button
-                key={o.value}
-                type="button"
-                onClick={() => onChange(active ? null : o.value)}
-                title={o.labelEn}
-                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${active ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-200 text-slate-600 hover:border-slate-300"}`}
-              >
-                <span className="w-4 h-4 rounded-full border border-black/10" style={{ background: o.hex || "#ccc" }} />
-                {o.labelEn}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  if (def.type === "MULTISELECT") {
-    const selected: string[] = Array.isArray(value) ? value : [];
-    const toggle = (val: string) =>
-      onChange(selected.includes(val) ? selected.filter((s) => s !== val) : [...selected, val]);
-    return (
-      <div className="sm:col-span-2">
-        {label}
-        <div className="flex flex-wrap gap-2">
-          {def.options.map((o) => {
-            const active = selected.includes(o.value);
-            return (
-              <button
-                key={o.value}
-                type="button"
-                onClick={() => toggle(o.value)}
-                className={`rounded-full border px-3 py-1 text-xs ${active ? "border-indigo-500 bg-indigo-50 text-indigo-700" : "border-slate-200 text-slate-600 hover:border-slate-300"}`}
-              >
-                {o.labelEn}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
-
-  // TEXT
-  return (
-    <div>
-      {label}
-      <input className="admin-input" value={(value as string) || ""} placeholder={def.placeholder || ""} onChange={(e) => onChange(e.target.value)} />
-    </div>
   );
 }
 

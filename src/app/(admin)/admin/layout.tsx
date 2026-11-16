@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { ADMIN_NAV_ITEMS } from "@/lib/permissions";
+import { Toaster } from "react-hot-toast";
 import "../admin.css";
 
 type MeResponse = {
@@ -44,6 +45,8 @@ const pageTitles: Record<string, string> = {
 
 function resolveTitle(pathname: string): string {
   if (pageTitles[pathname]) return pageTitles[pathname];
+  // Category specification fields: /admin/categories/<id>/attributes
+  if (/^\/admin\/categories\/[^/]+\/attributes$/.test(pathname)) return "Category Fields";
   // Product WhatsApp reviews: /admin/products/<id>/whatsapp-reviews
   if (/^\/admin\/products\/[^/]+\/whatsapp-reviews$/.test(pathname)) return "WhatsApp Reviews";
   // Edit product: /admin/products/<id>
@@ -110,6 +113,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <AdminHeader title={title} onMenuClick={() => setMobileOpen(true)} />
         <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 sm:p-6">{children}</main>
       </div>
+      <Toaster
+        position="top-center"
+        toastOptions={{ duration: 2600, style: { fontSize: "0.875rem", borderRadius: "0.75rem" } }}
+      />
     </div>
   );
 }

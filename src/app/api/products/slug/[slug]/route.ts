@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
 import { canViewCost, withoutCost } from "@/lib/productCost";
 import { ok, notFound, serverError } from "@/lib/api/response";
+import { withEffectiveCategoryAttributes } from "@/lib/categorySpecs";
 
 export async function GET(
   req: NextRequest,
@@ -12,11 +13,7 @@ export async function GET(
     const product = await prisma.product.findUnique({
       where: { slug },
       include: {
-        category: {
-          include: {
-            attributes: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
-          },
-        },
+        category: true,
         images: { orderBy: { sortOrder: "asc" } },
         variants: {
           include: { inventory: true },
@@ -33,7 +30,9 @@ export async function GET(
     });
 
     if (!product) return notFound("Product");
-    return ok((await canViewCost(req)) ? product : withoutCost(product));
+    // Specification fields include those inherited from parent categories.
+    const full = await withEffectiveCategoryAttributes(product);
+    return ok((await canViewCost(req)) ? full : withoutCost(full));
   } catch (e) {
     return serverError(e);
   }

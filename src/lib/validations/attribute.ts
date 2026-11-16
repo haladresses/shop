@@ -17,6 +17,9 @@ export const attributeOptionSchema = z.object({
 });
 
 export const categoryAttributeSchema = z.object({
+  // Present for a field that already exists. Lets the server notice a key
+  // rename and move the stored product values to the new key.
+  id: z.string().optional(),
   key: z
     .string()
     .min(1, "Key is required")

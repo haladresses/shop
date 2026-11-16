@@ -44,7 +44,9 @@ export default function AdminModal({
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      // A child that handles Escape itself (e.g. closing an inline picker)
+      // calls preventDefault so the whole modal doesn't close with it.
+      if (e.key === "Escape" && !e.defaultPrevented) onClose();
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";

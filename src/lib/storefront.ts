@@ -43,6 +43,8 @@ export type ApiProduct = {
   isNew?: boolean;
   isBestSeller?: boolean;
   attributes?: Record<string, unknown> | null;
+  // Product-only specifications: [{ labelEn, labelAr, valueEn, valueAr }].
+  customSpecs?: unknown;
   images?: ApiProductImage[];
   variants?: ApiProductVariant[];
   category?: {

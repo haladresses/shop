@@ -1,11 +1,14 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   LuPlus, LuShirt, LuPencil, LuTrash2, LuChevronLeft, LuChevronRight,
-  LuPackage, LuCircleCheck, LuStar, LuSparkles, LuSearch,
+  LuPackage, LuCircleCheck, LuStar, LuSparkles, LuSearch, LuCopy,
 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
+import { buildProductPayload, productToFormValue } from "@/components/admin/ProductForm";
+import { categorySelectOptions, type FlatCategory } from "@/lib/categoryTree";
 
 type Product = {
   id: string;
@@ -24,32 +27,80 @@ type Product = {
   _count: { variants: number; reviews: number };
 };
 
-type Category = { id: string; nameEn: string };
+type Category = FlatCategory & { isActive: boolean };
+
+type StatusFilter = "" | "true" | "false";
 
 export default function ProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [copyTarget, setCopyTarget] = useState<Product | null>(null);
+  const [copying, setCopying] = useState(false);
+  const [copyError, setCopyError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page), search, ...(categoryFilter && { categoryId: categoryFilter }) });
+    const params = new URLSearchParams({
+      page: String(page),
+      search,
+      ...(categoryFilter && { categoryId: categoryFilter }),
+      ...(statusFilter && { isActive: statusFilter }),
+    });
     const res = await fetch(`/api/products?${params}`, { cache: "no-store" });
     const data = await res.json();
     if (data.success) { setProducts(data.data); setTotal(data.meta.total); }
     setLoading(false);
-  }, [page, search, categoryFilter]);
+  }, [page, search, categoryFilter, statusFilter]);
 
   useEffect(() => {
-    fetch("/api/categories?all=true").then(r => r.json()).then(d => { if (d.success) setCategories(d.data); });
+    fetch("/api/categories?tree=true").then(r => r.json()).then(d => { if (d.success) setCategories(d.data); });
   }, []);
+
+  const categoryOptions = useMemo(() => categorySelectOptions(categories), [categories]);
+
+  // Copy a product as a hidden draft — same images, specs and variants, but
+  // stock 0 and no SKU/barcode (those must be unique) — then open it to edit.
+  const confirmDuplicate = async () => {
+    if (!copyTarget) return;
+    setCopying(true);
+    setCopyError("");
+    try {
+      const src = await fetch(`/api/products/${copyTarget.id}`, { cache: "no-store" }).then((r) => r.json());
+      if (!src.success) throw new Error(src.error || "Could not load the product");
+      const form = productToFormValue(src.data);
+      const payload = buildProductPayload({
+        ...form,
+        nameEn: `${form.nameEn} (Copy)`,
+        nameAr: `${form.nameAr} (نسخة)`,
+        sku: "",
+        barcode: "",
+        isActive: false,
+        variants: form.variants.map((v) => ({ ...v, sku: "", barcode: "", stock: "0" })),
+      });
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).then((r) => r.json());
+      if (!res.success) throw new Error(res.error || "Could not create the copy");
+      setCopyTarget(null);
+      router.push(`/admin/products/${res.data.id}`);
+    } catch (e) {
+      setCopyError(e instanceof Error ? e.message : "Could not duplicate the product");
+    } finally {
+      setCopying(false);
+    }
+  };
 
   useEffect(() => { load(); }, [load]);
 
@@ -132,10 +183,23 @@ export default function ProductsPage() {
             <LuSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input className="admin-input w-full sm:w-56 pl-9" placeholder="Search products..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
           </div>
-          <select className="admin-input admin-select w-full sm:w-44" value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}>
+          <select className="admin-input admin-select w-full sm:w-52" value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}>
             <option value="">All Categories</option>
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.nameEn}</option>)}
+            {categoryOptions.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
           </select>
+          <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5" role="group" aria-label="Filter by status">
+            {([["", "All"], ["true", "Active"], ["false", "Hidden"]] as [StatusFilter, string][]).map(([v, label]) => (
+              <button
+                key={label}
+                type="button"
+                aria-pressed={statusFilter === v}
+                onClick={() => { setStatusFilter(v); setPage(1); }}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${statusFilter === v ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:text-slate-700"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
         <Link href="/admin/products/new" className="admin-btn admin-btn-primary inline-flex items-center gap-1.5">
           <LuPlus size={16} /> Add Product
@@ -180,6 +244,7 @@ export default function ProductsPage() {
                   {flags(p)}
                   <div className="flex gap-2">
                     <Link href={`/admin/products/${p.id}`} className="admin-btn admin-btn-secondary text-xs py-1"><LuPencil size={14} /> Edit</Link>
+                    <button onClick={() => { setCopyError(""); setCopyTarget(p); }} className="admin-btn admin-btn-secondary text-xs py-1" title="Duplicate"><LuCopy size={14} /></button>
                     <button onClick={() => { setDeleteError(""); setDeleteTarget(p); }} className="admin-btn admin-btn-danger text-xs py-1"><LuTrash2 size={14} /></button>
                   </div>
                 </div>
@@ -234,6 +299,7 @@ export default function ProductsPage() {
                       <td>
                         <div className="flex gap-2">
                           <Link href={`/admin/products/${p.id}`} className="admin-btn admin-btn-secondary text-xs py-1"><LuPencil size={14} /> Edit</Link>
+                          <button onClick={() => { setCopyError(""); setCopyTarget(p); }} className="admin-btn admin-btn-secondary text-xs py-1" title="Duplicate this product"><LuCopy size={14} /> Copy</button>
                           <button onClick={() => { setDeleteError(""); setDeleteTarget(p); }} className="admin-btn admin-btn-danger text-xs py-1"><LuTrash2 size={14} /> Del</button>
                         </div>
                       </td>
@@ -256,6 +322,36 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
+
+      {/* Duplicate confirmation modal */}
+      <AdminModal
+        open={!!copyTarget}
+        onClose={() => !copying && setCopyTarget(null)}
+        className="!max-w-md"
+        title="Duplicate product?"
+        footer={
+          <>
+            <button onClick={() => setCopyTarget(null)} disabled={copying} className="admin-btn admin-btn-secondary">Cancel</button>
+            <button onClick={confirmDuplicate} disabled={copying} className="admin-btn admin-btn-primary justify-center disabled:opacity-60">
+              {copying ? "Copying..." : "Duplicate"}
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col items-center text-center">
+          <div className="w-14 h-14 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4">
+            <LuCopy size={24} />
+          </div>
+          <p className="text-sm text-slate-600">
+            Creates a copy of <span className="font-semibold text-slate-800">{copyTarget?.nameEn}</span> with the same images,
+            prices, specifications and variants, then opens it so you can adjust it.
+          </p>
+          <p className="text-xs text-slate-500 mt-2">
+            The copy starts hidden from the shop, with stock 0 and empty SKUs and barcodes.
+          </p>
+          {copyError && <div className="bg-red-50 text-red-700 text-sm px-3 py-2 rounded-lg mt-4 w-full">{copyError}</div>}
+        </div>
+      </AdminModal>
 
       {/* Delete confirmation modal */}
       <AdminModal

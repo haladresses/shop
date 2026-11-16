@@ -10,6 +10,16 @@ export async function GET(req: NextRequest) {
     const all = req.nextUrl.searchParams.get("all") === "true";
     const parentOnly = req.nextUrl.searchParams.get("parentOnly") === "true";
 
+    // Tree view for the admin: every category (active or not) with the counts
+    // the categories screen shows. The client nests them by parentId.
+    if (req.nextUrl.searchParams.get("tree") === "true") {
+      const categories = await prisma.category.findMany({
+        orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }],
+        include: { _count: { select: { products: true, children: true, attributes: true } } },
+      });
+      return ok(categories);
+    }
+
     if (all) {
       const categories = await prisma.category.findMany({
         where: { isActive: true, ...(parentOnly && { parentId: null }) },

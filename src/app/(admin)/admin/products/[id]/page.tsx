@@ -4,88 +4,9 @@ import Link from "next/link";
 import { LuChevronLeft, LuMessageSquare } from "react-icons/lu";
 import ProductForm, {
   buildProductPayload,
+  productToFormValue,
   type ProductFormValue,
 } from "@/components/admin/ProductForm";
-import type { ProductAttributes } from "@/lib/attributes";
-
-type ApiColorPart = { part: string; color: string; colorHex?: string | null };
-
-type ApiVariant = {
-  color: string | null;
-  colorHex: string | null;
-  colorParts?: ApiColorPart[] | null;
-  size: string | null;
-  sku: string | null;
-  barcode?: string | null;
-  priceAdjustment: string | number | null;
-  isActive: boolean;
-  inventory?: { quantity: number } | null;
-};
-
-type ApiImage = { url: string; isPrimary: boolean; altEn?: string | null; altAr?: string | null; color?: string | null };
-
-type ApiProduct = {
-  id: string;
-  nameEn: string;
-  nameAr: string;
-  descriptionEn: string | null;
-  descriptionAr: string | null;
-  categoryId: string;
-  basePrice: string | number;
-  salePrice: string | number | null;
-  costPrice?: string | number | null;
-  sku: string | null;
-  barcode?: string | null;
-  isActive: boolean;
-  isFeatured: boolean;
-  isNew: boolean;
-  isBestSeller: boolean;
-  attributes: ProductAttributes | null;
-  images: ApiImage[];
-  variants: ApiVariant[];
-};
-
-function toFormValue(p: ApiProduct): ProductFormValue {
-  return {
-    nameEn: p.nameEn,
-    nameAr: p.nameAr,
-    descriptionEn: p.descriptionEn ?? "",
-    descriptionAr: p.descriptionAr ?? "",
-    categoryId: p.categoryId,
-    basePrice: String(p.basePrice ?? ""),
-    salePrice: p.salePrice == null ? "" : String(p.salePrice),
-    costPrice: p.costPrice == null ? "" : String(p.costPrice),
-    sku: p.sku ?? "",
-    barcode: p.barcode ?? "",
-    isActive: p.isActive,
-    isFeatured: p.isFeatured,
-    isNew: p.isNew,
-    isBestSeller: p.isBestSeller,
-    attributes: p.attributes ?? {},
-    images: (p.images ?? []).map((i) => ({
-      url: i.url,
-      isPrimary: i.isPrimary,
-      altEn: i.altEn ?? undefined,
-      altAr: i.altAr ?? undefined,
-      color: i.color ?? undefined,
-    })),
-    variants: (p.variants ?? []).map((v) => ({
-      color: v.color ?? "",
-      colorHex: v.colorHex ?? "",
-      colorParts: (v.colorParts ?? []).map((cp) => ({
-        part: cp.part,
-        color: cp.color,
-        colorHex: cp.colorHex ?? "",
-      })),
-      size: v.size ?? "",
-      sku: v.sku ?? "",
-      barcode: v.barcode ?? "",
-      priceAdjustment: v.priceAdjustment == null ? "0" : String(v.priceAdjustment),
-      stock: String(v.inventory?.quantity ?? 0),
-      isActive: v.isActive,
-    })),
-  };
-}
 
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -99,7 +20,7 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
     fetch(`/api/products/${id}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
-        if (d.success) setInitial(toFormValue(d.data));
+        if (d.success) setInitial(productToFormValue(d.data));
         else setLoadError(d.error || "Product not found");
       })
       .catch(() => setLoadError("Failed to load product"));

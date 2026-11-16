@@ -297,6 +297,21 @@ body {
   }
 }
 
+/* Soft entrance for expanding panels and the unsaved-changes bar. */
+@keyframes adminFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes adminSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.admin-fade-in { animation: adminFadeIn 0.18s ease-out; }
+.admin-slide-up { animation: adminSlideUp 0.24s cubic-bezier(0.16, 1, 0.3, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .admin-fade-in, .admin-slide-up { animation: none; }
+}
+
 /* Soft focus in the admin — light indigo glow instead of black outlines. */
 .admin-input:focus { border-color: #a5b4fc; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12); outline: none; }
 input:focus, textarea:focus, select:focus { outline: none; }

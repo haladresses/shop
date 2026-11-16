@@ -18,6 +18,7 @@ import {
 } from "@/lib/storefront";
 import {
   normalizeAttributes,
+  normalizeCustomSpecs,
   formatAttributeValue,
   type ProductAttributes,
   type CategoryAttribute,
@@ -213,15 +214,21 @@ const ShopDetails = () => {
     () => (api?.attributes as ProductAttributes) ?? {},
     [api]
   );
+  // Category fields first, then specifications that only this product has.
   const specs = useMemo(
-    () =>
-      attrDefs
+    () => [
+      ...attrDefs
         .map((def) => ({
           label: pick(def.labelEn, def.labelAr, isArabic),
           value: formatAttributeValue(def, attrValues[def.key], isArabic),
         }))
         .filter((s) => s.value !== ""),
-    [attrDefs, attrValues, isArabic]
+      ...normalizeCustomSpecs(api?.customSpecs).map((s) => ({
+        label: pick(s.labelEn, s.labelAr, isArabic),
+        value: pick(s.valueEn, s.valueAr, isArabic),
+      })),
+    ],
+    [attrDefs, attrValues, api, isArabic]
   );
 
   const title = api ? pick(api.nameEn, api.nameAr, isArabic) : "";
@@ -521,8 +528,8 @@ const ShopDetails = () => {
               {/* Quick specs preview */}
               {specs.length > 0 && (
                 <div className="mb-6 rounded-lg border border-gray-3 divide-y divide-gray-3">
-                  {specs.slice(0, 4).map((s) => (
-                    <div key={s.label} className="flex items-center justify-between gap-4 px-4 py-2.5">
+                  {specs.slice(0, 4).map((s, i) => (
+                    <div key={`${i}-${s.label}`} className="flex items-center justify-between gap-4 px-4 py-2.5">
                       <span className="text-custom-sm text-dark-4">{s.label}</span>
                       <span className="text-custom-sm font-medium text-dark text-right">{s.value}</span>
                     </div>
@@ -620,8 +627,8 @@ const ShopDetails = () => {
             {activeTab === "specs" && (
               specs.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10">
-                  {specs.map((s) => (
-                    <div key={s.label} className="flex items-center justify-between gap-4 py-3 border-b border-gray-3">
+                  {specs.map((s, i) => (
+                    <div key={`${i}-${s.label}`} className="flex items-center justify-between gap-4 py-3 border-b border-gray-3">
                       <span className="text-dark-4">{s.label}</span>
                       <span className="font-medium text-dark text-right">{s.value}</span>
                     </div>
