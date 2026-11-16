@@ -7,7 +7,7 @@ import { printArea } from "@/lib/print";
 import { SupplierStatementDoc, type PrintableStatement } from "./PrintDocs";
 import { addDaysKey, api, fmt3, fmtDate, todayKey, useDocHeader } from "./shared";
 
-type Statement = PrintableStatement & {
+type Statement = Omit<PrintableStatement, "entries"> & {
   entries: (PrintableStatement["entries"][number] & { link: string | null })[];
 };
 

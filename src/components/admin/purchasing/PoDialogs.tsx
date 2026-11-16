@@ -166,7 +166,7 @@ export function ReturnToSupplierModal({
   onClose: () => void;
   onDone: (ret: { id: string; number: string }) => void;
 }) {
-  const returnable = po.items.filter((i) => i.receivedQty - i.returnedQty > 0);
+  const returnable = useMemo(() => po.items.filter((i) => i.receivedQty - i.returnedQty > 0), [po]);
   const [qty, setQty] = useState<Record<string, string>>({});
   const [reason, setReason] = useState("");
   const [returnedAt, setReturnedAt] = useState(todayKey());

@@ -16,6 +16,7 @@ import {
   LuTruck,
   LuWallet,
 } from "react-icons/lu";
+import Link from "next/link";
 import AdminModal from "@/components/admin/AdminModal";
 
 type InventoryItem = {
@@ -803,7 +804,7 @@ function ReceiveTab({ onDone }: { onDone: () => void }) {
         <p className="text-xs text-slate-400">Stock goes up immediately and each product&apos;s purchase price is updated to the weighted-average cost.</p>
         <p className="text-xs text-slate-500 border-t border-slate-100 pt-3">
           Buying from a supplier? Use{" "}
-          <a href="/admin/purchases/new" className="text-indigo-600 hover:underline">a purchase order</a> instead — it receives the stock the same way and also tracks what you owe them.
+          <Link href="/admin/purchases/new" className="text-indigo-600 hover:underline">a purchase order</Link> instead — it receives the stock the same way and also tracks what you owe them.
         </p>
       </div>
     </div>
