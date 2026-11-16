@@ -31,7 +31,7 @@ type ProductRow = {
 type Meta = { page: number; pageSize: number; total: number; totalPages: number };
 
 function RateChip({ rate, inherited }: { rate: RateInfo | null; inherited?: boolean }) {
-  if (!rate) return <span className="text-xs text-slate-400">—</span>;
+  if (!rate) return <span className="text-xs text-slate-400">-</span>;
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap ${
@@ -257,7 +257,7 @@ export default function TaxAssignmentTab({ canManage }: { canManage: boolean }) 
             <option value="">All categories</option>
             {tree.map((c) => (
               <option key={c.id} value={c.id}>
-                {"— ".repeat(c.depth)}
+                {"-".repeat(c.depth)}
                 {c.nameEn}
               </option>
             ))}

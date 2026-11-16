@@ -45,6 +45,30 @@
   }
 }
 
+/* ───────── Arabic typeface: Vazirmatn (SIL OFL, self-hosted) ─────────
+   Limited by unicode-range to the Arabic script, and listed FIRST in every
+   font stack, so any Arabic character — storefront, admin, POS, printed
+   receipts, invoices and stickers — renders in Vazirmatn, while Latin text
+   keeps its own font (SBC), even within the same line. One variable file
+   covers weights 100–900. */
+@font-face {
+  font-family: "Vazirmatn";
+  src: url("/fonts/vazirmatn/Vazirmatn-Variable.woff2") format("woff2-variations"),
+    url("/fonts/vazirmatn/Vazirmatn-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+0870-089F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+25CC;
+}
+
+/* Arabic is a joined script: letter-spacing tears the letters apart, so
+   tracking utilities are neutralised inside right-to-left content. */
+[dir="rtl"] [class*="tracking-"],
+[dir="rtl"][class*="tracking-"],
+:lang(ar) [class*="tracking-"] {
+  letter-spacing: normal;
+}
+
 /* ───────── Scrollbars (whole site: storefront, admin, POS, seller) ─────────
    A slim rounded "slider" on an invisible track. The thumb is painted inside
    a transparent border, so it looks ~4px wide but has a 10px grab area, and

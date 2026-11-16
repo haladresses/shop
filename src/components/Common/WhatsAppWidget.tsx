@@ -53,7 +53,7 @@ export default function WhatsAppWidget() {
     let text = t(cfg.prefillEn, cfg.prefillAr);
     if (onProduct && typeof window !== "undefined") {
       const name = document.querySelector("[data-product-title]")?.textContent?.trim();
-      text += `\n\n${isArabic ? "المنتج" : "Product"}: ${name ? `${name} — ` : ""}${window.location.href}`;
+      text += `\n\n${isArabic ? "المنتج" : "Product"}: ${name ? `${name}: ` : ""}${window.location.href}`;
     }
     window.open(waLink(cfg.phone, text), "_blank", "noopener,noreferrer");
     setOpen(false);

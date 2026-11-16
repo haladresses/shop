@@ -131,7 +131,7 @@ const Contact = () => {
         messagePlaceholder: "Tell us what you are shopping for and who it is for",
         submit: "Send to Store Team",
         sending: "Sending...",
-        successMsg: "Thanks! Your message has reached our team — we'll be in touch soon.",
+        successMsg: "Thanks! Your message has reached our team. We'll be in touch soon.",
         errorMsg: "We couldn't send your message. Please try again.",
         requiredMsg: "Please enter your name and a message.",
       };

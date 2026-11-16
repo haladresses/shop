@@ -19,6 +19,9 @@ type PosLine = {
   barcode: string | null;
   unitPrice: number;
   stock: number | null;
+  /** Inventory's low-stock level and shelf location for this option. */
+  lowStockAlert: number | null;
+  location: string | null;
   imageUrl: string | null;
   // For the POS cart's live pricing (same engine as the server):
   tax: RateInfo;
@@ -64,6 +67,8 @@ function toLines(product: ProductWithLines, pricing: Pricing): PosLine[] {
         barcode: product.barcode,
         unitPrice: unitBase,
         stock: null,
+        lowStockAlert: null,
+        location: null,
         imageUrl,
         ...shared,
       },
@@ -79,9 +84,11 @@ function toLines(product: ProductWithLines, pricing: Pricing): PosLine[] {
     colorParts: v.colorParts,
     size: v.size,
     sku: v.sku,
-    barcode: v.barcode,
+    barcode: v.barcode || product.barcode,
     unitPrice: Math.round((unitBase + Number(v.priceAdjustment)) * 1000) / 1000,
     stock: v.inventory?.quantity ?? 0,
+    lowStockAlert: v.inventory?.lowStockAlert ?? null,
+    location: v.inventory?.location ?? null,
     imageUrl,
     ...shared,
   }));
@@ -113,8 +120,10 @@ export async function GET(req: NextRequest) {
       if (!product) return ok([]);
 
       const lines = toLines(product, await pricingFor([product]));
-      // A variant-level barcode identifies exactly one line; narrow to it.
-      const matched = lines.filter((l) => l.barcode === barcode) ;
+      // The product's barcode covers every size/colour (the cashier picks one);
+      // a size/colour's own barcode identifies exactly that line.
+      if (product.barcode === barcode) return ok(lines);
+      const matched = lines.filter((l) => l.barcode === barcode);
       return ok(matched.length > 0 ? matched : lines);
     }
 

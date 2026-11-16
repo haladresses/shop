@@ -25,7 +25,7 @@ export default function SettlementPicker({
       <div className="grid sm:grid-cols-2 gap-2">
         {([
           ["CREDIT", "Credit to our account", "Reduces what we owe this supplier."],
-          ["REFUND", "Supplier refunded the money", "They paid it back — recorded as a refund received."],
+          ["REFUND", "Supplier refunded the money", "They paid it back. Recorded as a refund received."],
         ] as const).map(([k, title, hint]) => (
           <button
             key={k}

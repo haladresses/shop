@@ -153,7 +153,7 @@ export default function NewsletterAdminPage() {
               </div>
 
               <p className="text-xs text-slate-400">
-                Tip: the &ldquo;Already Subscribed&rdquo; message is shown when someone submits an email that is already an active subscriber — useful for reassuring them without revealing account details.
+                Tip: the &ldquo;Already Subscribed&rdquo; message is shown when someone submits an email that is already an active subscriber, useful for reassuring them without revealing account details.
               </p>
 
               <div className="flex items-center gap-3 sticky bottom-0 bg-slate-50 py-3">
@@ -213,8 +213,8 @@ export default function NewsletterAdminPage() {
                     {subscribers.map((s) => (
                       <tr key={s.id}>
                         <td className="font-medium text-slate-700">{s.email}</td>
-                        <td className="text-slate-500">{s.source || "—"}</td>
-                        <td className="text-slate-500 uppercase">{s.language || "—"}</td>
+                        <td className="text-slate-500">{s.source || "-"}</td>
+                        <td className="text-slate-500 uppercase">{s.language || "-"}</td>
                         <td className="text-slate-500">{new Date(s.createdAt).toLocaleString()}</td>
                         <td>
                           <button onClick={() => removeSubscriber(s.id)} className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50" title="Remove">

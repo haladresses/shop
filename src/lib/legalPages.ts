@@ -131,9 +131,9 @@ export const DEFAULT_PRIVACY_POLICY: LegalPageConfig = {
       headingEn: "Sharing Your Information",
       headingAr: "مشاركة معلوماتك",
       bodyEn:
-        "We only share your information with trusted partners needed to fulfill your order — our delivery partner (Wasellee) and our payment gateway (Thawani). We never sell your personal information to third parties.",
+        "We only share your information with trusted partners needed to fulfill your order. Our delivery partner (Wasellee) and our payment gateway (Thawani). We never sell your personal information to third parties.",
       bodyAr:
-        "نشارك معلوماتك فقط مع الشركاء الموثوقين اللازمين لإتمام طلبك — شريك التوصيل (وصلي) وبوابة الدفع (ثواني). نحن لا نبيع بياناتك الشخصية لأي طرف ثالث أبداً.",
+        "نشارك معلوماتك فقط مع الشركاء الموثوقين اللازمين لإتمام طلبك، شريك التوصيل (وصلي) وبوابة الدفع (ثواني). نحن لا نبيع بياناتك الشخصية لأي طرف ثالث أبداً.",
     },
     {
       headingEn: "Cookies",
@@ -163,9 +163,9 @@ export const DEFAULT_PRIVACY_POLICY: LegalPageConfig = {
       headingEn: "Contact Us",
       headingAr: "تواصلي معنا",
       bodyEn:
-        "If you have any questions about this Privacy Policy, please reach out through our Contact page or WhatsApp — we're happy to help.",
+        "If you have any questions about this Privacy Policy, please reach out through our Contact page or WhatsApp. We're happy to help.",
       bodyAr:
-        "إذا كان لديكِ أي استفسار حول سياسة الخصوصية هذه، تواصلي معنا عبر صفحة الاتصال أو واتساب — يسعدنا مساعدتك.",
+        "إذا كان لديكِ أي استفسار حول سياسة الخصوصية هذه، تواصلي معنا عبر صفحة الاتصال أو واتساب، يسعدنا مساعدتك.",
     },
   ],
 };
@@ -220,9 +220,9 @@ export const DEFAULT_TERMS_OF_USE: LegalPageConfig = {
       headingEn: "Intellectual Property",
       headingAr: "الملكية الفكرية",
       bodyEn:
-        "All content on this website — including photos, logos, and text — is the property of Hala Dresses and may not be copied or reused without our written permission.",
+        "All content on this website. Including photos, logos, and text. Is the property of Hala Dresses and may not be copied or reused without our written permission.",
       bodyAr:
-        "جميع محتويات هذا الموقع — بما في ذلك الصور والشعارات والنصوص — هي ملك لحلا للازياء ولا يجوز نسخها أو إعادة استخدامها دون إذن كتابي منا.",
+        "جميع محتويات هذا الموقع، بما في ذلك الصور والشعارات والنصوص، هي ملك لحلا للازياء ولا يجوز نسخها أو إعادة استخدامها دون إذن كتابي منا.",
     },
     {
       headingEn: "Limitation of Liability",

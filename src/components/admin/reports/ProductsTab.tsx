@@ -114,7 +114,7 @@ export default function ProductsTab({
         rowKey={(r) => r.key}
         defaultSort={{ key: "netExVat", dir: "desc" }}
         printExtra={data.category ? `Category: ${data.category.name}` : undefined}
-        note={missingCost > 0 ? <>* {missingCost} item{missingCost === 1 ? " has" : "s have"} sales without a purchase price — cost and profit are understated for them.</> : undefined}
+        note={missingCost > 0 ? <>* {missingCost} item{missingCost === 1 ? " has" : "s have"} sales without a purchase price. Cost and profit are understated for them.</> : undefined}
         toolbar={
           <>
             <div className="relative">

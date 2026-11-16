@@ -139,7 +139,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
     if (!p) return notFound("Promotion");
     if (p._count.redemptions > 0) {
       return error(
-        `This promotion was used on ${p._count.redemptions} order(s), so it's kept for your reports. Pause it instead — it will stop applying straight away.`,
+        `This promotion was used on ${p._count.redemptions} order(s), so it's kept for your reports. Pause it instead: it will stop applying straight away.`,
         409,
       );
     }

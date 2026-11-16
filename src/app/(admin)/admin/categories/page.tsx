@@ -259,7 +259,7 @@ export default function CategoriesPage() {
             type="button"
             onClick={() => toggleActive(cat)}
             className={`badge cursor-pointer ${cat.isActive ? "badge-delivered" : "badge-cancelled"}`}
-            title={cat.isActive ? "Visible in the shop — click to hide" : "Hidden — click to show in the shop"}
+            title={cat.isActive ? "Visible in the shop. Click to hide" : "Hidden: click to show in the shop"}
           >
             {cat.isActive ? "Active" : "Hidden"}
           </button>
@@ -399,7 +399,7 @@ export default function CategoriesPage() {
             </div>
             <p className="font-semibold text-slate-800">“{created.nameEn}” is ready</p>
             <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
-              Next, choose the details every product in it should have — fabric, length, sleeves… It takes a minute with the
+              Next, choose the details every product in it should have. Fabric, length, sleeves… It takes a minute with the
               ready-made sets.
             </p>
             <p className="inline-flex items-center gap-1.5 text-xs text-indigo-600 mt-3">

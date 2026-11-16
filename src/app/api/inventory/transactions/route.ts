@@ -39,6 +39,8 @@ export async function GET(req: NextRequest) {
           { note: { contains: search, mode: "insensitive" } },
           { inventory: { variant: { product: { nameEn: { contains: search, mode: "insensitive" } } } } },
           { inventory: { variant: { sku: { contains: search, mode: "insensitive" } } } },
+          { inventory: { variant: { barcode: { contains: search, mode: "insensitive" } } } },
+          { inventory: { variant: { product: { OR: [{ barcode: { contains: search, mode: "insensitive" } }, { sku: { contains: search, mode: "insensitive" } }] } } } },
         ],
       }),
     };

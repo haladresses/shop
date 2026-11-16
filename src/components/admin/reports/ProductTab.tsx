@@ -97,7 +97,7 @@ export default function ProductTab({
   const missingCost = rows.filter((r) => !r.hasCost).length;
 
   const cols: Column<Row>[] = [
-    { key: "sku", label: "SKU", ar: "الرمز", kind: "text", value: (r) => r.sku ?? "", render: (r) => <span className="font-mono text-xs">{r.sku ?? "—"}</span> },
+    { key: "sku", label: "SKU", ar: "الرمز", kind: "text", value: (r) => r.sku ?? "", render: (r) => <span className="font-mono text-xs">{r.sku ?? "-"}</span> },
     { key: "name", label: "Product", ar: "المنتج", kind: "text", value: (r) => r.nameEn, render: (r) => <span className="font-medium text-slate-800">{r.nameEn}</span> },
     { key: "nameAr", label: "Arabic name", ar: "الاسم بالعربية", kind: "text", value: (r) => r.nameAr, render: (r) => <span dir="rtl">{r.nameAr}</span> },
     ...(group === "variant"

@@ -38,6 +38,7 @@ type InventoryItem = {
       nameEn: string;
       nameAr: string;
       sku?: string | null;
+      barcode?: string | null;
       basePrice: string | number;
       salePrice: string | number | null;
       costPrice: string | number | null;
@@ -129,10 +130,10 @@ export default function InventoryPage() {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Kpi icon={LuBoxes} label="Units in stock" value={summary ? summary.units.toLocaleString() : "—"} sub={summary ? `${summary.skus.toLocaleString()} SKUs` : ""} />
-        <Kpi icon={LuWallet} label="Stock value (cost)" value={summary ? num(summary.costValue) : "—"} sub={summary ? `Retail ${num(summary.retailValue)}` : ""} />
-        <Kpi icon={LuCircleAlert} label="Low stock" value={summary ? String(summary.lowStock) : "—"} tone="warn" sub="At or below alert level" />
-        <Kpi icon={LuPackageX} label="Out of stock" value={summary ? String(summary.outOfStock) : "—"} tone="bad" sub={summary?.missingCost ? `${summary.missingCost} without purchase price` : "Need restocking"} />
+        <Kpi icon={LuBoxes} label="Units in stock" value={summary ? summary.units.toLocaleString() : "-"} sub={summary ? `${summary.skus.toLocaleString()} SKUs` : ""} />
+        <Kpi icon={LuWallet} label="Stock value (cost)" value={summary ? num(summary.costValue) : "-"} sub={summary ? `Retail ${num(summary.retailValue)}` : ""} />
+        <Kpi icon={LuCircleAlert} label="Low stock" value={summary ? String(summary.lowStock) : "-"} tone="warn" sub="At or below alert level" />
+        <Kpi icon={LuPackageX} label="Out of stock" value={summary ? String(summary.outOfStock) : "-"} tone="bad" sub={summary?.missingCost ? `${summary.missingCost} without purchase price` : "Need restocking"} />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -320,10 +321,10 @@ function StockTab({
                       </div>
                     </td>
                     <td className="font-mono text-xs text-slate-500">
-                      {item.variant.sku || item.variant.product.sku || "—"}
-                      {item.variant.barcode && <div className="text-slate-400">{item.variant.barcode}</div>}
+                      {item.variant.sku || item.variant.product.sku || "-"}
+                      {(item.variant.barcode || item.variant.product.barcode) && <div className="text-slate-400">{item.variant.barcode || item.variant.product.barcode}</div>}
                     </td>
-                    <td className="text-sm text-slate-600">{item.location || <span className="text-slate-300">—</span>}</td>
+                    <td className="text-sm text-slate-600">{item.location || <span className="text-slate-300">-</span>}</td>
                     <td className="text-right">
                       <span
                         className={`inline-flex items-center justify-center min-w-[44px] px-2 py-0.5 rounded-full text-sm font-bold tabular-nums ${
@@ -337,7 +338,7 @@ function StockTab({
                     <td className="text-right text-slate-500 tabular-nums">{item.lowStockAlert}</td>
                     <td className="text-right tabular-nums">{cost == null ? <span className="text-amber-600 text-xs">not set</span> : num(cost)}</td>
                     <td className="text-right tabular-nums text-slate-700">
-                      {cost == null ? "—" : num(Math.max(0, qty) * cost)}
+                      {cost == null ? "-" : num(Math.max(0, qty) * cost)}
                       <p className="text-[11px] text-slate-400">retail {num(Math.max(0, qty) * unitPrice(item.variant))}</p>
                     </td>
                     <td className="text-right whitespace-nowrap">
@@ -386,7 +387,7 @@ function AdjustModal({ item, onClose, onSaved }: { item: InventoryItem; onClose:
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (qty === 0) return setErr(type === "ADJUSTMENT" ? "The counted quantity matches the system — nothing to correct." : "Enter a quantity.");
+    if (qty === 0) return setErr(type === "ADJUSTMENT" ? "The counted quantity matches the system. Nothing to correct." : "Enter a quantity.");
     setSaving(true);
     setErr("");
     const res = await fetch("/api/inventory", {
@@ -458,7 +459,7 @@ function AdjustModal({ item, onClose, onSaved }: { item: InventoryItem; onClose:
         )}
         {qty !== 0 && (
           <p className={`text-sm rounded-lg px-3 py-2 ${after < 0 ? "bg-rose-50 text-rose-700" : "bg-slate-50 text-slate-600"}`}>
-            {item.quantity} → <strong>{after}</strong> ({delta > 0 ? "+" : ""}{delta}){after < 0 && " — not enough stock"}
+            {item.quantity} → <strong>{after}</strong> ({delta > 0 ? "+" : ""}{delta}){after < 0 && ". Not enough stock"}
           </p>
         )}
         <div className="grid grid-cols-2 gap-3">
@@ -604,13 +605,13 @@ function MovementsTab({ inventoryId, compact }: { inventoryId?: string; compact?
                       </span>
                     </td>
                     <td className={`text-right tabular-nums font-semibold ${q >= 0 ? "text-emerald-700" : "text-rose-600"}`}>{q > 0 ? `+${q}` : q}</td>
-                    <td className="text-right tabular-nums text-slate-500">{t.balanceAfter ?? "—"}</td>
+                    <td className="text-right tabular-nums text-slate-500">{t.balanceAfter ?? "-"}</td>
                     <td className="text-sm text-slate-600 max-w-[260px]">
                       {t.reference && <span className="font-mono text-xs bg-slate-100 rounded px-1.5 py-0.5 mr-1">{t.reference}</span>}
                       <span>{t.note}</span>
                       {t.unitCost != null && <span className="text-xs text-slate-400"> · @ {num(t.unitCost)}</span>}
                     </td>
-                    <td className="text-sm text-slate-500 whitespace-nowrap">{t.createdBy || "—"}</td>
+                    <td className="text-sm text-slate-500 whitespace-nowrap">{t.createdBy || "-"}</td>
                   </tr>
                 );
               })}
@@ -682,7 +683,10 @@ function ReceiveTab({ onDone }: { onDone: () => void }) {
   // A scanner sends the barcode + Enter: add the exact match straight away.
   const onEnter = (e: React.FormEvent) => {
     e.preventDefault();
-    const exact = results.find((r) => r.variant.barcode === q.trim() || r.variant.sku === q.trim());
+    const code = q.trim();
+    const exact = results.find((r) => r.variant.barcode === code || r.variant.sku === code)
+      // The product's own barcode: fine when the product has just one size/colour here.
+      ?? (results.filter((r) => r.variant.product.barcode === code).length === 1 ? results.find((r) => r.variant.product.barcode === code) : undefined);
     if (exact) add(exact);
     else if (results.length === 1) add(results[0]);
   };
@@ -726,7 +730,7 @@ function ReceiveTab({ onDone }: { onDone: () => void }) {
                   <button type="button" onClick={() => add(r)} className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-slate-50">
                     <span className="min-w-0">
                       <span className="block font-medium text-slate-800 truncate">{r.variant.product.nameEn}</span>
-                      <span className="block text-xs text-slate-500">{variantLabel(r.variant)} {r.variant.barcode && `· ${r.variant.barcode}`}</span>
+                      <span className="block text-xs text-slate-500">{variantLabel(r.variant)} {(r.variant.barcode || r.variant.product.barcode) && `· ${r.variant.barcode || r.variant.product.barcode}`}</span>
                     </span>
                     <span className="text-xs text-slate-500 shrink-0">{r.quantity} on hand</span>
                   </button>
@@ -767,7 +771,7 @@ function ReceiveTab({ onDone }: { onDone: () => void }) {
                         <input type="number" min="1" value={l.quantity} onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, quantity: e.target.value } : x)))} className="admin-input !py-1 text-right !w-24" />
                       </td>
                       <td className="text-right">
-                        <input type="number" min="0" step="0.001" value={l.unitCost} placeholder="—" onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitCost: e.target.value } : x)))} className="admin-input !py-1 text-right !w-28" />
+                        <input type="number" min="0" step="0.001" value={l.unitCost} placeholder="-" onChange={(e) => setLines(lines.map((x, j) => (j === i ? { ...x, unitCost: e.target.value } : x)))} className="admin-input !py-1 text-right !w-28" />
                       </td>
                       <td className="text-right tabular-nums">{num((parseInt(l.quantity) || 0) * (parseFloat(l.unitCost) || 0))}</td>
                       <td>
@@ -804,7 +808,7 @@ function ReceiveTab({ onDone }: { onDone: () => void }) {
         <p className="text-xs text-slate-400">Stock goes up immediately and each product&apos;s purchase price is updated to the weighted-average cost.</p>
         <p className="text-xs text-slate-500 border-t border-slate-100 pt-3">
           Buying from a supplier? Use{" "}
-          <Link href="/admin/purchases/new" className="text-indigo-600 hover:underline">a purchase order</Link> instead — it receives the stock the same way and also tracks what you owe them.
+          <Link href="/admin/purchases/new" className="text-indigo-600 hover:underline">a purchase order</Link> instead: it receives the stock the same way and also tracks what you owe them.
         </p>
       </div>
     </div>

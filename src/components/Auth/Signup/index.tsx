@@ -16,7 +16,7 @@ const Signup = () => {
     ? {
         breadcrumb: "إنشاء حساب",
         title: "أنشئي حسابك",
-        subtitle: "دقيقة واحدة فقط — لمتابعة الطلبات وحفظ المفضلة.",
+        subtitle: "دقيقة واحدة فقط، لمتابعة الطلبات وحفظ المفضلة.",
         quote: "إطلالات تليق بكل مناسبة.",
         show: "إظهار كلمة المرور",
         hide: "إخفاء كلمة المرور",
@@ -43,7 +43,7 @@ const Signup = () => {
     : {
         breadcrumb: "Sign Up",
         title: "Create your account",
-        subtitle: "It takes a minute — track orders and save favourites.",
+        subtitle: "It takes a minute. Track orders and save favourites.",
         quote: "Looks made for every occasion.",
         show: "Show password",
         hide: "Hide password",

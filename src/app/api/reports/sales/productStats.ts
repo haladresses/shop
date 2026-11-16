@@ -85,7 +85,8 @@ export async function productStats(
   if (opts.categoryIds && opts.categoryIds.length) conds.push(Prisma.sql`p."categoryId" IN (${Prisma.join(opts.categoryIds)})`);
   if (opts.search) {
     const like = `%${opts.search}%`;
-    conds.push(Prisma.sql`(p."nameEn" ILIKE ${like} OR p."nameAr" ILIKE ${like} OR p.sku ILIKE ${like})`);
+    conds.push(Prisma.sql`(p."nameEn" ILIKE ${like} OR p."nameAr" ILIKE ${like} OR p.sku ILIKE ${like} OR p.barcode ILIKE ${like}
+      OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv."productId" = p.id AND (pv.barcode ILIKE ${like} OR pv.sku ILIKE ${like})))`);
   }
   const productWhere = conds.length ? Prisma.join(conds, " AND ") : Prisma.sql`TRUE`;
   // Order discount share for lines recorded before per-line discounts existed.
@@ -183,7 +184,7 @@ export async function productStats(
       sku: (perVariant && v?.sku) || p?.sku || null,
       variantLabel,
       categoryId: p?.categoryId ?? null,
-      categoryName: p?.category?.nameEn ?? "—",
+      categoryName: p?.category?.nameEn ?? "-",
       orders: s?.orders ?? 0,
       qty,
       returnedQty,

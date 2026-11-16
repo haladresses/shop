@@ -266,7 +266,7 @@ export default function SummaryTab({ query, single }: { query: string; single: b
             value: (r) => r.difference,
             render: (r) =>
               r.difference == null ? (
-                "—"
+                "-"
               ) : (
                 <span className={Math.abs(r.difference) < 0.0005 ? "text-emerald-700" : r.difference > 0 ? "text-amber-700" : "text-rose-700 font-semibold"}>
                   {r.difference > 0 ? "+" : ""}
@@ -337,7 +337,7 @@ function SummaryA4({ data, title, titleAr }: { data: Summary; title: string; tit
   const t = data.totals;
   const sum = <T,>(rows: T[], f: (r: T) => number) => rows.reduce((s, r) => s + f(r), 0);
   return (
-    <div style={{ fontFamily: 'Tahoma, "Segoe UI", Arial, sans-serif', color: "#000", fontSize: 10 }}>
+    <div style={{ fontFamily: 'Vazirmatn, SBC, Tahoma, "Segoe UI", Arial, sans-serif', color: "#000", fontSize: 10 }}>
       <PrintHeader title={title} titleAr={titleAr} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <PSection title="Totals" titleAr="الإجماليات">
@@ -408,7 +408,7 @@ function SummaryA4({ data, title, titleAr }: { data: Summary; title: string; tit
         <PSection title="POS shifts" titleAr="الورديات">
           <PTable
             head={[{ label: "Cashier" }, { label: "Opened" }, { label: "Closed" }, { label: "Sales", right: true }, { label: "Expected cash", right: true }, { label: "Counted", right: true }, { label: "Difference", right: true }]}
-            rows={data.shifts.map((s) => [s.cashierName, fmtDateTime(s.openedAt), s.closedAt ? fmtDateTime(s.closedAt) : "Open", f3(s.salesTotal), f3(s.expectedCash), s.closingCash == null ? "—" : f3(s.closingCash), s.difference == null ? "—" : f3(s.difference)])}
+            rows={data.shifts.map((s) => [s.cashierName, fmtDateTime(s.openedAt), s.closedAt ? fmtDateTime(s.closedAt) : "Open", f3(s.salesTotal), f3(s.expectedCash), s.closingCash == null ? "-" : f3(s.closingCash), s.difference == null ? "-" : f3(s.difference)])}
           />
         </PSection>
       )}
@@ -431,7 +431,7 @@ function Summary80({ data, title, titleAr }: { data: Summary; title: string; tit
   );
   const Rule = () => <div style={{ borderTop: "1px dashed #000", margin: "4px 0" }} />;
   return (
-    <div style={{ width: "72mm", fontFamily: 'Tahoma, "Segoe UI", Arial, sans-serif', fontSize: 11, color: "#000", fontVariantNumeric: "tabular-nums" }}>
+    <div style={{ width: "72mm", fontFamily: 'Vazirmatn, SBC, Tahoma, "Segoe UI", Arial, sans-serif', fontSize: 11, color: "#000", fontVariantNumeric: "tabular-nums" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontWeight: 700, fontSize: 14 }}>{store.store_name_en || "Hala Dresses"}</div>
         {store.store_name_ar && <div dir="rtl" style={{ fontWeight: 700 }}>{store.store_name_ar}</div>}
@@ -469,7 +469,7 @@ function Summary80({ data, title, titleAr }: { data: Summary; title: string; tit
           {data.shifts.map((s) => (
             <div key={s.id}>
               <Row l={`${s.cashierName} ${fmtTime(s.openedAt)}`} v={f3(s.salesTotal)} />
-              <Row l="  Expected / counted" v={`${f3(s.expectedCash)} / ${s.closingCash == null ? "—" : f3(s.closingCash)}`} />
+              <Row l="  Expected / counted" v={`${f3(s.expectedCash)} / ${s.closingCash == null ? "-" : f3(s.closingCash)}`} />
               {s.difference != null && <Row l="  Difference" v={f3(s.difference)} />}
             </div>
           ))}

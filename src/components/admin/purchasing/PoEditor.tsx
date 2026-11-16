@@ -333,7 +333,7 @@ export default function PoEditor({ initial, onCancel }: { initial: EditorInitial
           </div>
           {vatOn && supplier && !supplier.vatNumber && lines.some((l) => n(l.taxRate) > 0) && (
             <p className="text-xs text-amber-800 bg-amber-50 rounded-lg px-3 py-2 flex items-center gap-2">
-              <LuTriangleAlert size={14} /> This supplier has no VAT number on file — input VAT on their invoices can&apos;t be reclaimed until you add it.
+              <LuTriangleAlert size={14} /> This supplier has no VAT number on file. Input VAT on their invoices can&apos;t be reclaimed until you add it.
             </p>
           )}
         </div>
@@ -410,7 +410,7 @@ export default function PoEditor({ initial, onCancel }: { initial: EditorInitial
                             />
                           )}
                         </td>
-                        <td className="text-right tabular-nums text-slate-500">{l.productId ? (l.onHand ?? "—") : "—"}</td>
+                        <td className="text-right tabular-nums text-slate-500">{l.productId ? (l.onHand ?? "-") : "-"}</td>
                         <td className="text-right">
                           <input type="number" min="1" step="1" inputMode="numeric" className="admin-input !py-1.5 text-right" value={l.quantity} onChange={(e) => setLine(l.uid, { quantity: e.target.value })} />
                         </td>
@@ -427,7 +427,7 @@ export default function PoEditor({ initial, onCancel }: { initial: EditorInitial
                           {fmt3(c?.net ?? 0)}
                           {(c?.tax ?? 0) > 0 && <span className="block text-[11px] text-slate-400">+{fmt3(c.tax)} VAT</span>}
                         </td>
-                        <td className="text-right tabular-nums text-slate-600">{l.productId ? fmt3(c?.landedUnitCost ?? 0) : "—"}</td>
+                        <td className="text-right tabular-nums text-slate-600">{l.productId ? fmt3(c?.landedUnitCost ?? 0) : "-"}</td>
                         <td>
                           <button type="button" onClick={() => setLines((ls) => ls.filter((x) => x.uid !== l.uid))} className="p-1.5 text-slate-400 hover:text-rose-600" aria-label="Remove line">
                             <LuTrash2 size={15} />
@@ -515,7 +515,7 @@ export default function PoEditor({ initial, onCancel }: { initial: EditorInitial
                 <LuSave size={16} /> {saving === "draft" ? "Saving…" : "Save as draft"}
               </button>
               <p className="text-[11px] text-slate-400 leading-relaxed">
-                A placed order counts as money owed to the supplier. Stock goes up when goods are received — all at once or in several deliveries.
+                A placed order counts as money owed to the supplier. Stock goes up when goods are received, all at once or in several deliveries.
               </p>
             </>
           )}
@@ -555,7 +555,7 @@ export default function PoEditor({ initial, onCancel }: { initial: EditorInitial
       >
         <div className="space-y-4 text-sm">
           <p className="text-slate-600">
-            The order is placed and every line is received into stock straight away — for goods bought on the spot. Stock goes up by {units} unit{units === 1 ? "" : "s"} and each product&apos;s cost moves to the weighted-average landed cost.
+            The order is placed and every line is received into stock straight away, for goods bought on the spot. Stock goes up by {units} unit{units === 1 ? "" : "s"} and each product&apos;s cost moves to the weighted-average landed cost.
           </p>
           {perms.pay ? (
             <div className="rounded-xl border border-slate-200 p-4 space-y-3">
@@ -690,7 +690,7 @@ function ReorderModal({
                       <p className="text-xs text-slate-500">{r.variantLabel || "Standard"}</p>
                     </td>
                     <td className={`text-right tabular-nums font-semibold ${(r.onHand ?? 0) <= 0 ? "text-rose-600" : "text-amber-600"}`}>{r.onHand ?? 0}</td>
-                    <td className="text-right tabular-nums text-slate-500">{r.lowStockAlert ?? "—"}</td>
+                    <td className="text-right tabular-nums text-slate-500">{r.lowStockAlert ?? "-"}</td>
                     <td className="text-xs text-slate-500">
                       {r.lastCost != null ? (
                         <>
@@ -698,7 +698,7 @@ function ReorderModal({
                           {r.lastSupplier && <span className="block">{r.lastSupplier.nameEn}</span>}
                         </>
                       ) : (
-                        "—"
+                        "-"
                       )}
                     </td>
                     <td className="text-right">

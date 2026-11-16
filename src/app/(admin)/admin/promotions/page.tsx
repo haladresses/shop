@@ -105,7 +105,7 @@ export default function PromotionsPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-800">Promotions</h1>
-          <p className="text-sm text-slate-500">Automatic deals — buy X get Y, mix &amp; match, % off and more. They apply by themselves online and at the POS; no code needed.</p>
+          <p className="text-sm text-slate-500">Automatic deals: buy X get Y, mix &amp; match, % off and more. They apply by themselves online and at the POS; no code needed.</p>
         </div>
         {canManage && (
           <Link href="/admin/promotions/new" className="admin-btn admin-btn-primary">
@@ -115,10 +115,10 @@ export default function PromotionsPage() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Kpi icon={LuSparkles} label="Active" value={k ? String(k.active) : "—"} sub={k ? `${k.liveNow} running right now` : ""} tone="good" />
-        <Kpi icon={LuCalendarClock} label="Scheduled" value={k ? String(k.scheduled) : "—"} sub={k ? `${k.paused} paused` : ""} />
-        <Kpi icon={LuReceipt} label="Orders with a deal" value={k ? k.orders30d.toLocaleString() : "—"} sub={k ? `${omr(k.revenue30d)} sales · 30 days` : ""} />
-        <Kpi icon={LuWallet} label="Discount given" value={k ? omr(k.discount30d) : "—"} sub="Last 30 days" />
+        <Kpi icon={LuSparkles} label="Active" value={k ? String(k.active) : "-"} sub={k ? `${k.liveNow} running right now` : ""} tone="good" />
+        <Kpi icon={LuCalendarClock} label="Scheduled" value={k ? String(k.scheduled) : "-"} sub={k ? `${k.paused} paused` : ""} />
+        <Kpi icon={LuReceipt} label="Orders with a deal" value={k ? k.orders30d.toLocaleString() : "-"} sub={k ? `${omr(k.revenue30d)} sales · 30 days` : ""} />
+        <Kpi icon={LuWallet} label="Discount given" value={k ? omr(k.discount30d) : "-"} sub="Last 30 days" />
       </div>
 
       <div className="flex flex-col lg:flex-row lg:items-center gap-3">
@@ -169,7 +169,7 @@ export default function PromotionsPage() {
           </span>
           <p className="font-semibold text-slate-700">{data?.counts.ALL ? "No promotions here" : "No promotions yet"}</p>
           <p className="text-sm text-slate-500 mt-1 max-w-sm">
-            {data?.counts.ALL ? "Try another tab or filter." : "Create your first deal — for example “Buy 1, get 2 free” on selected dresses this weekend."}
+            {data?.counts.ALL ? "Try another tab or filter." : "Create your first deal. For example “Buy 1, get 2 free” on selected dresses this weekend."}
           </p>
           {canManage && !data?.counts.ALL && (
             <Link href="/admin/promotions/new" className="admin-btn admin-btn-primary mt-4">
@@ -209,7 +209,7 @@ export default function PromotionsPage() {
         }
       >
         <p className="text-sm text-slate-600">
-          “{toDelete?.nameEn}” will be removed. Promotions that were already used on orders can&apos;t be deleted — pause them instead.
+          “{toDelete?.nameEn}” will be removed. Promotions that were already used on orders can&apos;t be deleted. Pause them instead.
         </p>
       </AdminModal>
     </div>
@@ -285,7 +285,7 @@ function PromotionCard({
       <dl className="grid sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
         <Meta icon={LuCalendarClock} value={formatSchedule(p)} />
         <Meta icon={LuStore} value={CHANNEL_LABEL[p.channel]} />
-        <Meta icon={LuLayers} value={`${items}${names && p.buyScope !== "ALL" ? ` — ${names}${(p.targets.buyProducts + p.targets.buyCategories) > p.targets.buyNames.length ? "…" : ""}` : ""}${reward}`} />
+        <Meta icon={LuLayers} value={`${items}${names && p.buyScope !== "ALL" ? `: ${names}${(p.targets.buyProducts + p.targets.buyCategories) > p.targets.buyNames.length ? "…" : ""}` : ""}${reward}`} />
         <Meta
           icon={LuReceipt}
           value={`Used ${p.usedCount}${p.usageLimit ? ` / ${p.usageLimit}` : ""} · saved customers ${omr(p.stats.discount)}`}

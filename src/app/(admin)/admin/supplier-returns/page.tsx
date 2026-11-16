@@ -95,7 +95,7 @@ export default function SupplierReturnsPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-slate-800">Supplier returns</h1>
-          <p className="text-sm text-slate-500">Goods sent back to suppliers (debit notes). Stock goes down and the value comes off what you owe — or the supplier refunds you.</p>
+          <p className="text-sm text-slate-500">Goods sent back to suppliers (debit notes). Stock goes down and the value comes off what you owe, or the supplier refunds you.</p>
         </div>
         <div className="flex gap-2">
           <a href={csvHref()} className="admin-btn admin-btn-secondary"><LuDownload size={15} /> CSV</a>
@@ -106,9 +106,9 @@ export default function SupplierReturnsPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Kpi icon={LuCalendarDays} label="This month" value={data ? `${fmt3(data.month.value)} OMR` : "—"} sub={data ? `${data.month.count} return${data.month.count === 1 ? "" : "s"}` : ""} />
-        <Kpi icon={LuUndo2} label="In this view" value={data ? `${fmt3(data.totals.total)} OMR` : "—"} sub={data ? `${data.meta.total} debit note${data.meta.total === 1 ? "" : "s"}` : ""} tone="info" />
-        <Kpi icon={LuReceiptText} label="Input VAT reversed" value={data ? `${fmt3(data.totals.vat)} OMR` : "—"} sub={data ? `Net ${fmt3(data.totals.net)} OMR` : ""} />
+        <Kpi icon={LuCalendarDays} label="This month" value={data ? `${fmt3(data.month.value)} OMR` : "-"} sub={data ? `${data.month.count} return${data.month.count === 1 ? "" : "s"}` : ""} />
+        <Kpi icon={LuUndo2} label="In this view" value={data ? `${fmt3(data.totals.total)} OMR` : "-"} sub={data ? `${data.meta.total} debit note${data.meta.total === 1 ? "" : "s"}` : ""} tone="info" />
+        <Kpi icon={LuReceiptText} label="Input VAT reversed" value={data ? `${fmt3(data.totals.vat)} OMR` : "-"} sub={data ? `Net ${fmt3(data.totals.net)} OMR` : ""} />
       </div>
 
       <div className="rounded-2xl border border-slate-200/70 bg-white p-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_240px_auto]">
@@ -172,7 +172,7 @@ export default function SupplierReturnsPage() {
                     </td>
                     <td className="text-right tabular-nums">{r.units}</td>
                     <td className="text-right tabular-nums">{fmt3(r.subtotal)}</td>
-                    <td className="text-right tabular-nums text-slate-500">{r.taxTotal ? fmt3(r.taxTotal) : "—"}</td>
+                    <td className="text-right tabular-nums text-slate-500">{r.taxTotal ? fmt3(r.taxTotal) : "-"}</td>
                     <td className="text-right tabular-nums font-semibold">{fmt3(r.total)}</td>
                     <td className="text-sm">
                       {r.settlement === "REFUND" && r.refund ? (
@@ -184,7 +184,7 @@ export default function SupplierReturnsPage() {
                         <span className="text-slate-600">Credit to account</span>
                       )}
                     </td>
-                    <td className="text-sm text-slate-500 max-w-[200px] truncate">{r.reason || "—"}</td>
+                    <td className="text-sm text-slate-500 max-w-[200px] truncate">{r.reason || "-"}</td>
                     <td>
                       <button onClick={() => print(r)} disabled={printing === r.id} className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-40" title="Print debit note (English + Arabic)">
                         <LuPrinter size={15} />

@@ -229,7 +229,7 @@ export default function PurchaseOrderDetail({ id }: { id: string }) {
 
       {lastReceipt && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-emerald-50 text-emerald-800 px-4 py-3 admin-fade-in">
-          <p className="text-sm font-medium flex items-center gap-2"><LuCheck size={16} /> {lastReceipt.number} booked — stock is updated.</p>
+          <p className="text-sm font-medium flex items-center gap-2"><LuCheck size={16} /> {lastReceipt.number} booked: stock is updated.</p>
           <div className="flex gap-2">
             {labelsLinkFor(lastReceipt.items) && (
               <Link href={labelsLinkFor(lastReceipt.items)!} className="admin-btn admin-btn-secondary !py-1.5"><LuBarcode size={15} /> Print barcode labels</Link>
@@ -255,7 +255,7 @@ export default function PurchaseOrderDetail({ id }: { id: string }) {
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 text-sm">
             <Info label="Expected" value={fmtDate(po.expectedDate)} warn={!!po.expectedDate && po.expectedDate < todayKey() && ["ORDERED", "PARTIALLY_RECEIVED"].includes(po.status)} />
             <Info label="Payment due" value={fmtDate(po.dueDate)} warn={po.overdue} />
-            <Info label="Supplier invoice" value={po.supplierReference || "—"} sub={po.invoiceDate ? fmtDate(po.invoiceDate) : undefined} />
+            <Info label="Supplier invoice" value={po.supplierReference || "-"} sub={po.invoiceDate ? fmtDate(po.invoiceDate) : undefined} />
             <Info label="Prices" value={po.pricesIncludeTax ? "Incl. VAT" : "Excl. VAT"} />
           </dl>
           <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-slate-100">
@@ -334,15 +334,15 @@ export default function PurchaseOrderDetail({ id }: { id: string }) {
                   </td>
                   <td className="text-right tabular-nums">{it.quantity}</td>
                   <td className={`text-right tabular-nums font-semibold ${it.receivedQty >= it.quantity ? "text-emerald-600" : it.receivedQty > 0 ? "text-amber-600" : "text-slate-400"}`}>{it.receivedQty}</td>
-                  <td className="text-right tabular-nums text-slate-500">{it.returnedQty || "—"}</td>
+                  <td className="text-right tabular-nums text-slate-500">{it.returnedQty || "-"}</td>
                   <td className="text-right tabular-nums">
                     {fmt3(it.unitCost)}
                     {it.discountPct > 0 && <span className="block text-[11px] text-slate-400">−{it.discountPct}%</span>}
                   </td>
                   <td className="text-right tabular-nums text-sm">{fmt3(it.taxAmount)}<span className="block text-[11px] text-slate-400">{it.taxRate}%</span></td>
                   <td className="text-right tabular-nums">{fmt3(it.netAmount)}</td>
-                  <td className="text-right tabular-nums">{it.landedUnitCost == null ? "—" : fmt3(it.landedUnitCost)}</td>
-                  <td className="text-right tabular-nums text-slate-500">{it.onHand ?? "—"}</td>
+                  <td className="text-right tabular-nums">{it.landedUnitCost == null ? "-" : fmt3(it.landedUnitCost)}</td>
+                  <td className="text-right tabular-nums text-slate-500">{it.onHand ?? "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -731,7 +731,7 @@ function ReturnModal({ open, po, canRefund, onClose, onDone }: { open: boolean; 
                   <p className="text-xs text-slate-500">{i.variantLabel || "Standard"}{i.returnedQty > 0 && ` · ${i.returnedQty} already returned`}</p>
                 </td>
                 <td className="text-right tabular-nums">{i.receivedQty}</td>
-                <td className="text-right tabular-nums text-slate-500">{i.onHand ?? "—"}</td>
+                <td className="text-right tabular-nums text-slate-500">{i.onHand ?? "-"}</td>
                 <td className="text-right">
                   <input type="number" min="0" max={i.can} value={qty[i.id] ?? ""} placeholder="0" onChange={(e) => setQty({ ...qty, [i.id]: e.target.value })} className="admin-input !py-1 text-right !w-24" />
                 </td>
@@ -786,7 +786,7 @@ export function SettlementPicker({
       <div className="grid sm:grid-cols-2 gap-2">
         {([
           ["CREDIT", "Credit to our account", "Reduces what we owe this supplier."],
-          ["REFUND", "Supplier refunded the money", "They paid it back — recorded as a refund received."],
+          ["REFUND", "Supplier refunded the money", "They paid it back. Recorded as a refund received."],
         ] as const).map(([k, title, hint]) => (
           <button
             key={k}

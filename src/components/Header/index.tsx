@@ -13,6 +13,7 @@ import { fetchNavigation, mapNavToMenu, DEFAULT_NAV_ITEMS } from "@/lib/navigati
 import CustomSelect from "./CustomSelect";
 import Dropdown from "./Dropdown";
 import LanguageDropdown from "./LanguageDropdown";
+import { publicEmail } from "@/lib/validations/auth";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -75,10 +76,12 @@ const Header = () => {
         : "/my-account"
     : "/signin";
 
+  // Phone-only accounts have an internal placeholder email: never show it.
+  const shownEmail = user ? publicEmail(user.email || "") || "" : "";
   const accountLabel = user
     ? isArabic
-      ? user.nameAr || user.nameEn || user.email
-      : user.nameEn || user.email
+      ? user.nameAr || user.nameEn || shownEmail
+      : user.nameEn || shownEmail
     : null;
 
   const copy = isArabic
@@ -205,7 +208,7 @@ const Header = () => {
               <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${user ? "bg-gradient-to-br from-blue to-blue-dark text-white group-hover:brightness-105" : "bg-blue/10 text-blue group-hover:bg-blue/20"}`}>
                 {user ? (
                   <span className="text-xs font-semibold uppercase">
-                    {(accountLabel || user.email).trim().charAt(0)}
+                    {(accountLabel || shownEmail || "?").trim().charAt(0)}
                   </span>
                 ) : (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

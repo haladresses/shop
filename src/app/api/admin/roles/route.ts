@@ -1,73 +1,88 @@
 import { NextRequest } from "next/server";
-import { Role } from "@prisma/client";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
-import { ok, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
+import { guard } from "@/lib/api/guard";
+import { created, error, ok, serverError } from "@/lib/api/response";
+import { MAX_CUSTOM_RANK, ROLE_COLORS, invalidateRoleCache, sanitizePermissions } from "@/lib/permissions";
 import {
-  PERMISSION_CATALOG,
-  ROLE_LABELS,
-  ROLE_ORDER,
-  canAssignRole,
-  getEffectivePermissions,
-  getRolePermissionsMatrix,
-  normalizeRolePermissions,
-  saveRolePermissionsMatrix,
-} from "@/lib/permissions";
+  audit,
+  getActor,
+  nameClash,
+  permissionsBeyond,
+  roleFieldsSchema,
+  roleInclude,
+  roleUserCounts,
+  toRoleDTO,
+  uniqueRoleKey,
+} from "@/lib/roles";
 
-async function buildPayload(matrix: Awaited<ReturnType<typeof getRolePermissionsMatrix>>, actor: { role: Role }) {
-  const counts = await prisma.user.groupBy({ by: ["role"], _count: true });
-  return {
-    roles: ROLE_ORDER.map((role) => ({
-      key: role,
-      labelEn: ROLE_LABELS[role].en,
-      labelAr: ROLE_LABELS[role].ar,
-      // Super admin always has everything; others only below the editor's own rank.
-      editable: role !== Role.SUPER_ADMIN && canAssignRole(actor, role),
-      users: counts.find((c) => c.role === role)?._count ?? 0,
-    })),
-    permissions: PERMISSION_CATALOG,
-    matrix,
-  };
-}
-
+/** All roles (most senior first) with member counts and what the viewer may do with each. */
 export async function GET(req: NextRequest) {
   try {
-    const user = await getAuthFromRequest(req);
-    if (!user) return unauthorized();
-    if (!(await userHasPermission(user, "admin.roles.view"))) return forbidden();
+    const g = await guard(req, ["admin.roles.view", "admin.users.view"]);
+    if ("res" in g) return g.res;
+    const actor = await getActor(g.user);
+    const canManageRoles = actor.permissions.has("admin.roles.manage");
 
-    return ok(await buildPayload(await getRolePermissionsMatrix(), user));
+    const [rows, counts] = await Promise.all([
+      prisma.appRole.findMany({ include: roleInclude, orderBy: [{ rank: "desc" }, { sortOrder: "asc" }, { nameEn: "asc" }] }),
+      roleUserCounts(),
+    ]);
+
+    return ok({
+      roles: rows.map((r) => toRoleDTO(r, actor, canManageRoles, counts.get(r.id))),
+      viewer: {
+        isSuper: actor.isSuper,
+        rank: actor.rank,
+        roleId: actor.roleId,
+        canManageRoles,
+        // The highest level this viewer may give a new role.
+        maxRank: actor.isSuper ? MAX_CUSTOM_RANK : Math.min(MAX_CUSTOM_RANK, actor.rank - 1),
+        permissions: Array.from(actor.permissions),
+      },
+      colors: ROLE_COLORS,
+    });
   } catch (e) {
     return serverError(e);
   }
 }
 
+/** Create a custom role. */
 export async function POST(req: NextRequest) {
   try {
-    const user = await getAuthFromRequest(req);
-    if (!user) return unauthorized();
-    if (!(await userHasPermission(user, "admin.roles.manage"))) return forbidden();
+    const g = await guard(req, "admin.roles.manage");
+    if ("res" in g) return g.res;
+    const actor = await getActor(g.user);
 
-    const body = await req.json();
-    if (!body || typeof body !== "object" || !("matrix" in body)) return error("Invalid body");
+    const parsed = roleFieldsSchema.safeParse(await req.json().catch(() => null));
+    if (!parsed.success) return error(parsed.error.issues[0].message);
+    const body = parsed.data;
+    const permissions = sanitizePermissions(body.permissions);
 
-    const current = await getRolePermissionsMatrix();
-    const requested = normalizeRolePermissions((body as { matrix: unknown }).matrix);
-    const mine = await getEffectivePermissions(user);
+    if (!actor.isSuper && body.rank >= actor.rank) return error(`Pick a level below your own (${actor.rank}).`, 403);
+    const beyond = permissionsBeyond(actor, permissions);
+    if (beyond.length) return error(`You can't give permissions you don't have: ${beyond.join(", ")}`, 403);
+    if (await nameClash(body.nameEn)) return error("A role with this name already exists.", 409);
 
-    const next = { ...current };
-    for (const role of ROLE_ORDER) {
-      if (role === Role.SUPER_ADMIN || !canAssignRole(user, role)) continue; // locked for this editor
-      const added = requested[role].filter((p) => !current[role].includes(p));
-      const notMine = added.filter((p) => !mine.includes(p));
-      if (notMine.length) return error(`You can't grant permissions you don't have: ${notMine.join(", ")}`, 403);
-      next[role] = requested[role];
-    }
-    next.SUPER_ADMIN = PERMISSION_CATALOG.map((item) => item.key).sort();
+    const last = await prisma.appRole.aggregate({ _max: { sortOrder: true } });
+    const row = await prisma.appRole.create({
+      data: {
+        key: await uniqueRoleKey(body.nameEn),
+        nameEn: body.nameEn,
+        nameAr: body.nameAr,
+        description: body.description,
+        color: body.color,
+        type: body.type,
+        rank: body.rank,
+        permissions,
+        sortOrder: (last._max.sortOrder ?? 0) + 1,
+        createdById: actor.id,
+      },
+      include: roleInclude,
+    });
+    invalidateRoleCache();
+    await audit(actor.id, "role.create", "AppRole", row.id, undefined, { key: row.key, nameEn: row.nameEn, type: row.type, rank: row.rank, permissions }, req.headers.get("x-forwarded-for"));
 
-    const saved = await saveRolePermissionsMatrix(next);
-    await prisma.auditLog.create({ data: { userId: user.id, action: "roles.update", entity: "Role", newData: saved } }).catch(() => {});
-    return ok(await buildPayload(saved, user));
+    return created(toRoleDTO(row, actor, true, { total: 0, active: 0 }));
   } catch (e) {
     return serverError(e);
   }

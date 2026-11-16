@@ -71,7 +71,7 @@ export default function TaxSettingsTab({
   const save = async () => {
     if (!vatOk) return toast.error("VAT number must be OM followed by 10 digits");
     if (form.enabled && !form.vatNumber.trim()) {
-      if (!window.confirm("VAT is being switched on without a VAT number. Tax invoices must show it — save anyway?")) return;
+      if (!window.confirm("VAT is being switched on without a VAT number. Tax invoices must show it. Save anyway?")) return;
     }
     setSaving(true);
     const d = await sendJson<TaxSettingsResponse>("/api/tax/settings", "PUT", form);
@@ -121,7 +121,7 @@ export default function TaxSettingsTab({
 
         <div className="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4">
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="text-slate-500">Example — shelf price</span>
+            <span className="text-slate-500">Example: shelf price</span>
             <input
               className="admin-input !w-28 !py-1 text-right tabular-nums"
               type="number"
@@ -193,7 +193,7 @@ export default function TaxSettingsTab({
         </div>
         {form.enabled && !form.vatNumber.trim() && (
           <p className="mt-3 flex items-center gap-2 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
-            <LuCircleAlert size={14} /> VAT is on but no VAT number is set — invoices will be printed without it.
+            <LuCircleAlert size={14} /> VAT is on but no VAT number is set. Invoices will be printed without it.
           </p>
         )}
       </Section>
@@ -219,7 +219,7 @@ export default function TaxSettingsTab({
         </Section>
       </div>
 
-      <Section icon={LuReceiptText} title="Invoice footer" desc="Printed at the bottom of every customer bill — e.g. your returns policy.">
+      <Section icon={LuReceiptText} title="Invoice footer" desc="Printed at the bottom of every customer bill. E.g. your returns policy.">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">English</label>

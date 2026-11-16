@@ -124,9 +124,9 @@ export default function CategoryTab({ query, onCategory }: { query: string; onCa
       {error && <p className="text-sm text-rose-600 bg-rose-50 rounded-xl px-4 py-3">{error}</p>}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Figure label="Categories with sales" value={int((data?.rows ?? []).filter((r) => active(r.own)).length)} />
-        <Figure label="Units sold" ar="القطع المباعة" value={t ? int(t.qtySold) : "—"} sub={t ? `${int(t.qtyReturned)} returned` : ""} />
-        <Figure label="Net excl. VAT" ar="الصافي قبل الضريبة" value={t ? money(t.netExVat) : "—"} />
-        <Figure label="Gross profit" ar="إجمالي الربح" value={t ? money(t.profit) : "—"} sub={t ? `Margin ${t.margin.toFixed(1)}%` : ""} strong />
+        <Figure label="Units sold" ar="القطع المباعة" value={t ? int(t.qtySold) : "-"} sub={t ? `${int(t.qtyReturned)} returned` : ""} />
+        <Figure label="Net excl. VAT" ar="الصافي قبل الضريبة" value={t ? money(t.netExVat) : "-"} />
+        <Figure label="Gross profit" ar="إجمالي الربح" value={t ? money(t.profit) : "-"} sub={t ? `Margin ${t.margin.toFixed(1)}%` : ""} strong />
       </div>
       <ReportTable
         id={mode === "total" ? "sales-by-category" : "sales-by-category-own"}

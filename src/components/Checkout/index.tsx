@@ -99,7 +99,7 @@ const Checkout = () => {
 
   const shippingCost =
     shippingMethod === "STORE_PICKUP"
-      ? 0 // Collected in person at the shop — no delivery fee.
+      ? 0 // Collected in person at the shop. No delivery fee.
       : shippingMethod === "WASELLEE"
       ? selectedBranch
         ? Number(
@@ -178,6 +178,33 @@ const Checkout = () => {
     useState<PaymentMethod>("THAWANI");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Signed-in customers: fill in their name, mobile, email and default
+  // address so checkout is a couple of taps. Guests simply get empty fields.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const me = await fetch("/api/account", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      if (!alive || !me?.success) return;
+      const list = await fetch("/api/account/addresses", { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      const addresses = (list?.success ? list.data : []) as { isDefault?: boolean; nameEn?: string; phone?: string; city?: string; area?: string | null; street?: string | null; buildingNo?: string | null }[];
+      const def = addresses.find((a) => a.isDefault) ?? addresses[0];
+      if (!alive) return;
+      setForm((prev) => ({
+        ...prev,
+        nameEn: prev.nameEn || def?.nameEn || me.data.nameEn || "",
+        phone: prev.phone || def?.phone || me.data.phone || "",
+        email: prev.email || me.data.email || "",
+        city: prev.city || def?.city || "",
+        area: prev.area || def?.area || "",
+        street: prev.street || def?.street || "",
+        buildingNo: prev.buildingNo || def?.buildingNo || "",
+      }));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -331,13 +358,13 @@ const Checkout = () => {
                   <div className="mb-5">
                     <label htmlFor="email" className="block mb-2.5">
                       {t("Email", "البريد الإلكتروني")}{" "}
-                      <span className="text-red">*</span>
+                      <span className="text-dark-4 text-custom-sm">{t("(optional)", "(اختياري)")}</span>
                     </label>
                     <input
                       type="email"
                       name="email"
                       id="email"
-                      required
+                      autoComplete="email"
                       value={form.email}
                       onChange={handleChange}
                       className={inputClass}
@@ -555,7 +582,7 @@ const Checkout = () => {
                             )}
                           </p>
                           <p>
-                            {isArabic ? selectedBranch.cityAr : selectedBranch.cityEn} —{" "}
+                            {isArabic ? selectedBranch.cityAr : selectedBranch.cityEn} ·{" "}
                             <span dir="ltr">{selectedBranch.phone}</span>
                           </p>
                         </div>
@@ -574,11 +601,11 @@ const Checkout = () => {
                       <p className="mb-1">
                         {(isArabic ? storeInfo.store_name_ar : storeInfo.store_name_en) ||
                           "Hala Dresses"}{" "}
-                        — {storeInfo.store_address || t("Muscat, Oman", "مسقط، عمان")}
+                       : {storeInfo.store_address || t("Muscat, Oman", "مسقط، عمان")}
                         {storeInfo.store_phone && (
                           <>
                             {" "}
-                            — <span dir="ltr">{storeInfo.store_phone}</span>
+                           : <span dir="ltr">{storeInfo.store_phone}</span>
                           </>
                         )}
                       </p>

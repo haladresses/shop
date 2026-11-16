@@ -1,11 +1,12 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
-import { LuLoaderCircle, LuMinus, LuPlus, LuPrinter, LuRotateCcw, LuSearch } from "react-icons/lu";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { LuArrowRightLeft, LuLoaderCircle, LuMinus, LuPlus, LuPrinter, LuRotateCcw, LuSearch } from "react-icons/lu";
+import ExchangePanel, { type ExchangeResult } from "@/components/pos/ExchangePanel";
 import { PosModal, methodLabel, omr } from "@/components/pos/PosUi";
 import PrintArea from "@/components/print/PrintArea";
 import { SaleDocument } from "@/components/print/SaleDocument";
 import { printArea } from "@/lib/print";
-import { refundToCreditNote, type InvoiceData, type StoreInfo } from "@/lib/invoice";
+import { methodLabels, orderToInvoice, refundToCreditNote, type InvoiceData, type StoreInfo } from "@/lib/invoice";
 import { DEFAULT_TAX_SETTINGS, type TaxSettings } from "@/lib/taxCalc";
 
 // Shared by the POS terminal, the admin Returns screen and the admin order
@@ -71,11 +72,15 @@ export default function ReturnModal({
   const [err, setErr] = useState("");
   const [done, setDone] = useState<RefundResult | null>(null);
   const [creditNote, setCreditNote] = useState<InvoiceData | null>(null);
+  const [mode, setMode] = useState<"refund" | "exchange">("refund");
+  const [exchanged, setExchanged] = useState<ExchangeResult | null>(null);
+  const [newReceipt, setNewReceipt] = useState<InvoiceData | null>(null);
   const [store, setStore] = useState<StoreInfo>({});
   const [tax, setTax] = useState<TaxSettings>(DEFAULT_TAX_SETTINGS);
 
   const reset = () => {
     setQ(""); setResults([]); setOrder(null); setQty({}); setMethod("CASH"); setReason(""); setRestock(true); setErr(""); setDone(null); setCreditNote(null);
+    setMode("refund"); setExchanged(null); setNewReceipt(null);
   };
 
   const search = useCallback(async (term: string) => {
@@ -109,6 +114,18 @@ export default function ReturnModal({
   };
   const refundAmount = order ? r3(order.items.reduce((s, it) => s + (qty[it.id] || 0) * unitRefund(it), 0)) : 0;
   const units = Object.values(qty).reduce((s, n) => s + n, 0);
+  const returnItems = useMemo(
+    () => Object.entries(qty).filter(([, n]) => n > 0).map(([orderItemId, quantity]) => ({ orderItemId, quantity })),
+    [qty],
+  );
+
+  const finishExchange = (r: ExchangeResult) => {
+    if (!order) return;
+    setExchanged(r);
+    setNewReceipt(orderToInvoice(r.order));
+    setCreditNote(refundToCreditNote(order, { ...r.refund, createdAt: new Date().toISOString() }));
+    onDone();
+  };
   const allLeft = order ? order.items.reduce((s, it) => s + (it.quantity - it.returnedQuantity), 0) : 0;
 
   const setAll = (mode: "all" | "none") => {
@@ -136,8 +153,60 @@ export default function ReturnModal({
   };
 
   return (
-    <PosModal open={open} onClose={close} title="Return / refund" size="lg">
-      {done !== null ? (
+    <PosModal open={open} onClose={close} title="Return / exchange" size="lg">
+      {exchanged !== null ? (
+        <div className="text-center py-6">
+          <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3"><LuArrowRightLeft size={28} /></div>
+          <p className="text-lg font-semibold text-slate-800">Exchange complete</p>
+          <p className="text-slate-500 mt-1">
+            {exchanged.direction === "CUSTOMER_PAYS" ? (
+              <>Collect <strong className="text-slate-800">{omr(Math.abs(exchanged.difference))}</strong> from the customer ({methodLabels(exchanged.settlementMethod).en}).</>
+            ) : exchanged.direction === "STORE_PAYS" ? (
+              <>Give the customer <strong className="text-slate-800">{omr(Math.abs(exchanged.difference))}</strong> back ({methodLabels(exchanged.settlementMethod).en}).</>
+            ) : (
+              <>Even exchange. Nothing to pay.</>
+            )}
+          </p>
+          {exchanged.changeGiven != null && exchanged.changeGiven > 0 && (
+            <p className="mt-1 text-emerald-700 font-semibold">Change: {omr(exchanged.changeGiven)}</p>
+          )}
+          <p className="text-xs text-slate-500 mt-2">
+            New sale {exchanged.order.invoiceNumber || exchanged.order.orderNumber}
+            {exchanged.refund.creditNoteNumber && ` · credit note ${exchanged.refund.creditNoteNumber}`}
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2 justify-center">
+            {newReceipt && (
+              <button
+                onClick={() => printArea("exchange-receipt", { page: "receipt", title: exchanged.order.invoiceNumber || exchanged.order.orderNumber })}
+                className="px-5 py-2.5 rounded-xl bg-slate-800 text-white font-medium inline-flex items-center gap-2"
+              >
+                <LuPrinter size={16} /> Print new receipt
+              </button>
+            )}
+            {creditNote && (
+              <button
+                onClick={() => printArea("credit-note", { page: "receipt", title: exchanged.refund.creditNoteNumber || "Credit note" })}
+                className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-medium inline-flex items-center gap-2"
+              >
+                <LuPrinter size={16} /> Print credit note
+              </button>
+            )}
+            <button onClick={orderNumber ? close : reset} className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-medium">
+              {orderNumber ? "Done" : "Another return"}
+            </button>
+          </div>
+          {newReceipt && (
+            <PrintArea id="exchange-receipt">
+              <SaleDocument data={newReceipt} store={store} tax={tax} layout="thermal" />
+            </PrintArea>
+          )}
+          {creditNote && (
+            <PrintArea id="credit-note">
+              <SaleDocument data={creditNote} store={store} tax={tax} layout="thermal" />
+            </PrintArea>
+          )}
+        </div>
+      ) : done !== null ? (
         <div className="text-center py-6">
           <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3"><LuRotateCcw size={28} /></div>
           <p className="text-lg font-semibold text-slate-800">Return recorded</p>
@@ -204,12 +273,12 @@ export default function ReturnModal({
           </div>
           {order.paymentStatus !== "PAID" && (
             <p className="text-amber-700 bg-amber-50 rounded-xl p-3 text-sm">
-              This order is {order.paymentStatus.toLowerCase()} — only paid orders can be returned. Mark it as paid first, or cancel it instead.
+              This order is {order.paymentStatus.toLowerCase()}. Only paid orders can be returned. Mark it as paid first, or cancel it instead.
             </p>
           )}
 
           <div className="flex items-center justify-between text-sm">
-            <p className="text-slate-600">Choose how many of each item is coming back — the rest of the order stays as it is.</p>
+            <p className="text-slate-600">Choose how many of each item is coming back. The rest of the order stays as it is.</p>
             <div className="flex gap-1 shrink-0">
               <button type="button" onClick={() => setAll("all")} disabled={allLeft === 0} className="px-2.5 py-1 rounded-lg text-xs bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40">All</button>
               <button type="button" onClick={() => setAll("none")} className="px-2.5 py-1 rounded-lg text-xs bg-slate-100 text-slate-600 hover:bg-slate-200">None</button>
@@ -240,16 +309,41 @@ export default function ReturnModal({
               );
             })}
           </ul>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-slate-600 mb-1">Refund by</label>
-              <select value={method} onChange={(e) => setMethod(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-white">
-                <option value="CASH">Cash</option>
-                <option value="CARD">Card</option>
-                <option value="BANK_TRANSFER">Bank transfer</option>
-                <option value="STORE_CREDIT">Store credit</option>
-              </select>
-            </div>
+          {/* What happens to the returned items */}
+          <div className="grid grid-cols-2 gap-1 rounded-2xl bg-slate-100 p-1">
+            {(
+              [
+                ["refund", "Refund", "Give the money back", LuRotateCcw],
+                ["exchange", "Exchange", "Swap for other items", LuArrowRightLeft],
+              ] as const
+            ).map(([m, title, sub, Icon]) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => { setMode(m); setErr(""); }}
+                className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-left transition ${mode === m ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-800"}`}
+              >
+                <Icon size={18} />
+                <span>
+                  <span className="block text-sm font-semibold">{title}</span>
+                  <span className="block text-[11px] text-slate-500">{sub}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className={`grid gap-3 ${mode === "refund" ? "sm:grid-cols-2" : ""}`}>
+            {mode === "refund" && (
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">Refund by</label>
+                <select value={method} onChange={(e) => setMethod(e.target.value)} className="w-full border border-slate-200 rounded-xl px-3 py-2.5 bg-white">
+                  <option value="CASH">Cash</option>
+                  <option value="CARD">Card</option>
+                  <option value="BANK_TRANSFER">Bank transfer</option>
+                  <option value="STORE_CREDIT">Store credit</option>
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-slate-600 mb-1">Reason</label>
               <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Wrong size, changed mind…" className="w-full border border-slate-200 rounded-xl px-3 py-2.5" />
@@ -257,12 +351,19 @@ export default function ReturnModal({
           </div>
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input type="checkbox" checked={restock} onChange={(e) => setRestock(e.target.checked)} className="rounded" />
-            Put items back in stock (untick for damaged goods)
+            Put returned items back in stock (untick for damaged goods)
           </label>
-          {err && <p className="text-rose-600 text-sm">{err}</p>}
-          <button onClick={submit} disabled={busy || refundAmount <= 0 || order.paymentStatus !== "PAID"} className="w-full py-3.5 rounded-2xl bg-rose-500 text-white font-semibold hover:bg-rose-600 disabled:opacity-40 flex items-center justify-center gap-2">
-            {busy ? <LuLoaderCircle className="animate-spin" /> : <>Return {units} item{units === 1 ? "" : "s"} · refund {omr(refundAmount)}</>}
-          </button>
+
+          {mode === "refund" ? (
+            <>
+              {err && <p className="text-rose-600 text-sm">{err}</p>}
+              <button onClick={submit} disabled={busy || refundAmount <= 0 || order.paymentStatus !== "PAID"} className="w-full py-3.5 rounded-2xl bg-rose-500 text-white font-semibold hover:bg-rose-600 disabled:opacity-40 flex items-center justify-center gap-2">
+                {busy ? <LuLoaderCircle className="animate-spin" /> : <>Return {units} item{units === 1 ? "" : "s"} · refund {omr(refundAmount)}</>}
+              </button>
+            </>
+          ) : order.paymentStatus === "PAID" ? (
+            <ExchangePanel orderId={order.id} returnItems={returnItems} restock={restock} reason={reason} onDone={finishExchange} />
+          ) : null}
         </div>
       )}
     </PosModal>

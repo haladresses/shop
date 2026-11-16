@@ -8,7 +8,7 @@ export const TAX_KINDS: TaxKind[] = ["STANDARD", "ZERO_RATED", "EXEMPT", "OUT_OF
 
 export const TAX_KIND_LABEL: Record<TaxKind, { en: string; ar: string; hint: string }> = {
   STANDARD: { en: "Standard rated", ar: "خاضع بالنسبة الأساسية", hint: "VAT charged at the rate." },
-  ZERO_RATED: { en: "Zero rated", ar: "خاضع بنسبة صفر", hint: "Taxable at 0% — still reported on the VAT return." },
+  ZERO_RATED: { en: "Zero rated", ar: "خاضع بنسبة صفر", hint: "Taxable at 0%: still reported on the VAT return." },
   EXEMPT: { en: "Exempt", ar: "معفى", hint: "No VAT and not a taxable supply." },
   OUT_OF_SCOPE: { en: "Out of scope", ar: "خارج النطاق", hint: "Outside the VAT system." },
 };

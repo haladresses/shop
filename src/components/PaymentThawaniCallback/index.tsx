@@ -109,7 +109,7 @@ function CallbackView() {
                 </h2>
                 <p className="mb-7.5 text-dark-4">
                   {result &&
-                    `${t("Order", "الطلب")} ${result.orderNumber} — ${t("total", "الإجمالي")} ${Number(
+                    `${t("Order", "الطلب")} ${result.orderNumber}: ${t("total", "الإجمالي")} ${Number(
                       result.total
                     ).toFixed(3)} OMR`}
                 </p>

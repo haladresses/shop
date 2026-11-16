@@ -23,10 +23,10 @@ export function addDaysKey(key: string, days: number): string {
 
 /** "16 Nov 2026" from a YYYY-MM-DD key or an ISO timestamp. */
 export function fmtDate(v: string | null | undefined, withTime = false): string {
-  if (!v) return "—";
+  if (!v) return "-";
   const isKey = /^\d{4}-\d{2}-\d{2}$/.test(v);
   const d = isKey ? new Date(`${v}T12:00:00+04:00`) : new Date(v);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleString("en-GB", {
     timeZone: TZ,
     day: "numeric",
@@ -48,7 +48,7 @@ export async function api<T = unknown>(url: string, init?: { method?: string; bo
     });
     return (await res.json()) as ApiResult<T>;
   } catch {
-    return { success: false, error: "Network error — please try again." };
+    return { success: false, error: "Network error: please try again." };
   }
 }
 
@@ -156,7 +156,7 @@ export function PayBadge({ status, overdue, days }: { status: string; overdue?: 
     );
   }
   const s = PAY_STATUS_LABEL[status] ?? PAY_STATUS_LABEL.NONE;
-  if (status === "NONE") return <span className="text-xs text-slate-400">—</span>;
+  if (status === "NONE") return <span className="text-xs text-slate-400">-</span>;
   return <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap ${s.badge}`}>{s.en}</span>;
 }
 

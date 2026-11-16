@@ -39,7 +39,7 @@ type Data = {
 
 const paidBy = (r: Receipt) =>
   r.payments.length === 0
-    ? "—"
+    ? "-"
     : r.payments.length === 1
       ? methodName(r.payments[0].method)
       : r.payments.map((p) => `${methodName(p.method)} ${f3(p.amount)}`).join(" + ");
@@ -115,7 +115,7 @@ export default function ReceiptsTab({
         ]),
       );
     } catch {
-      toast.error("Export failed — try a shorter period.");
+      toast.error("Export failed: try a shorter period.");
     } finally {
       setExporting(false);
     }
@@ -233,12 +233,12 @@ function ReceiptModal({ id, onClose }: { id: string; onClose: () => void }) {
           <table className="w-full text-sm">
             <tbody>
               {[
-                ["Invoice", data.invoiceNumber || "—"],
+                ["Invoice", data.invoiceNumber || "-"],
                 ["Order", data.orderNumber],
                 ["Date", fmtDateTime(data.createdAt)],
                 ["Channel", channelName(data.source)],
                 ["Salesperson", data.source === "ONLINE" ? "Online store" : data.cashier?.nameEn || "Unassigned"],
-                ["Customer", inv.customerName || "—"],
+                ["Customer", inv.customerName || "-"],
                 ["Status", `${data.status} · ${data.paymentStatus}`],
               ].map(([k, v]) => (
                 <tr key={k} className="border-b border-slate-100">

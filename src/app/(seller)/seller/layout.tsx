@@ -8,7 +8,7 @@ import "../seller.css";
 
 type MeResponse = {
   nameEn?: string | null;
-  email: string;
+  email: string | null;
   role: string;
   permissions: string[];
 };
@@ -61,7 +61,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
           {user && (
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center text-sky-600 font-semibold text-sm">
-                {user.nameEn?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+                {(user.nameEn || user.email || "?").charAt(0).toUpperCase()}
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-700">{user.nameEn || user.email}</p>

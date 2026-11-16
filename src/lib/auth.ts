@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 import prisma from "./db";
 import { Role } from "@prisma/client";
-import { getEffectivePermissions } from "@/lib/permissions";
+import { getEffectivePermissions, resolveUserRole, type PermissionSubject } from "@/lib/permissions";
+import { publicEmail } from "@/lib/validations/auth";
 
 export const SALT_ROUNDS = 12;
 
@@ -43,6 +44,7 @@ export async function getSessionUser(token: string) {
           nameEn: true,
           nameAr: true,
           role: true,
+          roleId: true,
           isActive: true,
           avatar: true,
           phone: true,
@@ -68,11 +70,17 @@ export async function getCurrentUser() {
 export async function getCurrentUserWithPermissions() {
   const user = await getCurrentUser();
   if (!user) return null;
-  const permissions = await getEffectivePermissions(user);
-  // Overrides are internal — expose only the resulting permission list.
+  const [permissions, role] = await Promise.all([getEffectivePermissions(user), resolveUserRole(user)]);
+  // Overrides are internal: expose only the resulting permission list.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { permissionOverrides, ...rest } = user;
-  return { ...rest, permissions };
+  const { permissionOverrides, email, ...rest } = user;
+  return {
+    ...rest,
+    // Phone-only accounts carry an internal placeholder email: never expose it.
+    email: publicEmail(email),
+    permissions,
+    appRole: role ? { id: role.id, key: role.key, nameEn: role.nameEn, nameAr: role.nameAr, color: role.color, type: role.type } : null,
+  };
 }
 
 export async function requireAuth(allowedRoles?: Role[]) {
@@ -90,8 +98,6 @@ export async function getAuthFromRequest(req: NextRequest) {
   if (!token) return null;
   return getSessionUser(token);
 }
-
-type PermissionSubject = { role: Role; permissionOverrides?: unknown };
 
 export async function userHasPermission(user: PermissionSubject, permission: string): Promise<boolean> {
   return (await getEffectivePermissions(user)).includes(permission);

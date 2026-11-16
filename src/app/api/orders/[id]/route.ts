@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
 import { canViewCost, withoutCost } from "@/lib/productCost";
-import { getAuthFromRequest, userHasAnyPermission, userHasPermission } from "@/lib/auth";
+import { getAuthFromRequest, userHasAnyPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
 import { updateOrderSchema } from "@/lib/validations/order";
 import { buildWaselleeManualWhatsAppLink } from "@/lib/wasellee";
 import type { Prisma } from "@prisma/client";
+import { publicEmail } from "@/lib/validations/auth";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -49,7 +50,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           return { ...item, product: withoutCost(product) };
         });
 
-    return ok({ ...order, items, waselleeManualWhatsAppLink });
+    // Phone-only accounts carry an internal placeholder email: never show it.
+    const customer = order.user ? { ...order.user, email: publicEmail(order.user.email) } : null;
+    return ok({ ...order, user: customer, items, waselleeManualWhatsAppLink });
   } catch (e) {
     return serverError(e);
   }

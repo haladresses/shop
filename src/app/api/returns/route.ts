@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { getAuthFromRequest, userHasAnyPermission } from "@/lib/auth";
 import { ok, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { businessDayEnd, businessDayStart, isDateKey, round3 } from "@/lib/finance";
+import { orderItemCodeCondition } from "@/lib/barcodes";
 
 /** Returns & refunds ledger for the admin Returns screen. */
 export async function GET(req: NextRequest) {
@@ -34,6 +35,7 @@ export async function GET(req: NextRequest) {
           { order: { orderNumber: { contains: search, mode: "insensitive" as const } } },
           { reason: { contains: search, mode: "insensitive" as const } },
           { creditNoteNumber: { contains: search, mode: "insensitive" as const } },
+          { order: orderItemCodeCondition(search) },
         ],
       }),
     };
@@ -66,6 +68,8 @@ export async function GET(req: NextRequest) {
           amount: Number(r.amount),
           taxAmount: Number(r.taxAmount),
           creditNoteNumber: r.creditNoteNumber,
+          exchangeOrderId: r.exchangeOrderId,
+          exchangeOrderNumber: r.exchangeOrderNumber,
           items: r.items,
           method: r.method,
           reason: r.reason,

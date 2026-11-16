@@ -78,7 +78,7 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Click into the affected order or product to take action.",
     ],
     cautions: [
-      "Numbers here are a summary — never edit catalog data straight from a trend spike.",
+      "Numbers here are a summary. Never edit catalog data straight from a trend spike.",
       "A metric that looks off is usually a payment or stock sync delay, not bad data.",
     ],
     related: ["/admin/orders", "/admin/inventory"],
@@ -136,7 +136,7 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "For gateway config, set the mode first, then paste matching keys.",
     ],
     cautions: [
-      "Gateway keys are secrets — restrict changes to payment managers.",
+      "Gateway keys are secrets. Restrict changes to payment managers.",
       "Never mix UAT and production credentials in the same configuration.",
     ],
     related: ["/admin/orders", "/admin/settings"],
@@ -165,7 +165,7 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Save, then re-run a test checkout to confirm the calculations.",
     ],
     cautions: [
-      "Rate and branch edits change live checkout totals — verify before saving.",
+      "Rate and branch edits change live checkout totals. Verify before saving.",
       "Treat Wasellee credentials as secrets, not ordinary settings.",
     ],
     related: ["/admin/orders", "/admin/settings"],
@@ -252,7 +252,7 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Use the Contact details tab to update the public phone, address, and social links.",
     ],
     cautions: [
-      "Deleting a message is permanent — archive instead when unsure.",
+      "Deleting a message is permanent. Archive instead when unsure.",
       "Contact details here are public and site-wide; double-check before saving.",
     ],
     related: ["/admin/users", "/admin/settings"],
@@ -284,7 +284,7 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Publish only after every field has been verified.",
     ],
     cautions: [
-      "Changing the category can shift required attributes — re-check them.",
+      "Changing the category can shift required attributes. Re-check them.",
       "Do not publish a product with missing images or inventory.",
     ],
     related: ["/admin/categories", "/admin/inventory", "/admin/reviews"],
@@ -302,7 +302,7 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
     ],
     guidance: [
       "Do not delete categories that still contain products or child categories without a migration plan.",
-      "Start from a ready-made set (Dresses, Abayas, Accessories) and adjust — every field is bilingual and editable.",
+      "Start from a ready-made set (Dresses, Abayas, Accessories) and adjust. Every field is bilingual and editable.",
       "Sub-categories inherit their parent's fields, so define shared fields (fabric, care) once on the parent.",
     ],
     level: "Core",
@@ -517,7 +517,7 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Confirm capture is working on the storefront.",
     ],
     cautions: [
-      "Subscriber data is customer data — handle exports carefully.",
+      "Subscriber data is customer data. Handle exports carefully.",
       "Keep cleanup deliberate so reporting stays meaningful.",
     ],
     related: ["/admin/settings"],
@@ -575,7 +575,7 @@ export const ADMIN_HELP_TOPICS: AdminHelpTopic[] = [
       "Keep the top level focused on priorities.",
     ],
     cautions: [
-      "Broken links damage navigation trust — test every destination.",
+      "Broken links damage navigation trust. Test every destination.",
       "Avoid overloading the top level with competing options.",
     ],
     related: ["/admin/categories"],
@@ -1038,7 +1038,7 @@ export const ADMIN_HELP_ARABIC_STEPS: Record<string, { steps: string[]; cautions
       "انقر على الطلب أو المنتج المتأثر لاتخاذ الإجراء المناسب.",
     ],
     cautions: [
-      "الأرقام هنا ملخص فقط — لا تعدّل بيانات الكتالوج بناءً على قفزة في الاتجاه.",
+      "الأرقام هنا ملخص فقط، لا تعدّل بيانات الكتالوج بناءً على قفزة في الاتجاه.",
       "المؤشر الذي يبدو غير صحيح غالباً ما يكون تأخيراً في مزامنة الدفع أو المخزون وليس بيانات خاطئة.",
     ],
   },
@@ -1062,7 +1062,7 @@ export const ADMIN_HELP_ARABIC_STEPS: Record<string, { steps: string[]; cautions
       "لإعدادات البوابة، اضبط الوضع أولاً ثم الصق المفاتيح المطابقة.",
     ],
     cautions: [
-      "مفاتيح البوابة أسرار — اقصر تعديلها على مسؤولي المدفوعات.",
+      "مفاتيح البوابة أسرار، اقصر تعديلها على مسؤولي المدفوعات.",
       "لا تخلط أبداً بين بيانات UAT والإنتاج في الإعداد نفسه.",
     ],
   },
@@ -1074,7 +1074,7 @@ export const ADMIN_HELP_ARABIC_STEPS: Record<string, { steps: string[]; cautions
       "احفظ ثم أعد اختبار عملية دفع للتأكد من صحة الحسابات.",
     ],
     cautions: [
-      "تعديلات الأسعار والفروع تغيّر إجماليات الدفع المباشرة — تحقق قبل الحفظ.",
+      "تعديلات الأسعار والفروع تغيّر إجماليات الدفع المباشرة، تحقق قبل الحفظ.",
       "تعامل مع بيانات Wasellee باعتبارها أسراراً وليست إعدادات عادية.",
     ],
   },
@@ -1110,7 +1110,7 @@ export const ADMIN_HELP_ARABIC_STEPS: Record<string, { steps: string[]; cautions
       "استخدم تبويب بيانات التواصل لتحديث الهاتف والعنوان وروابط التواصل العامة.",
     ],
     cautions: [
-      "حذف الرسالة نهائي — أرشفها بدلاً من ذلك عند الشك.",
+      "حذف الرسالة نهائي، أرشفها بدلاً من ذلك عند الشك.",
       "بيانات التواصل هنا عامة وتظهر في كل الموقع؛ تحقق منها قبل الحفظ.",
     ],
   },
@@ -1122,7 +1122,7 @@ export const ADMIN_HELP_ARABIC_STEPS: Record<string, { steps: string[]; cautions
       "لا تنشر إلا بعد التحقق من كل حقل.",
     ],
     cautions: [
-      "تغيير الفئة قد يبدّل الخصائص المطلوبة — أعد مراجعتها.",
+      "تغيير الفئة قد يبدّل الخصائص المطلوبة، أعد مراجعتها.",
       "لا تنشر منتجاً بصور أو مخزون ناقص.",
     ],
   },
@@ -1218,7 +1218,7 @@ export const ADMIN_HELP_ARABIC_STEPS: Record<string, { steps: string[]; cautions
       "أكّد أن التقاط الاشتراكات يعمل في المتجر.",
     ],
     cautions: [
-      "بيانات المشتركين بيانات عملاء — احرص عند التصدير.",
+      "بيانات المشتركين بيانات عملاء، احرص عند التصدير.",
       "اجعل عمليات التنظيف مدروسة حتى تبقى التقارير مفيدة.",
     ],
   },
@@ -1242,7 +1242,7 @@ export const ADMIN_HELP_ARABIC_STEPS: Record<string, { steps: string[]; cautions
       "أبقِ المستوى الأعلى مركّزاً على الأولويات.",
     ],
     cautions: [
-      "الروابط المكسورة تضر بثقة التنقل — اختبر كل وجهة.",
+      "الروابط المكسورة تضر بثقة التنقل، اختبر كل وجهة.",
       "تجنّب تكديس المستوى الأعلى بخيارات متنافسة.",
     ],
   },

@@ -109,7 +109,7 @@ export const PAY_STATUS_LABEL: Record<string, { en: string; badge: string }> = {
   UNPAID: { en: "Unpaid", badge: "bg-rose-50 text-rose-700" },
   PARTIAL: { en: "Part paid", badge: "bg-amber-50 text-amber-700" },
   PAID: { en: "Paid", badge: "bg-emerald-50 text-emerald-700" },
-  NONE: { en: "—", badge: "bg-slate-100 text-slate-500" },
+  NONE: { en: "-", badge: "bg-slate-100 text-slate-500" },
 };
 
 export const SUPPLIER_PAYMENT_METHODS = ["BANK_TRANSFER", "CASH", "CHEQUE", "CARD", "OTHER"] as const;

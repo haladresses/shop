@@ -41,14 +41,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
       if (action === "cancel") {
         if (!["DRAFT", "ORDERED"].includes(po.status) || received > 0) {
-          throw new PurchasingError("Goods have already been received — return them to the supplier or close the order instead.", 409);
+          throw new PurchasingError("Goods have already been received. Return them to the supplier or close the order instead.", 409);
         }
         await tx.purchaseOrder.update({
           where: { id },
           data: {
             status: "CANCELLED",
             cancelledAt: new Date(),
-            notes: appendNote(po.notes, `Cancelled on ${stamp}${reason ? ` — ${reason}` : ""}`),
+            notes: appendNote(po.notes, `Cancelled on ${stamp}${reason ? `: ${reason}` : ""}`),
           },
         });
         await rebalanceAllocations(tx, id);
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           data: {
             status: "RECEIVED",
             receivedAt: new Date(),
-            notes: appendNote(po.notes, `Closed short on ${stamp}: ${short} unit(s) not delivered${reason ? ` — ${reason}` : ""}`),
+            notes: appendNote(po.notes, `Closed short on ${stamp}: ${short} unit(s) not delivered${reason ? `: ${reason}` : ""}`),
           },
         });
         await recalcPurchaseOrder(tx, id);
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       }
       // back to draft
       if (po.status !== "ORDERED" || received > 0) throw new PurchasingError("Only a placed order with nothing received can go back to draft.", 409);
-      if (po._count.allocations > 0) throw new PurchasingError("This order has payments against it — void them first.", 409);
+      if (po._count.allocations > 0) throw new PurchasingError("This order has payments against it. Void them first.", 409);
       await tx.purchaseOrder.update({ where: { id }, data: { status: "DRAFT", orderedAt: null } });
       return "DRAFT";
     }, TX_OPTIONS);

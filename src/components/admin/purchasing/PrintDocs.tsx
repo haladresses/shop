@@ -74,7 +74,7 @@ function DocShell({
               <span>{m.en}</span>
               <span dir="rtl" lang="ar">{m.ar}</span>
             </span>
-            <span className="block font-semibold mt-0.5">{m.value || "—"}</span>
+            <span className="block font-semibold mt-0.5">{m.value || "-"}</span>
           </div>
         ))}
       </div>
@@ -265,7 +265,7 @@ function ItemsTable({ po, receivedOnly }: { po: PrintablePo; receivedOnly?: Map<
             {!receivedOnly && (
               <>
                 <td className="border border-black px-1.5 py-1 text-right align-top">{fmt3(it.unitCost)}</td>
-                <td className="border border-black px-1.5 py-1 text-right align-top">{it.discountPct ? it.discountPct : "—"}</td>
+                <td className="border border-black px-1.5 py-1 text-right align-top">{it.discountPct ? it.discountPct : "-"}</td>
                 <td className="border border-black px-1.5 py-1 text-right align-top">{it.taxRate}%</td>
                 <td className="border border-black px-1.5 py-1 text-right align-top">{fmt3(it.netAmount)}</td>
                 <td className="border border-black px-1.5 py-1 text-right align-top">{fmt3(it.taxAmount)}</td>
@@ -406,7 +406,7 @@ export function DebitNoteDoc({ ret, header }: { ret: PrintableReturn; header: Do
         />
         <div className="border border-black p-2.5">
           <Bi en="Reason for return" ar="سبب الإرجاع" className="font-bold border-b border-gray-300 pb-1 mb-1" />
-          <p className="whitespace-pre-line">{ret.reason || "—"}</p>
+          <p className="whitespace-pre-line">{ret.reason || "-"}</p>
         </div>
       </div>
       <table className="w-full border-collapse">
@@ -531,7 +531,7 @@ export function SupplierStatementDoc({ st, header }: { st: PrintableStatement; h
             <tr key={i} className="print-avoid-break">
               <td className="border border-black px-1.5 py-1 whitespace-nowrap">{fmtDate(e.date)}</td>
               <td className="border border-black px-1.5 py-1 whitespace-nowrap">
-                {e.number ?? "—"}
+                {e.number ?? "-"}
                 <span className="block text-[10px]" dir="rtl" lang="ar">{TYPE_AR[e.type] ?? ""}</span>
               </td>
               <td className="border border-black px-1.5 py-1">{e.description}</td>

@@ -40,6 +40,7 @@ const pageTitles: Record<string, string> = {
   "/admin/contact": "Contact",
   "/admin/help": "Help Center",
   "/admin/roles": "Roles & Permissions",
+  "/admin/roles/new": "New Role",
   "/admin/settings": "Settings",
   "/admin/legal-pages": "Legal Pages",
   "/admin/testimonials": "Testimonials",
@@ -61,6 +62,7 @@ function resolveTitle(pathname: string): string {
   if (/^\/admin\/promotions\/[^/]+$/.test(pathname)) return "Edit Promotion";
   if (/^\/admin\/supplier-returns\/[^/]+$/.test(pathname)) return "Supplier Return";
   if (/^\/admin\/purchases\/[^/]+$/.test(pathname)) return "Purchase Order";
+  if (/^\/admin\/roles\/[^/]+$/.test(pathname)) return "Edit Role";
   // Edit product: /admin/products/<id>
   if (/^\/admin\/products\/[^/]+$/.test(pathname)) return "Edit Product";
   return "Admin";

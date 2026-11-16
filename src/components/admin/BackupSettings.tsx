@@ -35,9 +35,9 @@ type ScheduleSettings = {
 type RestoreTarget = Backup | "upload";
 
 function formatBytes(bytes: string | null) {
-  if (!bytes) return "—";
+  if (!bytes) return "-";
   const n = Number(bytes);
-  if (!Number.isFinite(n) || n === 0) return "—";
+  if (!Number.isFinite(n) || n === 0) return "-";
   const units = ["B", "KB", "MB", "GB"];
   let val = n;
   let i = 0;

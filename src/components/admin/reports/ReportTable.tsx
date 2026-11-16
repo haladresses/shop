@@ -29,7 +29,7 @@ export type Column<T> = {
 type Kind = Column<unknown>["kind"];
 
 export function fmtValue(kind: Kind, v: string | number | null | undefined): string {
-  if (v == null || v === "") return kind === "text" || !kind ? "" : "—";
+  if (v == null || v === "") return kind === "text" || !kind ? "" : "-";
   if (typeof v === "string") return v;
   if (kind === "money") return money(v);
   if (kind === "int") return int(v);

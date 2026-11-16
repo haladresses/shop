@@ -6,6 +6,7 @@ import { ok, error, unauthorized, forbidden, serverError } from "@/lib/api/respo
 import { slugify } from "@/lib/utils";
 import { cleanCustomSpecs, productSchema } from "@/lib/validations/product";
 import { Prisma } from "@prisma/client";
+import { assignProductBarcodes } from "@/lib/barcodes";
 
 export async function GET(req: NextRequest) {
   try {
@@ -228,6 +229,12 @@ export async function POST(req: NextRequest) {
         images: true,
       },
     });
+
+    // Every product has its own barcode: one is created when none was entered.
+    if (!product.barcode) {
+      const [assigned] = await prisma.$transaction((tx) => assignProductBarcodes(tx, [product.id]));
+      if (assigned) product.barcode = assigned.barcode;
+    }
 
     return ok(product, 201);
   } catch (e) {

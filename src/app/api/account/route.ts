@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest) {
     if (b.phone !== undefined) {
       if (!b.phone) {
         // Phone-only accounts sign in with their phone — don't let them remove it.
-        if (me.email.endsWith(`@${PHONE_ACCOUNT_DOMAIN}`)) return error("Your mobile number is how you sign in — it can't be removed.");
+        if (me.email.endsWith(`@${PHONE_ACCOUNT_DOMAIN}`)) return error("Your mobile number is how you sign in. It can't be removed.");
         data.phone = null;
       } else {
         const phone = normalizePhone(b.phone);

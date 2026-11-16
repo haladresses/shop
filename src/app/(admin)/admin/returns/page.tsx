@@ -15,6 +15,8 @@ type RefundRow = {
   amount: number;
   taxAmount: number;
   creditNoteNumber: string | null;
+  exchangeOrderId?: string | null;
+  exchangeOrderNumber?: string | null;
   items: unknown;
   method: string;
   reason: string | null;
@@ -100,6 +102,7 @@ export default function ReturnsPage() {
           <option value="CARD">Card</option>
           <option value="BANK_TRANSFER">Bank transfer</option>
           <option value="STORE_CREDIT">Store credit</option>
+          <option value="EXCHANGE">Exchange</option>
         </select>
         <div className="flex items-center gap-2">
           <input type="date" value={filters.from} onChange={(e) => setFilter("from", e.target.value)} className="admin-input !py-2 text-sm !w-auto min-w-0" />
@@ -107,7 +110,7 @@ export default function ReturnsPage() {
           <input type="date" value={filters.to} onChange={(e) => setFilter("to", e.target.value)} className="admin-input !py-2 text-sm !w-auto min-w-0" />
         </div>
         <button onClick={() => setNewOpen(true)} className="admin-btn admin-btn-primary !py-2 text-sm md:ml-auto">
-          <LuPlus size={16} /> New return
+          <LuPlus size={16} /> New return / exchange
         </button>
       </div>
 
@@ -141,19 +144,24 @@ export default function ReturnsPage() {
                 {rows.map((r) => (
                   <tr key={r.id}>
                     <td className="whitespace-nowrap text-sm">{new Date(r.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</td>
-                    <td className="font-mono text-xs whitespace-nowrap">{r.creditNoteNumber || "—"}</td>
+                    <td className="font-mono text-xs whitespace-nowrap">{r.creditNoteNumber || "-"}</td>
                     <td>
                       <span className="font-medium text-slate-800">{r.order.orderNumber}</span>
                       <p className="text-xs text-slate-400">{r.order.source === "POS" ? "In-store" : "Online"} · total {num(r.order.total)}</p>
                     </td>
                     <td className="text-right tabular-nums">{r.units}</td>
-                    <td className="text-sm">{methodLabel(r.method)}</td>
+                    <td className="text-sm">
+                      {methodLabel(r.method)}
+                      {r.exchangeOrderNumber && (
+                        <a href={`/admin/orders?view=${r.exchangeOrderId}`} className="block text-xs text-indigo-600 hover:underline">for {r.exchangeOrderNumber}</a>
+                      )}
+                    </td>
                     <td>
                       {r.restocked ? <span className="badge badge-delivered">Restocked</span> : <span className="badge badge-cancelled">Damaged</span>}
                     </td>
-                    <td className="max-w-[240px] truncate text-sm text-slate-600">{r.reason || "—"}</td>
-                    <td className="text-sm text-slate-500">{r.createdBy || "—"}</td>
-                    <td className="text-right tabular-nums text-slate-500">{r.taxAmount > 0 ? num(r.taxAmount) : "—"}</td>
+                    <td className="max-w-[240px] truncate text-sm text-slate-600">{r.reason || "-"}</td>
+                    <td className="text-sm text-slate-500">{r.createdBy || "-"}</td>
+                    <td className="text-right tabular-nums text-slate-500">{r.taxAmount > 0 ? num(r.taxAmount) : "-"}</td>
                     <td className="text-right tabular-nums font-semibold">{num(r.amount)}</td>
                     <td>
                       <button onClick={() => printCreditNote(r)} disabled={printing === r.id} className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-40" title="Print credit note (English + Arabic)">

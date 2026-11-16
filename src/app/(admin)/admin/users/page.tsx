@@ -331,7 +331,7 @@ function UserWorkspace({ id, onBack, onChanged, onDeleted }: { id: string; onBac
 
       {/* Body */}
       <div className="px-4 sm:px-8 py-6 space-y-4">
-        {locked && <p className="rounded-xl bg-amber-50 text-amber-800 text-sm px-4 py-3">This account is at or above your level — view only.</p>}
+        {locked && <p className="rounded-xl bg-amber-50 text-amber-800 text-sm px-4 py-3">This account is at or above your level. View only.</p>}
         <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-5 sm:p-6">
           {tab === "overview" && <ProfileTab u={u} locked={locked} onSave={patch} />}
           {tab === "access" && <AccessTab u={u} onSave={patch} />}
@@ -357,8 +357,8 @@ function ProfileTab({ u, locked, onSave }: { u: Detail; locked: boolean; onSave:
       <div className="grid sm:grid-cols-2 gap-3">
         <L label="Name (English)"><input className="admin-input" disabled={locked} value={f.nameEn} onChange={(e) => setF({ ...f, nameEn: e.target.value })} /></L>
         <L label="Name (Arabic)"><input className="admin-input" dir="rtl" disabled={locked} value={f.nameAr} onChange={(e) => setF({ ...f, nameAr: e.target.value })} /></L>
-        <L label="Email"><input className="admin-input" dir="ltr" disabled={locked} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="—" /></L>
-        <L label="Mobile"><input className="admin-input" dir="ltr" disabled={locked} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="—" /></L>
+        <L label="Email"><input className="admin-input" dir="ltr" disabled={locked} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="-" /></L>
+        <L label="Mobile"><input className="admin-input" dir="ltr" disabled={locked} value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} placeholder="-" /></L>
       </div>
       {!locked && <button className="admin-btn admin-btn-primary">Save profile</button>}
     </form>
@@ -375,7 +375,7 @@ function AccessTab({ u, onSave }: { u: Detail; onSave: (b: object, t?: string) =
 
   const groups = useMemo(() => {
     const m = new Map<string, Perm[]>();
-    for (const p of u.catalog) {
+    for (const p of u.catalog ?? []) {
       if (q && !`${p.label} ${p.description} ${p.group}`.toLowerCase().includes(q.toLowerCase())) continue;
       m.set(p.group, [...(m.get(p.group) ?? []), p]);
     }
@@ -396,7 +396,7 @@ function AccessTab({ u, onSave }: { u: Detail; onSave: (b: object, t?: string) =
   const save = async () => {
     const body: Record<string, unknown> = { overrides: { grant, revoke } };
     if (role !== u.role) body.role = role;
-    await onSave(body, role !== u.role ? "Role updated — they've been signed out to apply it" : "Permissions saved");
+    await onSave(body, role !== u.role ? "Role updated: they've been signed out to apply it" : "Permissions saved");
   };
 
   return (
@@ -523,7 +523,7 @@ function SecurityTab({ u, locked, onDone, onClose }: { u: Detail; locked: boolea
       )}
 
       {!u.isSelf && (
-        <Box title="Delete account" desc="Only for accounts without orders or POS history — otherwise deactivate.">
+        <Box title="Delete account" desc="Only for accounts without orders or POS history. Otherwise deactivate.">
           <button
             onClick={async () => {
               if (!confirm("Delete this account permanently?")) return;

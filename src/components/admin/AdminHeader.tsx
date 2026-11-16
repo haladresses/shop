@@ -4,8 +4,10 @@ import { LuBell, LuSearch, LuMenu } from "react-icons/lu";
 
 type AdminUser = {
   nameEn?: string | null;
-  email: string;
+  email: string | null;
+  phone?: string | null;
   role: string;
+  appRole?: { nameEn: string; color: string } | null;
   avatar?: string | null;
 };
 
@@ -35,14 +37,14 @@ export default function AdminHeader({ title, onMenuClick }: { title?: string; on
         {user && (
           <button className="flex items-center gap-2.5 rounded-full hover:bg-slate-100 pr-2 sm:pr-3 sm:py-1 transition-colors min-w-0">
             <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500 flex items-center justify-center text-white font-semibold text-sm shadow-sm flex-shrink-0">
-              {user.nameEn?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+              {(user.nameEn || user.email || user.phone || "?").charAt(0).toUpperCase()}
             </div>
             <div className="text-left min-w-0">
               <p className="text-sm font-medium text-slate-700 leading-tight truncate max-w-[120px] sm:max-w-none">
-                {user.nameEn || user.email}
+                {user.nameEn || user.email || user.phone}
               </p>
               <p className="text-xs text-slate-500 capitalize leading-tight">
-                {user.role.replace("_", " ").toLowerCase()}
+                {user.appRole?.nameEn ?? user.role.replace("_", " ").toLowerCase()}
               </p>
             </div>
           </button>

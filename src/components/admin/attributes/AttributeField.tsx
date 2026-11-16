@@ -128,7 +128,7 @@ function Control({
           {stale && <option value={selected}>{selected} (removed option)</option>}
           {def.options.map((o) => (
             <option key={o.value} value={o.value}>
-              {o.labelEn}{o.labelAr && o.labelAr !== o.labelEn ? ` — ${o.labelAr}` : ""}
+              {o.labelEn}{o.labelAr && o.labelAr !== o.labelEn ? `: ${o.labelAr}` : ""}
             </option>
           ))}
         </select>

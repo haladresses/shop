@@ -171,7 +171,7 @@ export default function OptionsEditor({
           ))}
         </div>
       ) : (
-        <p className="text-xs text-slate-400">No options yet — add the first one below.</p>
+        <p className="text-xs text-slate-400">No options yet: add the first one below.</p>
       )}
 
       {editingOption && (
@@ -246,7 +246,7 @@ export default function OptionsEditor({
           </p>
           {missingArabic > 0 && (
             <p className="text-[11px] text-amber-600 mt-1">
-              {missingArabic} option{missingArabic === 1 ? " has" : "s have"} no Arabic name yet — click a chip to add it. Arabic shoppers will see the English name until then.
+              {missingArabic} option{missingArabic === 1 ? " has" : "s have"} no Arabic name yet. Click a chip to add it. Arabic shoppers will see the English name until then.
             </p>
           )}
         </>

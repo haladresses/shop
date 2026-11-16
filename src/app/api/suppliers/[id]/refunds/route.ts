@@ -24,7 +24,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
           method: d.method,
           reference: d.reference,
           receivedAt: parseDay(d.receivedAt) ?? new Date(),
-          note: d.note ? `Refund received — ${d.note}` : "Refund received",
+          note: d.note ? `Refund received: ${d.note}` : "Refund received",
           userId: g.user.id,
         }),
       TX_OPTIONS,

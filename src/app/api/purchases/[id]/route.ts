@@ -180,10 +180,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         throw new PurchasingError("A cancelled order can only have its notes changed.", 409);
       }
       if (!fullEdit && touched.some((k) => !(HEADER_FIELDS as readonly string[]).includes(k))) {
-        throw new PurchasingError("Goods have been received on this order — only references, dates, notes and attachments can be changed now.", 409);
+        throw new PurchasingError("Goods have been received on this order. Only references, dates, notes and attachments can be changed now.", 409);
       }
       if (d.supplierId && d.supplierId !== po.supplierId) {
-        if (po._count.allocations > 0) throw new PurchasingError("This order has payments against it — the supplier can't be changed.", 409);
+        if (po._count.allocations > 0) throw new PurchasingError("This order has payments against it. The supplier can't be changed.", 409);
         const s = await tx.supplier.findUnique({ where: { id: d.supplierId }, select: { isActive: true } });
         if (!s || !s.isActive) throw new PurchasingError("Choose an active supplier.");
       }
@@ -235,7 +235,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     const { id } = await params;
     const po = await prisma.purchaseOrder.findUnique({ where: { id }, select: { status: true } });
     if (!po) return notFound("Purchase order");
-    if (po.status !== "DRAFT") return error("Only drafts can be deleted — cancel the order instead.", 409);
+    if (po.status !== "DRAFT") return error("Only drafts can be deleted. Cancel the order instead.", 409);
     await prisma.purchaseOrder.delete({ where: { id } });
     return ok({ deleted: true });
   } catch (e) {

@@ -189,7 +189,7 @@ function BranchesTab() {
   return (
     <div className="space-y-4">
       <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-2.5">
-        Prices are assumed in OMR — confirm the real domestic rates with Wasellee and adjust each branch here.
+        Prices are assumed in OMR. Confirm the real domestic rates with Wasellee and adjust each branch here.
       </div>
 
       <div className="flex items-center justify-between">
@@ -408,7 +408,7 @@ function RatesTab() {
   return (
     <div className="space-y-4">
       <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-2.5">
-        Prices are assumed in OMR (Wasellee&apos;s currency for this table wasn&apos;t confirmed) — verify and edit here. Not currently wired into checkout (Oman-only checkout); reference data for manual/international quotes.
+        Prices are assumed in OMR (Wasellee&apos;s currency for this table wasn&apos;t confirmed). Verify and edit here. Not currently wired into checkout (Oman-only checkout); reference data for manual/international quotes.
       </div>
 
       <div className="flex items-center justify-between">
@@ -567,7 +567,7 @@ function WhatsAppTab() {
     <div className="space-y-6 w-full">
       <div className="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-lg px-4 py-2.5">
         Every order placed with Wasellee shipping is automatically sent to the Bousher office over WhatsApp via a
-        self-hosted <strong>WAHA</strong> (WhatsApp HTTP API) instance — no Meta Business API or template approval
+        self-hosted <strong>WAHA</strong> (WhatsApp HTTP API) instance. No Meta Business API or template approval
         needed. Point this at your own WAHA server URL below and turn notifications on.
       </div>
 
@@ -608,7 +608,7 @@ function WhatsAppTab() {
       </div>
 
       <div className="admin-card p-6 space-y-5">
-        <p className="font-medium text-slate-800">Wasellee / LO Express — Bousher Office</p>
+        <p className="font-medium text-slate-800">Wasellee / LO Express · Bousher Office</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Office Phone (WhatsApp target)</label>

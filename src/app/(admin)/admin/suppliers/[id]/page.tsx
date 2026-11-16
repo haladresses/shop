@@ -270,7 +270,7 @@ function SupplierProfile({ id }: { id: string }) {
             <Kpi
               icon={LuFileText}
               label="Delivery performance"
-              value={data.stats.avgLeadTimeDays != null ? `${data.stats.avgLeadTimeDays} days` : "—"}
+              value={data.stats.avgLeadTimeDays != null ? `${data.stats.avgLeadTimeDays} days` : "-"}
               sub={data.stats.onTimeRate != null ? `${data.stats.onTimeRate}% on time` : "Average lead time"}
               tone="info"
             />
@@ -376,7 +376,7 @@ function SupplierProfile({ id }: { id: string }) {
                       <td className="text-right tabular-nums">{r.units}</td>
                       <td className="text-right tabular-nums font-semibold">{fmt3(r.total)}</td>
                       <td className="text-sm">{r.settlement === "REFUND" ? <span className="text-emerald-700">Refunded</span> : "Credit"}</td>
-                      <td className="text-sm text-slate-500 max-w-[220px] truncate">{r.reason || "—"}</td>
+                      <td className="text-sm text-slate-500 max-w-[220px] truncate">{r.reason || "-"}</td>
                       <td><button onClick={() => printReturn(r)} className="p-1.5 text-slate-400 hover:text-slate-700" title="Print debit note"><LuPrinter size={15} /></button></td>
                     </tr>
                   ))}
@@ -438,7 +438,7 @@ function SupplierProfile({ id }: { id: string }) {
                 <p className="text-sm text-slate-500">
                   {s.isActive
                     ? "Inactive suppliers are hidden from pickers and can't get new orders. Their history stays."
-                    : "This supplier is inactive — reactivate to order from them again."}
+                    : "This supplier is inactive. Reactivate to order from them again."}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button onClick={toggleActive} className="admin-btn admin-btn-secondary">{s.isActive ? "Deactivate" : "Reactivate"}</button>
@@ -504,7 +504,7 @@ function Detail({ label, value, mono }: { label: string; value: string | null | 
   return (
     <div>
       <dt className="text-xs text-slate-500">{label}</dt>
-      <dd className={`text-slate-800 ${mono ? "font-mono" : ""}`}>{value || <span className="text-slate-300">—</span>}</dd>
+      <dd className={`text-slate-800 ${mono ? "font-mono" : ""}`}>{value || <span className="text-slate-300">-</span>}</dd>
     </div>
   );
 }

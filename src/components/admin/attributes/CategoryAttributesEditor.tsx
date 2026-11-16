@@ -200,7 +200,7 @@ export default function CategoryAttributesEditor({
       return cloneAsNew(d, d.key);
     });
     if (!fresh.length) {
-      toast(`Nothing new to copy — ${sourceName}'s fields are already here.`);
+      toast(`Nothing new to copy: ${sourceName}'s fields are already here.`);
       return;
     }
     append(fresh);
@@ -360,7 +360,7 @@ export default function CategoryAttributesEditor({
               </div>
               <h4 className="font-semibold text-slate-800">No fields yet</h4>
               <p className="text-sm text-slate-500 max-w-md mx-auto mt-1">
-                Fields are the details every product in this category shares — fabric, length, sleeves… Start with a
+                Fields are the details every product in this category shares. Fabric, length, sleeves… Start with a
                 ready-made set or build your own.
               </p>
               {canManage && (
@@ -688,7 +688,7 @@ function FieldEditor({
                 onChange={(e) => onPatch({ key: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"), keyTouched: true })}
               />
               <p className="text-xs text-slate-500 mt-1">
-                Answers are stored under this key. You rarely need to change it — if you do, saved answers move to the new key automatically.
+                Answers are stored under this key. You rarely need to change it. If you do, saved answers move to the new key automatically.
               </p>
               {renamed && used > 0 && (
                 <Notice tone="indigo">
@@ -725,7 +725,7 @@ function FieldEditor({
       {confirmingDelete && (
         <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 admin-fade-in">
           <p>
-            <strong>{plural(used, "product")}</strong> have an answer for this field. Deleting it hides those answers — they
+            <strong>{plural(used, "product")}</strong> have an answer for this field. Deleting it hides those answers. They
             are kept, and come back if you add a field with the key <code className="font-mono">{f.originalKey ?? f.key}</code> again.
           </p>
           <div className="mt-3 flex gap-2 justify-end">

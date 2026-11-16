@@ -259,7 +259,7 @@ export function RefundModal({
     >
       <div className="space-y-4">
         <p className="text-sm text-slate-600">
-          Money the supplier paid back to you — for example for goods returned and credited earlier, or an overpayment.
+          Money the supplier paid back to you, for example for goods returned and credited earlier, or an overpayment.
           {supplier.balance < -0.0005 && ` You currently have ${fmt3(-supplier.balance)} OMR credit with them.`}
         </p>
         <div className="grid sm:grid-cols-2 gap-3">

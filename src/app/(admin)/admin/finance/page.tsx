@@ -312,7 +312,7 @@ export default function FinancePage() {
                     <PlRow label="  discounts given" value={t.discounts} muted />
                     <PlRow label="  shipping charged" value={t.shipping} muted />
                     <PlRow label="Refunds & returns" value={-t.refunds} />
-                    {Math.abs(t.vat ?? 0) > 0.0005 && <PlRow label="VAT collected (excluded — owed to the tax authority)" value={-t.vat} />}
+                    {Math.abs(t.vat ?? 0) > 0.0005 && <PlRow label="VAT collected (excluded: owed to the tax authority)" value={-t.vat} />}
                     <PlRow label="Net sales" value={t.netSales} strong />
                     <PlRow label="Cost of goods sold" value={-t.cogs} />
                     <PlRow label="Gross profit" value={t.grossProfit} strong />
@@ -634,7 +634,7 @@ function ExpensesTab({ canManage, onChange }: { canManage: boolean; onChange: ()
                     <td className="whitespace-nowrap">{e.date}</td>
                     <td><span className="badge bg-slate-100 text-slate-700">{e.category}</span></td>
                     <td className="max-w-[320px]">
-                      <p className="truncate">{e.description || "—"}</p>
+                      <p className="truncate">{e.description || "-"}</p>
                       {e.reference && <p className="text-xs text-slate-400">Ref: {e.reference}</p>}
                     </td>
                     <td className="text-slate-500 text-sm">{e.paymentMethod.replace(/_/g, " ").toLowerCase()}</td>

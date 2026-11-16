@@ -11,7 +11,6 @@ export default function PosRootLayout({
     <SiteDocument
       lang="en"
       bodyClassName="bg-slate-100"
-      footerClassName="pb-24 lg:pb-3"
       head={
         <>
           <title>POS | Hala Dresses</title>

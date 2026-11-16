@@ -41,6 +41,7 @@ export function buildInventoryWhere(f: StockFilter): Prisma.InventoryWhereInput 
         { variant: { product: { nameEn: { contains: q, mode: "insensitive" } } } },
         { variant: { product: { nameAr: { contains: q } } } },
         { variant: { product: { sku: { contains: q, mode: "insensitive" } } } },
+        { variant: { product: { barcode: { contains: q, mode: "insensitive" } } } },
         { location: { contains: q, mode: "insensitive" } },
       ],
     });

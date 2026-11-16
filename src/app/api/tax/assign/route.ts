@@ -4,6 +4,7 @@ import prisma from "@/lib/db";
 import { ok, error, serverError } from "@/lib/api/response";
 import { guard } from "@/lib/api/guard";
 import { getDefaultTaxRate, resolveCategoryTaxRates, resolveProductTaxRates } from "@/lib/tax";
+import { productCodeConditions } from "@/lib/barcodes";
 
 /**
  * Which VAT rate applies where.
@@ -31,7 +32,7 @@ export async function GET(req: NextRequest) {
           OR: [
             { nameEn: { contains: search, mode: "insensitive" as const } },
             { nameAr: { contains: search } },
-            { sku: { contains: search, mode: "insensitive" as const } },
+            ...productCodeConditions(search),
           ],
         }),
       };

@@ -90,7 +90,7 @@ export default function CategoriesTab({ query, onOpenCategory }: { query: string
             label: "Category",
             labelAr: "الفئة",
             value: (r) => r.nameEn,
-            printValue: (r) => `${"— ".repeat(r.depth)}${r.nameEn}`,
+            printValue: (r) => `${"-".repeat(r.depth)}${r.nameEn}`,
             render: (r) => (
               <div className="flex items-center gap-1 min-w-[180px]" style={{ paddingLeft: r.depth * 18 }}>
                 {r.hasChildren ? (

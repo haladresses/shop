@@ -137,11 +137,11 @@ export function SuppliersTab({ perms, reloadKey, onChanged }: { perms: Purchasin
                       </p>
                     </td>
                     <td className="text-sm">
-                      <p className="text-slate-700">{s.contactPerson || "—"}</p>
+                      <p className="text-slate-700">{s.contactPerson || "-"}</p>
                       <p className="text-xs text-slate-400">{s.phone || s.email || ""}</p>
                     </td>
                     <td className="text-sm text-slate-600 whitespace-nowrap">{s.paymentTermsDays ? `Net ${s.paymentTermsDays}` : "Cash"}</td>
-                    <td className="text-right tabular-nums">{s.openOrders || "—"}</td>
+                    <td className="text-right tabular-nums">{s.openOrders || "-"}</td>
                     <td className="text-sm text-slate-500 whitespace-nowrap">{fmtDate(s.lastOrderDate)}</td>
                     <td className="text-right">
                       {s.overdue > 0.0005 ? (
@@ -150,7 +150,7 @@ export function SuppliersTab({ perms, reloadKey, onChanged }: { perms: Purchasin
                           <span className="block text-[11px] font-normal">{s.maxDaysOverdue}d late</span>
                         </span>
                       ) : (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-slate-300">-</span>
                       )}
                     </td>
                     <td className="text-right">
@@ -182,7 +182,7 @@ export function SuppliersTab({ perms, reloadKey, onChanged }: { perms: Purchasin
             <tfoot>
               <tr>
                 <td colSpan={5} className="text-right text-sm font-semibold text-slate-600">{meta.total} supplier{meta.total === 1 ? "" : "s"}</td>
-                <td className="text-right tabular-nums font-semibold text-rose-600">{totals.overdue > 0 ? fmt3(totals.overdue) : "—"}</td>
+                <td className="text-right tabular-nums font-semibold text-rose-600">{totals.overdue > 0 ? fmt3(totals.overdue) : "-"}</td>
                 <td className="text-right"><BalanceText value={totals.balance} /></td>
                 <td />
               </tr>

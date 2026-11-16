@@ -8,6 +8,7 @@ import { withEffectiveCategoryAttributes } from "@/lib/categorySpecs";
 import { applyMovement } from "@/lib/inventory";
 import { resolveProductTaxRates } from "@/lib/tax";
 import { Prisma } from "@prisma/client";
+import { assignProductBarcodes } from "@/lib/barcodes";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -113,7 +114,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const updated = await prisma.$transaction(
       async (tx) => {
         if (variants !== undefined) await reconcileVariants(tx, id, variants, user.id);
-        return tx.product.update({
+        const saved = await tx.product.update({
           where: { id },
           data,
           include: {
@@ -123,13 +124,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
             taxRate: { select: { id: true, code: true, nameEn: true, nameAr: true, rate: true, type: true } },
           },
         });
+        // Every product has its own barcode: clearing it (or never setting one) gets a new code.
+        if (!saved.barcode) {
+          const [assigned] = await assignProductBarcodes(tx, [id]);
+          if (assigned) saved.barcode = assigned.barcode;
+        }
+        return saved;
       },
       { timeout: 30000 },
     );
     return ok(updated);
   } catch (e) {
     if (e instanceof Error && /Not enough stock/.test(e.message)) {
-      return error(`${e.message} Someone may have sold units while this page was open — reload and try again.`, 409);
+      return error(`${e.message} Someone may have sold units while this page was open. Reload and try again.`, 409);
     }
     return serverError(e);
   }

@@ -119,7 +119,7 @@ function Performance({ detail }: { detail: PromotionDetail }) {
                         {new Date(r.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })} · {r.order.source === "POS" ? "POS" : "Online"}
                       </p>
                     </td>
-                    <td className="text-slate-600">{r.order.customer || "—"}</td>
+                    <td className="text-slate-600">{r.order.customer || "-"}</td>
                     <td className="text-right tabular-nums text-emerald-700">−{r.discount.toFixed(3)}</td>
                     <td className="text-right tabular-nums">{r.order.total.toFixed(3)}</td>
                   </tr>

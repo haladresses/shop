@@ -16,7 +16,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (!parsed.success) return error(parsed.error.issues[0].message);
     const d = parsed.data;
     if (existing.isDefault && (d.isActive === false || d.isDefault === false)) {
-      return error("This is the default rate — make another rate the default first.");
+      return error("This is the default rate. Make another rate the default first.");
     }
     const type = d.type ?? existing.type;
     const rate = d.rate ?? Number(existing.rate);

@@ -85,7 +85,7 @@ export default function ItemSearch({
 
   const pick = (r: LookupRow) => {
     if (!usable(r)) {
-      setMsg(`${r.nameEn} has no stock record yet — nothing to return.`);
+      setMsg(`${r.nameEn} has no stock record yet. Nothing to return.`);
       return;
     }
     onPick(r);

@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
           data: { quantity: { decrement: item.quantity } },
         });
         if (res.count !== 1) {
-          throw new Error(`Not enough stock available — someone else may have just sold the last one.`);
+          throw new Error(`Not enough stock available. Someone else may have just sold the last one.`);
         }
       }
 

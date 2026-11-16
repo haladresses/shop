@@ -35,7 +35,7 @@ type SiteDocumentProps = Omit<ComponentPropsWithoutRef<"html">, "children"> & {
   head: ReactNode;
   children: ReactNode;
   bodyClassName?: string;
-  footerClassName?: string;
+  /** Rendered after the page content. None by default — the "Designed & built by" credit only appears on the storefront home page (see components/Footer). */
   footer?: ReactNode;
 };
 
@@ -43,14 +43,7 @@ export default function SiteDocument({
   head,
   children,
   bodyClassName,
-  footerClassName = "",
-  footer = (
-    <footer
-      className={`border-t border-gray-3 bg-white px-4 py-3 text-center print:hidden ${footerClassName}`}
-    >
-      <SbcCredit />
-    </footer>
-  ),
+  footer = null,
   ...htmlAttributes
 }: SiteDocumentProps) {
   return (
@@ -58,7 +51,9 @@ export default function SiteDocument({
       {/* eslint-disable-next-line @next/next/no-head-element -- Shared by the App Router root layouts. */}
       <head>
         {head}
-        <meta name="generator" content="SBC — sbc.om" />
+        {/* Arabic typeface (Vazirmatn) — preloaded so Arabic text never flashes in a fallback font. */}
+        <link rel="preload" href="/fonts/vazirmatn/Vazirmatn-Variable.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <meta name="generator" content="SBC (sbc.om)" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(website) }}

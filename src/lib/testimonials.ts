@@ -11,7 +11,7 @@ export type TestimonialItem = {
 
 export const DEFAULT_TESTIMONIALS: TestimonialItem[] = [
   {
-    reviewEn: "My daughter's dress from Hala Dresses was the prettiest at her graduation. Soft fabric, beautiful stitching — delivered right on time.",
+    reviewEn: "My daughter's dress from Hala Dresses was the prettiest at her graduation. Soft fabric, beautiful stitching. Delivered right on time.",
     reviewAr: "فستان ابنتي من حلا للازياء كان الأجمل في حفل التخرج. القماش ناعم والخياطة دقيقة، وصلت في الوقت المحدد تماماً.",
     authorNameEn: "Um Mohammed",
     authorNameAr: "أم محمد",

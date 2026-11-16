@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
       select: {
         id: true,
         role: true,
+        roleId: true,
+        permissionOverrides: true,
         isActive: true,
         posPinHash: true,
         posPinAttempts: true,

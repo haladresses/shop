@@ -102,6 +102,8 @@ type Refund = {
   amount: number | string;
   taxAmount?: number | string;
   creditNoteNumber?: string | null;
+  exchangeOrderId?: string | null;
+  exchangeOrderNumber?: string | null;
   method: string;
   reason?: string | null;
   restocked?: boolean;
@@ -545,7 +547,7 @@ function OrdersView() {
                 </button>
                 {selected.paymentStatus === "PAID" && Number(selected.refundedAmount ?? 0) < Number(selected.total) - 0.0005 && (
                   <button onClick={() => setReturnOpen(true)} disabled={detailLoading} className="admin-btn admin-btn-danger" title="Return some or all items of this order">
-                    <LuRotateCcw size={15} /> Return items
+                    <LuRotateCcw size={15} /> Return / exchange
                   </button>
                 )}
               </>
@@ -656,7 +658,7 @@ function OrdersView() {
                 <p className="text-xs font-semibold text-indigo-700 uppercase mb-1.5 flex items-center gap-1.5">
                   <LuStore size={13} /> Pickup from Hala Store
                 </p>
-                <p className="text-slate-600">Customer will collect this order in person — no delivery required.</p>
+                <p className="text-slate-600">Customer will collect this order in person. No delivery required.</p>
               </div>
             )}
 
@@ -691,7 +693,7 @@ function OrdersView() {
                             )}
                           </div>
                           <p className="text-xs text-slate-500 font-mono mt-0.5">
-                            {ch.phone ? `+${ch.phone.replace(/^(\+)?/, "")}` : "No number set — configure in Shipping settings"}
+                            {ch.phone ? `+${ch.phone.replace(/^(\+)?/, "")}` : "No number set: configure in Shipping settings"}
                           </p>
                           <div className="flex flex-wrap items-center gap-2 mt-2.5">
                             <button
@@ -812,6 +814,7 @@ function OrdersView() {
                           <p className="text-xs text-slate-500 truncate">
                             {fmtDate(r.createdAt)}
                             {r.creditNoteNumber && ` · ${r.creditNoteNumber}`}
+                            {r.exchangeOrderNumber && ` · exchanged for ${r.exchangeOrderNumber}`}
                             {r.reason && ` · ${r.reason}`}
                           </p>
                         </div>
@@ -950,7 +953,7 @@ function OrdersView() {
               >
                 Return individual items instead
               </button>{" "}
-              — e.g. 1 of 4 — and keep the rest of the order.
+             (e.g. 1 of 4) and keep the rest of the order.
             </p>
           )}
         </div>

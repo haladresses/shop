@@ -104,13 +104,13 @@ function Suppliers() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Kpi icon={LuWallet} label="Total payable" value={summary ? `${fmt3(summary.totalPayable)}` : "—"} sub={summary ? (summary.totalCredit > 0 ? `${fmt3(summary.totalCredit)} credit with suppliers` : `${summary.suppliers.active} active suppliers`) : ""} tone="info" onClick={() => go("payables")} />
-        <Kpi icon={LuCircleAlert} label="Overdue" value={summary ? fmt3(summary.overdue.amount) : "—"} sub={summary ? `${summary.overdue.count} order${summary.overdue.count === 1 ? "" : "s"}` : ""} tone={summary && summary.overdue.amount > 0 ? "bad" : undefined} onClick={() => go("payables")} />
-        <Kpi icon={LuCalendarClock} label="Due in the next 7 days" value={summary ? fmt3(summary.dueSoon.amount) : "—"} sub={summary ? `${summary.dueSoon.count} order${summary.dueSoon.count === 1 ? "" : "s"}` : ""} tone="warn" />
+        <Kpi icon={LuWallet} label="Total payable" value={summary ? `${fmt3(summary.totalPayable)}` : "-"} sub={summary ? (summary.totalCredit > 0 ? `${fmt3(summary.totalCredit)} credit with suppliers` : `${summary.suppliers.active} active suppliers`) : ""} tone="info" onClick={() => go("payables")} />
+        <Kpi icon={LuCircleAlert} label="Overdue" value={summary ? fmt3(summary.overdue.amount) : "-"} sub={summary ? `${summary.overdue.count} order${summary.overdue.count === 1 ? "" : "s"}` : ""} tone={summary && summary.overdue.amount > 0 ? "bad" : undefined} onClick={() => go("payables")} />
+        <Kpi icon={LuCalendarClock} label="Due in the next 7 days" value={summary ? fmt3(summary.dueSoon.amount) : "-"} sub={summary ? `${summary.dueSoon.count} order${summary.dueSoon.count === 1 ? "" : "s"}` : ""} tone="warn" />
         <Kpi
           icon={LuTruck}
           label="Awaiting delivery"
-          value={summary ? String(summary.awaitingDelivery.count) : "—"}
+          value={summary ? String(summary.awaitingDelivery.count) : "-"}
           sub={summary ? `${fmt3(summary.awaitingDelivery.value)} OMR${summary.awaitingDelivery.late ? ` · ${summary.awaitingDelivery.late} late` : ""}` : ""}
           tone={summary?.awaitingDelivery.late ? "bad" : undefined}
           onClick={() => router.push("/admin/purchases?status=open")}

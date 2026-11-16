@@ -5,6 +5,7 @@ import { ok, error, serverError } from "@/lib/api/response";
 import { guard } from "@/lib/api/guard";
 import { round3 } from "@/lib/finance";
 import { ONLINE_SELLER, SALE_METHODS, UNKNOWN_SELLER, num, parseFilters } from "../shared";
+import { orderItemCodeCondition } from "@/lib/barcodes";
 
 /**
  * Every receipt (sale) in the period, newest first, paged.
@@ -44,6 +45,7 @@ export async function GET(req: NextRequest) {
         OR: [
           { orderNumber: { contains: search, mode: "insensitive" } },
           { invoiceNumber: { contains: search, mode: "insensitive" } },
+          orderItemCodeCondition(search),
           { guestName: { contains: search, mode: "insensitive" } },
           { guestEmail: { contains: search, mode: "insensitive" } },
           { user: { nameEn: { contains: search, mode: "insensitive" } } },
