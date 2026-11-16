@@ -38,6 +38,22 @@ type WaselleeBranch = {
 const FREE_SHIPPING_THRESHOLD = 10;
 const SHIPPING_COST = 1.5;
 
+/** Server-priced summary (POST /api/checkout/quote) — offers, delivery and VAT exactly as they'll be charged. */
+type Quote = {
+  subtotal: number;
+  promotionDiscount: number;
+  discount: number;
+  shipping: number;
+  taxTotal: number;
+  total: number;
+  vatEnabled: boolean;
+  pricesIncludeTax: boolean;
+  showOnStorefront: boolean;
+  appliedPromotions: { id: string; nameEn: string; nameAr: string; discount: number }[];
+  hints: { promotionId: string; messageEn: string; messageAr: string }[];
+  lines: { promotionDiscount: number; gross: number }[];
+};
+
 const Checkout = () => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
@@ -95,7 +111,57 @@ const Checkout = () => {
       : subtotal >= FREE_SHIPPING_THRESHOLD || subtotal === 0
       ? 0
       : SHIPPING_COST;
-  const total = subtotal + shippingCost;
+  const localTotal = subtotal + shippingCost;
+
+  // Ask the server for the real numbers whenever the cart or delivery changes.
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [quoteError, setQuoteError] = useState("");
+  const quoteKey = JSON.stringify([
+    cartItems.map((i) => [i.productId, i.variantId ?? null, i.quantity]),
+    shippingMethod,
+    waselleeBranchId,
+    waselleeDeliveryType,
+  ]);
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      setQuote(null);
+      return;
+    }
+    const ctrl = new AbortController();
+    const t = setTimeout(() => {
+      fetch("/api/checkout/quote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: ctrl.signal,
+        body: JSON.stringify({
+          items: cartItems.map((i) => ({ productId: i.productId, variantId: i.variantId || null, quantity: i.quantity })),
+          shippingMethod,
+          waselleeBranchId: shippingMethod === "WASELLEE" ? waselleeBranchId || null : null,
+          waselleeDeliveryType: shippingMethod === "WASELLEE" ? waselleeDeliveryType : null,
+        }),
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.success) {
+            setQuote(d.data);
+            setQuoteError("");
+          } else {
+            setQuote(null);
+            setQuoteError(d.error || "");
+          }
+        })
+        .catch(() => {});
+    }, 200);
+    return () => {
+      clearTimeout(t);
+      ctrl.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quoteKey]);
+
+  const shownShipping = quote ? quote.shipping : shippingCost;
+  const total = quote ? quote.total : localTotal;
+  const showVat = !!quote && quote.vatEnabled && quote.showOnStorefront && quote.taxTotal > 0;
 
   const [form, setForm] = useState({
     nameEn: "",
@@ -571,14 +637,41 @@ const Checkout = () => {
                       ))
                     )}
 
+                    {quote?.appliedPromotions.map((p) => (
+                      <div key={p.id} className="flex items-center justify-between py-4 border-b border-gray-3 gap-3">
+                        <p className="text-green">{t(p.nameEn, p.nameAr)}</p>
+                        <p className="text-green text-right whitespace-nowrap">
+                          -{p.discount.toFixed(3)} {currency}
+                        </p>
+                      </div>
+                    ))}
+                    {quote?.hints.slice(0, 2).map((h) => (
+                      <p key={h.promotionId} className="mt-3 rounded-md bg-yellow-light-4 text-dark px-3 py-2 text-custom-sm">
+                        {t(h.messageEn, h.messageAr)}
+                      </p>
+                    ))}
+
                     <div className="flex items-center justify-between py-5 border-b border-gray-3">
                       <p className="text-dark">{t("Shipping Fee", "رسوم الشحن")}</p>
                       <p className="text-dark text-right">
-                        {shippingCost === 0
+                        {shownShipping === 0
                           ? t("Free", "مجاني")
-                          : `${shippingCost.toFixed(3)} ${currency}`}
+                          : `${shownShipping.toFixed(3)} ${currency}`}
                       </p>
                     </div>
+
+                    {showVat && (
+                      <div className="flex items-center justify-between py-4 border-b border-gray-3">
+                        <p className="text-dark">
+                          {quote!.pricesIncludeTax ? t("Includes VAT", "شامل ضريبة القيمة المضافة") : t("VAT", "ضريبة القيمة المضافة")}
+                        </p>
+                        <p className="text-dark text-right">
+                          {quote!.pricesIncludeTax ? "" : "+"}
+                          {quote!.taxTotal.toFixed(3)} {currency}
+                        </p>
+                      </div>
+                    )}
+                    {quoteError && <p className="mt-3 text-red text-custom-sm">{quoteError}</p>}
 
                     <div className="flex items-center justify-between pt-5">
                       <p className="font-medium text-lg text-dark">

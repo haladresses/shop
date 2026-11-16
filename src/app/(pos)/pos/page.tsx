@@ -37,6 +37,13 @@ import {
 } from "react-icons/lu";
 import { formatVariantLabel } from "@/lib/utils";
 import { PosModal, Receipt, ReceiptData, StoreInfo, beep, methodLabel, omr } from "@/components/pos/PosUi";
+import PrintArea from "@/components/print/PrintArea";
+import { SaleDocument } from "@/components/print/SaleDocument";
+import { printArea } from "@/lib/print";
+import { orderToInvoice } from "@/lib/invoice";
+import { priceSale, type SalePricing } from "@/lib/salePricing";
+import type { PromotionRule } from "@/lib/promotionEngine";
+import { DEFAULT_TAX_SETTINGS, NO_TAX, type RateInfo, type TaxSettings } from "@/lib/taxCalc";
 import ReturnModal from "@/components/pos/ReturnModal";
 
 // ───────────────────────── types ─────────────────────────
@@ -56,6 +63,10 @@ type PosLine = {
   unitPrice: number;
   stock: number | null;
   imageUrl: string | null;
+  // For live pricing with the shared engine (promotions + VAT):
+  tax?: RateInfo;
+  categoryIds?: string[];
+  onSale?: boolean;
 };
 
 type CartLine = PosLine & { quantity: number };
@@ -178,6 +189,8 @@ export default function PosPage() {
   // Staff who can also open the admin panel get a "Back to admin" button.
   const [canOpenAdmin, setCanOpenAdmin] = useState(false);
   const [storeInfo, setStoreInfo] = useState<StoreInfo>({});
+  const [taxSettings, setTaxSettings] = useState<TaxSettings>(DEFAULT_TAX_SETTINGS);
+  const [promoRules, setPromoRules] = useState<PromotionRule[]>([]);
 
   // shift
   const [shift, setShift] = useState<ShiftSummary | null>(null);
@@ -274,6 +287,20 @@ export default function PosPage() {
       .then((r) => r.json())
       .then((d) => d.success && setStoreInfo(d.data))
       .catch(() => {});
+    // VAT settings and running promotions — refreshed every few minutes so a
+    // terminal left open all day picks up new deals and settings.
+    const loadPricing = () => {
+      fetch("/api/tax/settings", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => d.success && setTaxSettings(d.data))
+        .catch(() => {});
+      fetch("/api/promotions/active?channel=POS", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => d.success && setPromoRules(d.data?.rules ?? []))
+        .catch(() => {});
+    };
+    loadPricing();
+    const pricingTimer = setInterval(loadPricing, 5 * 60 * 1000);
     fetch("/api/categories?all=true")
       .then((r) => r.json())
       .then((d) => d.success && setCategories(d.data))
@@ -285,7 +312,10 @@ export default function PosPage() {
     setHeld(readHeld());
     setNow(new Date());
     const t = setInterval(() => setNow(new Date()), 30000);
-    return () => clearInterval(t);
+    return () => {
+      clearInterval(t);
+      clearInterval(pricingTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -513,10 +543,31 @@ export default function PosPage() {
     );
   };
 
-  const subtotal = r3(cart.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0));
+  // Same calculation the server runs at checkout: promotions, then the
+  // cashier's discount, then VAT.
+  const saleLines = useMemo(
+    () =>
+      cart.map((l) => ({
+        productId: l.productId,
+        categoryIds: l.categoryIds ?? [],
+        unitPrice: l.unitPrice,
+        quantity: l.quantity,
+        onSale: !!l.onSale,
+        tax: l.tax ?? NO_TAX,
+      })),
+    [cart],
+  );
+  const pricingBase = useMemo(
+    () => ({ lines: saleLines, promotions: promoRules, channel: "POS" as const, settings: taxSettings, now: now ?? new Date() }),
+    [saleLines, promoRules, taxSettings, now],
+  );
+  const afterPromos = useMemo(() => priceSale(pricingBase), [pricingBase]);
+  const subtotal = afterPromos.subtotal;
+  const promoSubtotal = r3(afterPromos.subtotal - afterPromos.promotionDiscount);
   const discountRaw = parseFloat(discountValue) || 0;
-  const discountNum = r3(Math.min(Math.max(discountMode === "percent" ? (subtotal * discountRaw) / 100 : discountRaw, 0), subtotal));
-  const total = r3(subtotal - discountNum);
+  const discountNum = r3(Math.min(Math.max(discountMode === "percent" ? (promoSubtotal * discountRaw) / 100 : discountRaw, 0), promoSubtotal));
+  const pricing = useMemo(() => priceSale({ ...pricingBase, manualDiscount: discountNum }), [pricingBase, discountNum]);
+  const total = pricing.total;
   const itemCount = cart.reduce((s, l) => s + l.quantity, 0);
 
   // ── hold / resume ──
@@ -592,7 +643,7 @@ export default function PosPage() {
             ];
     const amountTendered = cashDue > 0 ? (tendered === "" ? cashDue : tenderedNum) : undefined;
     try {
-      const data = await postJson<{ orderNumber: string; createdAt: string }>("/api/pos/checkout", {
+      const data = await postJson<Record<string, unknown>>("/api/pos/checkout", {
         items: cart.map((l) => ({ productId: l.productId, variantId: l.variantId || undefined, quantity: l.quantity })),
         payments,
         amountTendered,
@@ -605,26 +656,9 @@ export default function PosPage() {
         beep("error");
         return;
       }
-      setReceipt({
-        orderNumber: data.data!.orderNumber,
-        items: cart.map((l) => ({
-          name: l.nameEn,
-          nameAr: l.nameAr,
-          variant: formatVariantLabel(l),
-          quantity: l.quantity,
-          unitPrice: l.unitPrice,
-          total: r3(l.unitPrice * l.quantity),
-        })),
-        subtotal,
-        discount: discountNum,
-        total,
-        payments,
-        amountTendered: amountTendered ?? null,
-        changeGiven: amountTendered != null ? r3(amountTendered - cashDue) : null,
-        cashierName,
-        customerName: customer?.nameEn || customerName || undefined,
-        createdAt: new Date().toISOString(),
-      });
+      // Build the bill from what the server actually saved (prices, offers,
+      // VAT, invoice number) so a reprint is always identical.
+      setReceipt(orderToInvoice(data.data!, { cashierName }));
       setPayOpen(false);
       setCartOpen(false);
       resetSale();
@@ -818,9 +852,12 @@ export default function PosPage() {
             </p>
           )}
         </div>
-        <Receipt data={receipt} store={storeInfo} />
+        <Receipt data={receipt} store={storeInfo} tax={taxSettings} />
+        <PrintArea id="pos-receipt">
+          <SaleDocument data={receipt} store={storeInfo} tax={taxSettings} layout="thermal" />
+        </PrintArea>
         <div className="flex gap-3 mt-6 print:hidden">
-          <button onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-2xl bg-slate-800 text-white px-6 py-3 font-medium hover:bg-slate-900">
+          <button onClick={() => printArea("pos-receipt", { page: "receipt", title: receipt.invoiceNumber || receipt.orderNumber })} className="inline-flex items-center gap-2 rounded-2xl bg-slate-800 text-white px-6 py-3 font-medium hover:bg-slate-900">
             <LuPrinter size={18} /> Print
           </button>
           <button autoFocus onClick={() => { setReceipt(null); setScreen("terminal"); }} className="inline-flex items-center gap-2 rounded-2xl bg-rose-500 text-white px-6 py-3 font-medium hover:bg-rose-600">
@@ -870,7 +907,7 @@ export default function PosPage() {
               <button onClick={() => { setZReport(null); setOpeningCash("0"); setScreen("openShift"); }} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-500 text-white px-5 py-3.5 font-medium hover:bg-emerald-600">
                 <LuPlay size={18} /> Open a new shift
               </button>
-              <button onClick={() => window.print()} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white border border-slate-200 text-slate-700 px-5 py-3.5 font-medium hover:bg-slate-50">
+              <button onClick={() => printArea("z-report", { page: "receipt", title: "Z-report" })} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white border border-slate-200 text-slate-700 px-5 py-3.5 font-medium hover:bg-slate-50">
                 <LuPrinter size={18} /> Print Z-report
               </button>
               <button onClick={() => { setZReport(null); switchUser(); }} className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white border border-slate-200 text-slate-500 px-5 py-3.5 font-medium hover:text-rose-600">
@@ -879,6 +916,7 @@ export default function PosPage() {
             </div>
           </div>
           <div className="flex justify-center"><ShiftReport s={zReport} store={storeInfo} /></div>
+          <PrintArea id="z-report"><ShiftReport s={zReport} store={storeInfo} print /></PrintArea>
         </div>
       </PosBackdrop>
     );
@@ -897,6 +935,7 @@ export default function PosPage() {
       setDiscountValue={setDiscountValue}
       discountNum={discountNum}
       total={total}
+      pricing={pricing}
       itemCount={itemCount}
       customerPhone={customerPhone}
       setCustomerPhone={setCustomerPhone}
@@ -1218,7 +1257,7 @@ export default function PosPage() {
         )}
       </PosModal>
 
-      <SalesModal open={salesOpen} onClose={() => setSalesOpen(false)} store={storeInfo} />
+      <SalesModal open={salesOpen} onClose={() => setSalesOpen(false)} store={storeInfo} tax={taxSettings} />
       <ReturnModal open={returnOpen} onClose={() => setReturnOpen(false)} onDone={() => { loadShift(); }} />
       <CashMovementModal type={cashOpen} onClose={() => setCashOpen(null)} onDone={(s) => setShift(s)} />
       <CloseShiftModal
@@ -1341,6 +1380,7 @@ function CartPanel(p: {
   setDiscountValue: (v: string) => void;
   discountNum: number;
   total: number;
+  pricing: SalePricing;
   itemCount: number;
   customerPhone: string;
   setCustomerPhone: (v: string) => void;
@@ -1391,8 +1431,9 @@ function CartPanel(p: {
           </div>
         ) : (
           <ul className="divide-y divide-slate-100">
-            {p.cart.map((l) => {
+            {p.cart.map((l, idx) => {
               const key = lineKey(l);
+              const saved = p.pricing.lines[idx]?.promotionDiscount ?? 0;
               return (
                 <li key={key} className={`flex items-center gap-3 px-4 py-3 transition-colors ${p.lastAddedKey === key ? "bg-rose-50" : ""}`}>
                   <div className="w-11 h-11 rounded-xl bg-slate-100 overflow-hidden shrink-0">
@@ -1427,7 +1468,16 @@ function CartPanel(p: {
                       <LuPlus size={14} />
                     </button>
                   </div>
-                  <span className="w-[72px] text-right text-sm font-semibold text-slate-800 shrink-0">{(l.unitPrice * l.quantity).toFixed(3)}</span>
+                  <span className="w-[72px] text-right shrink-0">
+                    {saved > 0 ? (
+                      <>
+                        <span className="block text-[11px] text-slate-400 line-through">{(l.unitPrice * l.quantity).toFixed(3)}</span>
+                        <span className="block text-sm font-semibold text-emerald-600">{(l.unitPrice * l.quantity - saved).toFixed(3)}</span>
+                      </>
+                    ) : (
+                      <span className="text-sm font-semibold text-slate-800">{(l.unitPrice * l.quantity).toFixed(3)}</span>
+                    )}
+                  </span>
                 </li>
               );
             })}
@@ -1441,6 +1491,15 @@ function CartPanel(p: {
           <span>Subtotal · {p.itemCount} item{p.itemCount === 1 ? "" : "s"}</span>
           <span>{p.subtotal.toFixed(3)}</span>
         </div>
+        {p.pricing.appliedPromotions.map((a) => (
+          <div key={a.id} className="flex justify-between text-sm text-emerald-700">
+            <span className="truncate pr-2">🏷 {a.nameEn}</span>
+            <span className="shrink-0">−{a.discount.toFixed(3)}</span>
+          </div>
+        ))}
+        {p.pricing.hints.slice(0, 2).map((h) => (
+          <p key={h.promotionId} className="text-xs rounded-lg bg-amber-50 text-amber-800 px-2.5 py-1.5">{h.messageEn}</p>
+        ))}
         <div className="flex justify-between items-center text-sm text-slate-600 gap-2">
           <span>Discount</span>
           <div className="flex items-center gap-1.5">
@@ -1464,6 +1523,12 @@ function CartPanel(p: {
             {p.discountNum > 0 && <span className="text-rose-600 text-xs w-14 text-right">−{p.discountNum.toFixed(3)}</span>}
           </div>
         </div>
+        {p.pricing.vatEnabled && p.pricing.taxTotal > 0 && (
+          <div className="flex justify-between text-xs text-slate-500">
+            <span>{p.pricing.pricesIncludeTax ? "Includes VAT" : "VAT"}</span>
+            <span>{p.pricing.pricesIncludeTax ? "" : "+"}{p.pricing.taxTotal.toFixed(3)}</span>
+          </div>
+        )}
         <div className="flex justify-between items-baseline pt-1">
           <span className="font-semibold text-slate-800">Total</span>
           <span className="text-2xl font-bold text-slate-900">{omr(p.total)}</span>
@@ -1490,29 +1555,10 @@ function CartPanel(p: {
 }
 
 function saleToReceipt(s: Sale): ReceiptData {
-  return {
-    orderNumber: s.orderNumber,
-    items: s.items.map((it) => ({
-      name: it.nameEn,
-      variant: [it.color, it.size].filter(Boolean).join(" / "),
-      quantity: it.quantity,
-      unitPrice: it.unitPrice,
-      total: it.total,
-    })),
-    subtotal: s.subtotal,
-    discount: s.discount,
-    total: s.total,
-    payments: s.payments,
-    amountTendered: s.amountTendered,
-    changeGiven: s.changeGiven,
-    cashierName: s.cashierName,
-    customerName: s.customerName,
-    createdAt: s.createdAt,
-    title: "Copy",
-  };
+  return orderToInvoice(s as unknown as Record<string, unknown>, { copyLabel: "Copy" });
 }
 
-function SalesModal({ open, onClose, store }: { open: boolean; onClose: () => void; store: StoreInfo }) {
+function SalesModal({ open, onClose, store, tax }: { open: boolean; onClose: () => void; store: StoreInfo; tax: TaxSettings }) {
   const [scope, setScope] = useState<"shift" | "today">("shift");
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(false);
@@ -1533,10 +1579,13 @@ function SalesModal({ open, onClose, store }: { open: boolean; onClose: () => vo
     <PosModal open={open} onClose={() => { setSelected(null); onClose(); }} title={selected ? `Sale ${selected.orderNumber}` : "Recent sales"} size="lg">
       {selected ? (
         <div className="flex flex-col items-center gap-4">
-          <Receipt data={saleToReceipt(selected)} store={store} />
+          <Receipt data={saleToReceipt(selected)} store={store} tax={tax} />
+          <PrintArea id="pos-reprint">
+            <SaleDocument data={saleToReceipt(selected)} store={store} tax={tax} layout="thermal" />
+          </PrintArea>
           <div className="flex gap-2">
             <button onClick={() => setSelected(null)} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium">Back</button>
-            <button onClick={() => window.print()} className="px-4 py-2.5 rounded-xl bg-slate-800 text-white font-medium inline-flex items-center gap-2"><LuPrinter size={16} /> Reprint</button>
+            <button onClick={() => printArea("pos-reprint", { page: "receipt", title: selected.orderNumber })} className="px-4 py-2.5 rounded-xl bg-slate-800 text-white font-medium inline-flex items-center gap-2"><LuPrinter size={16} /> Reprint</button>
           </div>
         </div>
       ) : (
@@ -1708,7 +1757,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ShiftReport({ s, store }: { s: ShiftSummary; store: StoreInfo }) {
+function ShiftReport({ s, store, print = false }: { s: ShiftSummary; store: StoreInfo; print?: boolean }) {
   const line = (label: string, v: number | string) => (
     <div className="flex justify-between">
       <span>{label}</span>
@@ -1716,9 +1765,11 @@ function ShiftReport({ s, store }: { s: ShiftSummary; store: StoreInfo }) {
     </div>
   );
   return (
-    <div className="pos-receipt w-full max-w-[340px] bg-white rounded-2xl shadow-sm border border-slate-200 p-5 font-mono text-[13px] text-slate-800">
+    <div className={print ? "bg-white text-black font-mono text-[12px]" : "w-full max-w-[340px] bg-white rounded-2xl shadow-sm border border-slate-200 p-5 font-mono text-[13px] text-slate-800"} style={print ? { width: "72mm" } : undefined}>
       <p className="text-center font-bold text-base">{store.store_name_en || "Hala Dresses"}</p>
+      {store.store_name_ar && <p className="text-center font-bold" dir="rtl">{store.store_name_ar}</p>}
       <p className="text-center font-semibold tracking-wider mt-1">Z-REPORT · SHIFT CLOSE</p>
+      <p className="text-center font-semibold" dir="rtl">تقرير إغلاق الوردية</p>
       <div className="border-t border-dashed border-slate-300 my-2" />
       {line("Cashier", s.cashierName)}
       {line("Opened", new Date(s.openedAt).toLocaleString("en-GB"))}

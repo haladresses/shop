@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { rateLabel, type TaxKind } from "@/lib/taxCalc";
 import { useRouter } from "next/navigation";
 import {
   LuX, LuPlus, LuPencil, LuTrash2, LuImagePlus, LuLayers, LuTags, LuFolderTree,
@@ -19,6 +20,8 @@ type Category = {
   isActive: boolean;
   sortOrder: number;
   parentId: string | null;
+  /** Own VAT rate (null = inherits) — managed under Tax & VAT. */
+  taxRateId?: string | null;
   _count: { products: number; children: number; attributes: number };
 };
 
@@ -61,6 +64,18 @@ export default function CategoriesPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  // VAT rates, to label categories that set their own (best-effort; the
+  // endpoint needs a catalog/tax permission).
+  const [taxRates, setTaxRates] = useState<Map<string, { code: string; nameEn: string; rate: number; type: TaxKind }>>(new Map());
+  useEffect(() => {
+    fetch("/api/tax/rates", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success) setTaxRates(new Map((d.data as { id: string; code: string; nameEn: string; rate: number; type: TaxKind }[]).map((r) => [r.id, r])));
+      })
+      .catch(() => {});
+  }, []);
 
   const tree = useMemo(() => buildCategoryTree(categories), [categories]);
   const byId = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
@@ -219,6 +234,15 @@ export default function CategoriesPage() {
           <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-600" title="Products in this category">
             <LuPackage size={12} /> {cat._count.products}
           </span>
+          {cat.taxRateId && taxRates.get(cat.taxRateId) && (
+            <Link
+              href="/admin/tax?tab=assign"
+              className="inline-flex items-center rounded-md bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-100"
+              title={`VAT: ${taxRates.get(cat.taxRateId)!.nameEn} (applies to products in this category unless they set their own)`}
+            >
+              VAT {rateLabel(taxRates.get(cat.taxRateId)!)}
+            </Link>
+          )}
           <Link
             href={`/admin/categories/${cat.id}/attributes`}
             className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${

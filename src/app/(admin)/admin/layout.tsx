@@ -25,8 +25,16 @@ const pageTitles: Record<string, string> = {
   "/admin/finance": "Finance & Profit / Loss",
   "/admin/returns": "Returns & Refunds",
   "/admin/inventory": "Inventory",
+  "/admin/suppliers": "Suppliers",
+  "/admin/purchases": "Purchase Orders",
+  "/admin/purchases/new": "New Purchase Order",
+  "/admin/supplier-returns": "Supplier Returns",
+  "/admin/supplier-returns/new": "New Return to Supplier",
+  "/admin/tax": "Tax & VAT",
   "/admin/payments": "Payments",
   "/admin/coupons": "Coupons",
+  "/admin/promotions": "Promotions",
+  "/admin/promotions/new": "New Promotion",
   "/admin/reviews": "Reviews",
   "/admin/hero": "Homepage Hero",
   "/admin/contact": "Contact",
@@ -49,6 +57,10 @@ function resolveTitle(pathname: string): string {
   if (/^\/admin\/categories\/[^/]+\/attributes$/.test(pathname)) return "Category Fields";
   // Product WhatsApp reviews: /admin/products/<id>/whatsapp-reviews
   if (/^\/admin\/products\/[^/]+\/whatsapp-reviews$/.test(pathname)) return "WhatsApp Reviews";
+  if (/^\/admin\/suppliers\/[^/]+$/.test(pathname)) return "Supplier";
+  if (/^\/admin\/promotions\/[^/]+$/.test(pathname)) return "Edit Promotion";
+  if (/^\/admin\/supplier-returns\/[^/]+$/.test(pathname)) return "Supplier Return";
+  if (/^\/admin\/purchases\/[^/]+$/.test(pathname)) return "Purchase Order";
   // Edit product: /admin/products/<id>
   if (/^\/admin\/products\/[^/]+$/.test(pathname)) return "Edit Product";
   return "Admin";

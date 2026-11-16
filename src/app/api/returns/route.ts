@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
         OR: [
           { order: { orderNumber: { contains: search, mode: "insensitive" as const } } },
           { reason: { contains: search, mode: "insensitive" as const } },
+          { creditNoteNumber: { contains: search, mode: "insensitive" as const } },
         ],
       }),
     };
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest) {
         include: { order: { select: { id: true, orderNumber: true, source: true, total: true, guestName: true } } },
       }),
       prisma.refund.count({ where }),
-      prisma.refund.aggregate({ where, _sum: { amount: true } }),
+      prisma.refund.aggregate({ where, _sum: { amount: true, taxAmount: true } }),
       prisma.refund.count({ where: { ...where, restocked: false } }),
     ]);
 
@@ -63,6 +64,9 @@ export async function GET(req: NextRequest) {
           id: r.id,
           createdAt: r.createdAt.toISOString(),
           amount: Number(r.amount),
+          taxAmount: Number(r.taxAmount),
+          creditNoteNumber: r.creditNoteNumber,
+          items: r.items,
           method: r.method,
           reason: r.reason,
           restocked: r.restocked,
@@ -73,6 +77,7 @@ export async function GET(req: NextRequest) {
       }),
       meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
       sum: round3(Number(sum._sum.amount ?? 0)),
+      vatSum: round3(Number(sum._sum.taxAmount ?? 0)),
       damagedCount: restocked,
     });
   } catch (e) {

@@ -4,6 +4,7 @@ import { getAuthFromRequest, userHasAnyPermission } from "@/lib/auth";
 import { ok, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { getOpenShift, returnedByLine } from "@/lib/posShift";
 import { businessDayStart, toBusinessDateKey } from "@/lib/finance";
+import { lineRefund } from "@/lib/orderPricing";
 
 /**
  * Sales for the POS "Recent sales" and "Returns" screens.
@@ -35,7 +36,23 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
       take: 30,
       include: {
-        items: { select: { id: true, productId: true, variantId: true, quantity: true, unitPrice: true, total: true, productSnapshot: true } },
+        items: {
+          select: {
+            id: true,
+            productId: true,
+            variantId: true,
+            quantity: true,
+            unitPrice: true,
+            total: true,
+            productSnapshot: true,
+            discountAmount: true,
+            promotionDiscount: true,
+            taxRate: true,
+            taxCode: true,
+            taxableAmount: true,
+            taxAmount: true,
+          },
+        },
         payments: { select: { method: true, amount: true, status: true } },
         refunds: { select: { amount: true, items: true, createdAt: true } },
         cashier: { select: { nameEn: true } },
@@ -45,6 +62,7 @@ export async function GET(req: NextRequest) {
     return ok(
       orders.map((o) => {
         const returned = returnedByLine(o.refunds);
+        const legacyRatio = Number(o.subtotal) > 0 ? Number(o.discount) / Number(o.subtotal) : 0;
         return {
           id: o.id,
           orderNumber: o.orderNumber,
@@ -61,6 +79,16 @@ export async function GET(req: NextRequest) {
           amountTendered: o.amountTendered == null ? null : Number(o.amountTendered),
           changeGiven: o.changeGiven == null ? null : Number(o.changeGiven),
           payments: o.payments.map((p) => ({ method: p.method, amount: Number(p.amount), status: p.status })),
+          invoiceNumber: o.invoiceNumber,
+          shippingCost: Number(o.shippingCost),
+          shippingTax: Number(o.shippingTax),
+          taxTotal: Number(o.taxTotal),
+          pricesIncludeTax: o.pricesIncludeTax,
+          taxBreakdown: o.taxBreakdown,
+          promotionDiscount: Number(o.promotionDiscount),
+          appliedPromotions: o.appliedPromotions,
+          customerVatNumber: o.customerVatNumber,
+          shippingAddress: o.shippingAddress,
           items: o.items.map((it) => {
             const snap = (it.productSnapshot ?? {}) as Record<string, unknown>;
             return {
@@ -75,6 +103,15 @@ export async function GET(req: NextRequest) {
               returnedQuantity: returned.get(it.id) ?? 0,
               unitPrice: Number(it.unitPrice),
               total: Number(it.total),
+              productSnapshot: it.productSnapshot,
+              discountAmount: Number(it.discountAmount),
+              promotionDiscount: Number(it.promotionDiscount),
+              taxRate: Number(it.taxRate),
+              taxCode: it.taxCode,
+              taxableAmount: it.taxableAmount == null ? null : Number(it.taxableAmount),
+              taxAmount: Number(it.taxAmount),
+              // What one returned unit refunds (after promotions/discount, incl. VAT).
+              refundPerUnit: lineRefund(it, 1, legacyRatio).amount,
             };
           }),
         };

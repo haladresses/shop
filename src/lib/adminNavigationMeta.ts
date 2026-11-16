@@ -2,6 +2,10 @@ import type { IconType } from "react-icons";
 import {
   LuBarcode,
   LuChartColumn,
+  LuClipboardList,
+  LuHandshake,
+  LuPercent,
+  LuGift,
   LuCreditCard,
   LuGalleryHorizontalEnd,
   LuImage,
@@ -28,7 +32,7 @@ import {
   LuWarehouse,
 } from "react-icons/lu";
 
-export type AdminNavigationSection = "Overview" | "Operations" | "Catalog" | "Content" | "System";
+export type AdminNavigationSection = "Overview" | "Operations" | "Purchasing" | "Catalog" | "Content" | "System";
 
 export type AdminNavigationMeta = {
   href: string;
@@ -45,14 +49,19 @@ export const ADMIN_NAVIGATION_META: AdminNavigationMeta[] = [
   { href: "/pos", label: "POS", permission: "pos.access", section: "Operations", icon: LuScanBarcode, color: "text-emerald-400" },
   { href: "/admin/orders", label: "Orders", permission: "admin.orders.view", section: "Operations", icon: LuPackage, color: "text-amber-400" },
   { href: "/admin/finance", label: "Finance & P&L", permission: "admin.finance.view", section: "Operations", icon: LuLandmark, color: "text-emerald-300" },
+  { href: "/admin/tax", label: "Tax & VAT", permission: "admin.tax.view", section: "Operations", icon: LuPercent, color: "text-teal-300" },
   { href: "/admin/reports", label: "Sales Report", permission: "admin.reports.view", section: "Operations", icon: LuChartColumn, color: "text-indigo-400" },
-  { href: "/admin/returns", label: "Returns", permission: "admin.orders.view", section: "Operations", icon: LuUndo2, color: "text-orange-300" },
+  { href: "/admin/returns", label: "Customer Returns", permission: "admin.orders.view", section: "Operations", icon: LuUndo2, color: "text-orange-300" },
   { href: "/admin/payments", label: "Payments", permission: "admin.payments.view", section: "Operations", icon: LuCreditCard, color: "text-green-400" },
   { href: "/admin/shipping", label: "Shipping", permission: "admin.shipping.view", section: "Operations", icon: LuTruck, color: "text-blue-400" },
   { href: "/admin/coupons", label: "Coupons", permission: "admin.coupons.view", section: "Operations", icon: LuTicket, color: "text-pink-400" },
+  { href: "/admin/promotions", label: "Promotions", permission: "admin.promotions.view", section: "Operations", icon: LuGift, color: "text-fuchsia-300" },
   { href: "/admin/users", label: "Users", permission: "admin.users.view", section: "Operations", icon: LuUsers, color: "text-violet-400" },
   { href: "/admin/roles", label: "Roles & Permissions", permission: "admin.roles.view", section: "Operations", icon: LuShield, color: "text-purple-300" },
   { href: "/admin/contact", label: "Contact", permission: "admin.contact.view", section: "Operations", icon: LuMailOpen, color: "text-rose-400" },
+  { href: "/admin/suppliers", label: "Suppliers", permission: "admin.suppliers.view", section: "Purchasing", icon: LuHandshake, color: "text-amber-300" },
+  { href: "/admin/purchases", label: "Purchase Orders", permission: "admin.suppliers.view", section: "Purchasing", icon: LuClipboardList, color: "text-sky-300" },
+  { href: "/admin/supplier-returns", label: "Supplier Returns", permission: "admin.suppliers.view", section: "Purchasing", icon: LuUndo2, color: "text-orange-300" },
   { href: "/admin/products", label: "Products", permission: "admin.products.view", section: "Catalog", icon: LuShirt, color: "text-rose-400" },
   { href: "/admin/categories", label: "Categories", permission: "admin.categories.view", section: "Catalog", icon: LuTags, color: "text-emerald-400" },
   { href: "/admin/inventory", label: "Inventory", permission: "admin.inventory.view", section: "Catalog", icon: LuWarehouse, color: "text-orange-400" },
@@ -69,7 +78,7 @@ export const ADMIN_NAVIGATION_META: AdminNavigationMeta[] = [
   { href: "/admin/help", label: "Help", permission: "admin.help.view", section: "System", icon: LuInfo, color: "text-cyan-300" },
 ];
 
-export const ADMIN_NAVIGATION_SECTION_ORDER: AdminNavigationSection[] = ["Overview", "Operations", "Catalog", "Content", "System"];
+export const ADMIN_NAVIGATION_SECTION_ORDER: AdminNavigationSection[] = ["Overview", "Operations", "Purchasing", "Catalog", "Content", "System"];
 
 export const ADMIN_NAVIGATION_META_BY_HREF = new Map(
   ADMIN_NAVIGATION_META.map((item) => [item.href, item]),

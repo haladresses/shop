@@ -172,8 +172,15 @@ export async function POST(req: NextRequest) {
     const parsed = productSchema.safeParse(body);
     if (!parsed.success) return error(parsed.error.issues[0].message);
 
-    const { variants, images, attributes, customSpecs, ...productData } = parsed.data;
+    const { variants, images, attributes, customSpecs, taxRateId, ...productData } = parsed.data;
     const extraSpecs = cleanCustomSpecs(customSpecs);
+
+    // Only admins choose a product's VAT rate; sellers' products follow their category.
+    const canSetTax = canAssignSeller || (await userHasPermission(user, "admin.tax.manage"));
+    if (canSetTax && taxRateId) {
+      const rate = await prisma.taxRate.findUnique({ where: { id: taxRateId }, select: { isActive: true } });
+      if (!rate?.isActive) return error("The selected VAT rate doesn't exist or is inactive.");
+    }
 
     let slug = slugify(productData.nameEn);
     const existing = await prisma.product.findUnique({ where: { slug } });
@@ -183,6 +190,7 @@ export async function POST(req: NextRequest) {
       data: {
         ...productData,
         barcode: productData.barcode || null,
+        taxRateId: canSetTax ? taxRateId ?? null : null,
         slug,
         attributes: attributes && Object.keys(attributes).length
           ? (attributes as Prisma.InputJsonValue)

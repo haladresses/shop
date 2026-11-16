@@ -3,6 +3,9 @@ import prisma from "@/lib/db";
 import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import type { Prisma } from "@prisma/client";
+import { resolveProductTaxRates } from "@/lib/tax";
+import { categoryAncestry } from "@/lib/promotions";
+import { NO_TAX, type RateInfo } from "@/lib/taxCalc";
 
 type PosLine = {
   productId: string;
@@ -17,7 +20,18 @@ type PosLine = {
   unitPrice: number;
   stock: number | null;
   imageUrl: string | null;
+  // For the POS cart's live pricing (same engine as the server):
+  tax: RateInfo;
+  categoryIds: string[];
+  onSale: boolean;
 };
+
+type Pricing = { rates: Map<string, RateInfo>; ancestry: Map<string, string[]> };
+
+async function pricingFor(products: { id: string }[]): Promise<Pricing> {
+  const [rates, ancestry] = await Promise.all([resolveProductTaxRates(products.map((p) => p.id)), categoryAncestry()]);
+  return { rates, ancestry };
+}
 
 const PRODUCT_INCLUDE = {
   images: { where: { isPrimary: true }, take: 1 },
@@ -26,10 +40,15 @@ const PRODUCT_INCLUDE = {
 
 type ProductWithLines = Prisma.ProductGetPayload<{ include: typeof PRODUCT_INCLUDE }>;
 
-function toLines(product: ProductWithLines): PosLine[] {
+function toLines(product: ProductWithLines, pricing: Pricing): PosLine[] {
   const unitBase = Number(product.salePrice ?? product.basePrice);
   const imageUrl = product.images[0]?.url ?? null;
   const activeVariants = product.variants.filter((v) => v.isActive);
+  const shared = {
+    tax: pricing.rates.get(product.id) ?? NO_TAX,
+    categoryIds: pricing.ancestry.get(product.categoryId) ?? [product.categoryId],
+    onSale: product.salePrice != null && Number(product.salePrice) < Number(product.basePrice),
+  };
 
   if (activeVariants.length === 0) {
     return [
@@ -46,6 +65,7 @@ function toLines(product: ProductWithLines): PosLine[] {
         unitPrice: unitBase,
         stock: null,
         imageUrl,
+        ...shared,
       },
     ];
   }
@@ -60,9 +80,10 @@ function toLines(product: ProductWithLines): PosLine[] {
     size: v.size,
     sku: v.sku,
     barcode: v.barcode,
-    unitPrice: unitBase + Number(v.priceAdjustment),
+    unitPrice: Math.round((unitBase + Number(v.priceAdjustment)) * 1000) / 1000,
     stock: v.inventory?.quantity ?? 0,
     imageUrl,
+    ...shared,
   }));
 }
 
@@ -91,7 +112,7 @@ export async function GET(req: NextRequest) {
       });
       if (!product) return ok([]);
 
-      const lines = toLines(product);
+      const lines = toLines(product, await pricingFor([product]));
       // A variant-level barcode identifies exactly one line; narrow to it.
       const matched = lines.filter((l) => l.barcode === barcode) ;
       return ok(matched.length > 0 ? matched : lines);
@@ -135,7 +156,9 @@ export async function GET(req: NextRequest) {
     });
 
     const hasMore = products.length > PAGE_SIZE;
-    let lines = products.slice(0, PAGE_SIZE).flatMap(toLines);
+    const pageProducts = products.slice(0, PAGE_SIZE);
+    const pricing = await pricingFor(pageProducts);
+    let lines = pageProducts.flatMap((p) => toLines(p, pricing));
     if (color) lines = lines.filter((l) => l.color === color);
     if (inStockOnly) lines = lines.filter((l) => l.stock === null || l.stock > 0);
     return NextResponse.json({ success: true, data: lines, meta: { page, hasMore } });

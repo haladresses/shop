@@ -4,7 +4,7 @@ import prisma from "@/lib/db";
 import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { businessDayEnd, businessDayStart, isDateKey } from "@/lib/finance";
-import { INVENTORY_TX_TYPES } from "@/lib/inventory";
+import { ALL_INVENTORY_TX_TYPES } from "@/lib/inventory";
 
 /** Stock movement ledger (receipts, sales, returns, adjustments, damage…). */
 export async function GET(req: NextRequest) {
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     const where: Prisma.InventoryTransactionWhereInput = {
       ...(inventoryId && { inventoryId }),
-      ...((INVENTORY_TX_TYPES as readonly string[]).includes(type) && { type: type as (typeof INVENTORY_TX_TYPES)[number] }),
+      ...((ALL_INVENTORY_TX_TYPES as readonly string[]).includes(type) && { type: type as (typeof ALL_INVENTORY_TX_TYPES)[number] }),
       ...(isDateKey(from) || isDateKey(to)
         ? {
             createdAt: {

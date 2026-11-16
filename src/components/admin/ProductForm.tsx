@@ -20,6 +20,7 @@ import BarcodePreview from "./BarcodePreview";
 import AttributeField from "./attributes/AttributeField";
 import CategoryAttributesEditor from "./attributes/CategoryAttributesEditor";
 import CustomSpecsEditor from "./attributes/CustomSpecsEditor";
+import ProductTaxField from "./tax/ProductTaxField";
 
 export type ProductImageState = {
   url: string;
@@ -36,6 +37,10 @@ export type ColorPartState = {
 };
 
 export type VariantState = {
+  /** Set for variants that already exist — they are updated in place. */
+  id?: string;
+  /** Stock when the form was loaded; only the change is booked to the ledger. */
+  stockBase?: string;
   color: string;
   colorHex: string;
   // Per-region breakdown for a variant that is itself multi-color, e.g. one
@@ -63,6 +68,8 @@ export type ProductFormValue = {
   costPrice: string;
   sku: string;
   barcode: string;
+  /** VAT rate override; "" = inherit from the category. */
+  taxRateId: string;
   isActive: boolean;
   isFeatured: boolean;
   isNew: boolean;
@@ -74,11 +81,11 @@ export type ProductFormValue = {
   variants: VariantState[];
 };
 
-type Category = FlatCategory & { parentId: string | null; isActive: boolean };
+type Category = FlatCategory & { parentId: string | null; isActive: boolean; taxRateId?: string | null };
 
 export const emptyProductForm: ProductFormValue = {
   nameEn: "", nameAr: "", descriptionEn: "", descriptionAr: "",
-  categoryId: "", basePrice: "", salePrice: "", costPrice: "", sku: "", barcode: "",
+  categoryId: "", basePrice: "", salePrice: "", costPrice: "", sku: "", barcode: "", taxRateId: "",
   isActive: true, isFeatured: false, isNew: true, isBestSeller: false,
   attributes: {}, customSpecs: [], images: [], variants: [],
 };
@@ -96,6 +103,7 @@ export function buildProductPayload(form: ProductFormValue) {
     costPrice: form.costPrice ? parseFloat(form.costPrice) : null,
     sku: form.sku || undefined,
     barcode: form.barcode || undefined,
+    taxRateId: form.taxRateId || null,
     isActive: form.isActive,
     isFeatured: form.isFeatured,
     isNew: form.isNew,
@@ -116,6 +124,8 @@ export function buildProductPayload(form: ProductFormValue) {
       color: img.color || undefined,
     })),
     variants: form.variants.map((v) => ({
+      id: v.id || undefined,
+      stockBase: v.id && v.stockBase !== undefined ? parseInt(v.stockBase) || 0 : undefined,
       color: v.color || undefined,
       colorHex: v.colorHex || undefined,
       colorParts: (v.colorParts || [])
@@ -145,6 +155,7 @@ export type ApiProductForForm = {
   costPrice?: string | number | null;
   sku: string | null;
   barcode?: string | null;
+  taxRateId?: string | null;
   isActive: boolean;
   isFeatured: boolean;
   isNew: boolean;
@@ -153,6 +164,7 @@ export type ApiProductForForm = {
   customSpecs?: unknown;
   images: { url: string; isPrimary: boolean; altEn?: string | null; altAr?: string | null; color?: string | null }[];
   variants: {
+    id?: string;
     color: string | null;
     colorHex: string | null;
     colorParts?: ApiColorPart[] | null;
@@ -177,6 +189,7 @@ export function productToFormValue(p: ApiProductForForm): ProductFormValue {
     costPrice: p.costPrice == null ? "" : String(p.costPrice),
     sku: p.sku ?? "",
     barcode: p.barcode ?? "",
+    taxRateId: p.taxRateId ?? "",
     isActive: p.isActive,
     isFeatured: p.isFeatured,
     isNew: p.isNew,
@@ -191,6 +204,8 @@ export function productToFormValue(p: ApiProductForForm): ProductFormValue {
       color: i.color ?? undefined,
     })),
     variants: (p.variants ?? []).map((v) => ({
+      id: v.id,
+      stockBase: String(v.inventory?.quantity ?? 0),
       color: v.color ?? "",
       colorHex: v.colorHex ?? "",
       colorParts: (v.colorParts ?? []).map((cp) => ({
@@ -536,6 +551,13 @@ export default function ProductForm({
             </div>
           </div>
           <MarginPreview cost={form.costPrice} price={form.salePrice || form.basePrice} />
+          <ProductTaxField
+            value={form.taxRateId}
+            onChange={(v) => set("taxRateId", v)}
+            categoryId={form.categoryId}
+            categories={categories}
+            price={form.salePrice || form.basePrice}
+          />
           <div>
             <Label>SKU</Label>
             <input className="admin-input" value={form.sku} onChange={(e) => set("sku", e.target.value)} />

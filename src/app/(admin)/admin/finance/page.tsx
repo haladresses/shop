@@ -20,6 +20,7 @@ type Totals = {
   discounts: number;
   shipping: number;
   refunds: number;
+  vat: number;
   netSales: number;
   cogs: number;
   grossProfit: number;
@@ -40,6 +41,7 @@ type Bucket = {
   grossSales: number;
   discounts: number;
   refunds: number;
+  vat: number;
   netSales: number;
   onlineSales: number;
   posSales: number;
@@ -159,9 +161,9 @@ export default function FinancePage() {
 
   const exportCsv = () => {
     if (!data) return;
-    const head = ["Period", "Orders", "Items sold", "Gross sales", "Discounts", "Refunds", "Net sales", "Online", "POS", "Cost of goods", "Gross profit", "Expenses", "Net profit"];
+    const head = ["Period", "Orders", "Items sold", "Gross sales", "Discounts", "Refunds", "VAT", "Net sales", "Online", "POS", "Cost of goods", "Gross profit", "Expenses", "Net profit"];
     const rows = data.breakdown.map((b) => [
-      bucketLabel(b.bucket, data.range.granularity, true), b.orders, b.itemsSold, b.grossSales, b.discounts, b.refunds, b.netSales,
+      bucketLabel(b.bucket, data.range.granularity, true), b.orders, b.itemsSold, b.grossSales, b.discounts, b.refunds, b.vat ?? 0, b.netSales,
       b.onlineSales, b.posSales, b.cogs, b.grossProfit, b.expenses, b.netProfit,
     ]);
     const csv = [head, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -254,7 +256,7 @@ export default function FinancePage() {
               <p className="text-xs text-slate-400 -mt-2">Change vs previous period {data.previousRange.from} → {data.previousRange.to}</p>
 
               <div className="grid lg:grid-cols-2 gap-5">
-                <Card title="Net sales" subtitle={`${G_LABEL[data.range.granularity]} · after refunds`}>
+                <Card title="Net sales" subtitle={`${G_LABEL[data.range.granularity]} · after refunds, excl. VAT`}>
                   <ColumnChart
                     ariaLabel="Net sales per period"
                     data={data.breakdown.map((b) => ({ key: b.bucket, label: bucketLabel(b.bucket, data.range.granularity), value: b.netSales }))}
@@ -310,6 +312,7 @@ export default function FinancePage() {
                     <PlRow label="  discounts given" value={t.discounts} muted />
                     <PlRow label="  shipping charged" value={t.shipping} muted />
                     <PlRow label="Refunds & returns" value={-t.refunds} />
+                    {Math.abs(t.vat ?? 0) > 0.0005 && <PlRow label="VAT collected (excluded — owed to the tax authority)" value={-t.vat} />}
                     <PlRow label="Net sales" value={t.netSales} strong />
                     <PlRow label="Cost of goods sold" value={-t.cogs} />
                     <PlRow label="Gross profit" value={t.grossProfit} strong />

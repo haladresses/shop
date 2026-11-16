@@ -6,8 +6,15 @@ import {
   LuClock, LuTruck, LuCircleCheck, LuWallet, LuUser, LuMapPin, LuPhone,
   LuMail, LuPackage, LuTriangleAlert, LuSave, LuReceipt, LuBan,
   LuExternalLink, LuBike, LuBuilding2, LuCopy, LuUndo2, LuMessageCircle, LuStore,
+  LuPrinter, LuRotateCcw, LuFileText,
 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
+import ReturnModal from "@/components/pos/ReturnModal";
+import PrintArea from "@/components/print/PrintArea";
+import { SaleDocument } from "@/components/print/SaleDocument";
+import { printArea } from "@/lib/print";
+import { orderToInvoice, refundToCreditNote, methodLabels, type StoreInfo } from "@/lib/invoice";
+import { DEFAULT_TAX_SETTINGS, type TaxSettings } from "@/lib/taxCalc";
 import { formatVariantLabel } from "@/lib/utils";
 
 type ShippingAddress = {
@@ -80,6 +87,26 @@ type Order = {
   whatsappNotifiedAt?: string | null;
   whatsappNotifyError?: string | null;
   waselleeManualWhatsAppLink?: string | null;
+  // VAT, promotions and returns
+  invoiceNumber?: string | null;
+  taxTotal?: number | string;
+  pricesIncludeTax?: boolean;
+  promotionDiscount?: number | string;
+  appliedPromotions?: { id: string; nameEn: string; nameAr: string; discount: number }[] | null;
+  refundedAmount?: number | string;
+  refunds?: Refund[];
+};
+
+type Refund = {
+  id: string;
+  amount: number | string;
+  taxAmount?: number | string;
+  creditNoteNumber?: string | null;
+  method: string;
+  reason?: string | null;
+  restocked?: boolean;
+  items?: { orderItemId: string; quantity: number }[] | null;
+  createdAt: string;
 };
 
 type DispatchChannel = {
@@ -141,6 +168,22 @@ function OrdersView() {
   const [dispatchLoading, setDispatchLoading] = useState(false);
   const [marking, setMarking] = useState<"driver" | "wasellee" | null>(null);
   const [copied, setCopied] = useState<"driver" | "wasellee" | null>(null);
+  // Printing & partial returns
+  const [storeInfo, setStoreInfo] = useState<StoreInfo>({});
+  const [taxSettings, setTaxSettings] = useState<TaxSettings>(DEFAULT_TAX_SETTINGS);
+  const [returnOpen, setReturnOpen] = useState(false);
+  const [creditNoteFor, setCreditNoteFor] = useState<Refund | null>(null);
+
+  useEffect(() => {
+    fetch("/api/settings?group=general").then((r) => r.json()).then((d) => d.success && setStoreInfo(d.data)).catch(() => {});
+    fetch("/api/tax/settings").then((r) => r.json()).then((d) => d.success && setTaxSettings(d.data)).catch(() => {});
+  }, []);
+
+  const printCreditNote = (r: Refund) => {
+    setCreditNoteFor(r);
+    // Let the credit note render into its print area first.
+    setTimeout(() => printArea("order-credit-note", { page: "a4", title: r.creditNoteNumber || "Credit note" }), 50);
+  };
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -481,11 +524,54 @@ function OrdersView() {
           ) : null
         }
         footer={
-          <button onClick={closeDetail} className="admin-btn admin-btn-secondary">Close</button>
+          <div className="flex flex-wrap items-center justify-end gap-2 w-full">
+            {selected && (
+              <>
+                <button
+                  onClick={() => printArea("order-invoice-a4", { page: "a4", title: selected.invoiceNumber || selected.orderNumber })}
+                  disabled={detailLoading}
+                  className="admin-btn admin-btn-secondary"
+                  title="Bilingual (English + Arabic) A4 tax invoice"
+                >
+                  <LuPrinter size={15} /> Invoice (A4)
+                </button>
+                <button
+                  onClick={() => printArea("order-invoice-thermal", { page: "receipt", title: selected.invoiceNumber || selected.orderNumber })}
+                  disabled={detailLoading}
+                  className="admin-btn admin-btn-secondary"
+                  title="Bilingual 80 mm receipt"
+                >
+                  <LuReceipt size={15} /> Receipt
+                </button>
+                {selected.paymentStatus === "PAID" && Number(selected.refundedAmount ?? 0) < Number(selected.total) - 0.0005 && (
+                  <button onClick={() => setReturnOpen(true)} disabled={detailLoading} className="admin-btn admin-btn-danger" title="Return some or all items of this order">
+                    <LuRotateCcw size={15} /> Return items
+                  </button>
+                )}
+              </>
+            )}
+            <button onClick={closeDetail} className="admin-btn admin-btn-secondary">Close</button>
+          </div>
         }
       >
         {selected && (
           <div>
+            <PrintArea id="order-invoice-a4">
+              <SaleDocument data={orderToInvoice(selected as unknown as Record<string, unknown>)} store={storeInfo} tax={taxSettings} layout="a4" />
+            </PrintArea>
+            <PrintArea id="order-invoice-thermal">
+              <SaleDocument data={orderToInvoice(selected as unknown as Record<string, unknown>)} store={storeInfo} tax={taxSettings} layout="thermal" />
+            </PrintArea>
+            {creditNoteFor && (
+              <PrintArea id="order-credit-note">
+                <SaleDocument
+                  data={refundToCreditNote(selected as unknown as Record<string, unknown>, creditNoteFor as unknown as Record<string, unknown>)}
+                  store={storeInfo}
+                  tax={taxSettings}
+                  layout="a4"
+                />
+              </PrintArea>
+            )}
             {detailLoading && (
               <div className="flex justify-center py-6"><div className="spinner" /></div>
             )}
@@ -690,12 +776,54 @@ function OrdersView() {
               <div className="border-t border-slate-200 mt-3 pt-3 space-y-1 text-sm">
                 <div className="flex justify-between text-slate-600"><span>Subtotal</span><span>{omr(selected.subtotal)}</span></div>
                 <div className="flex justify-between text-slate-600"><span>Shipping</span><span>{Number(selected.shippingCost) === 0 ? "Free" : omr(selected.shippingCost)}</span></div>
-                {Number(selected.discount) > 0 && (
-                  <div className="flex justify-between text-emerald-600"><span>Discount {selected.couponCode && `(${selected.couponCode})`}</span><span>- {omr(selected.discount)}</span></div>
+                {(selected.appliedPromotions ?? []).map((p) => (
+                  <div key={p.id} className="flex justify-between text-emerald-600"><span>Offer · {p.nameEn}</span><span>- {omr(p.discount)}</span></div>
+                ))}
+                {Number(selected.discount) - Number(selected.promotionDiscount ?? 0) > 0.0005 && (
+                  <div className="flex justify-between text-emerald-600"><span>Discount {selected.couponCode && `(${selected.couponCode})`}</span><span>- {omr(Number(selected.discount) - Number(selected.promotionDiscount ?? 0))}</span></div>
+                )}
+                {Number(selected.taxTotal ?? 0) > 0 && (
+                  <div className="flex justify-between text-slate-500"><span>{selected.pricesIncludeTax === false ? "VAT" : "Includes VAT"}</span><span>{omr(selected.taxTotal ?? 0)}</span></div>
                 )}
                 <div className="flex justify-between font-semibold text-base text-slate-800 pt-1"><span>Total</span><span>{omr(selected.total)}</span></div>
+                {Number(selected.refundedAmount ?? 0) > 0 && (
+                  <div className="flex justify-between text-rose-600"><span>Refunded</span><span>- {omr(selected.refundedAmount ?? 0)}</span></div>
+                )}
+                {selected.invoiceNumber && (
+                  <p className="text-xs text-slate-400 pt-1 flex items-center gap-1"><LuFileText size={12} /> Invoice {selected.invoiceNumber}</p>
+                )}
               </div>
             </div>
+
+            {/* Returns on this order (each one a credit note) */}
+            {(selected.refunds?.length ?? 0) > 0 && (
+              <div className="mb-5">
+                <p className="text-sm font-semibold text-slate-700 mb-2 flex items-center gap-1.5"><LuUndo2 size={14} /> Returns ({selected.refunds!.length})</p>
+                <div className="space-y-2">
+                  {selected.refunds!.map((r) => {
+                    const units = (r.items ?? []).reduce((s, it) => s + Number(it.quantity || 0), 0);
+                    return (
+                      <div key={r.id} className="flex items-center gap-3 bg-rose-50/60 rounded-xl px-3 py-2 text-sm">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-slate-800">
+                            {omr(r.amount)} · {units} item{units === 1 ? "" : "s"} · {methodLabels(r.method).en}
+                            {r.restocked === false && <span className="ml-1 text-xs text-amber-700">(damaged, not restocked)</span>}
+                          </p>
+                          <p className="text-xs text-slate-500 truncate">
+                            {fmtDate(r.createdAt)}
+                            {r.creditNoteNumber && ` · ${r.creditNoteNumber}`}
+                            {r.reason && ` · ${r.reason}`}
+                          </p>
+                        </div>
+                        <button onClick={() => printCreditNote(r)} className="admin-btn admin-btn-secondary !px-2.5 !py-1.5 text-xs" title="Print credit note">
+                          <LuPrinter size={13} /> Credit note
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Payment details */}
             {selected.payments?.length > 0 && (
@@ -776,6 +904,16 @@ function OrdersView() {
         )}
       </AdminModal>
 
+      {/* Partial / full return of this order's items */}
+      {selected && (
+        <ReturnModal
+          open={returnOpen}
+          orderNumber={selected.orderNumber}
+          onClose={() => setReturnOpen(false)}
+          onDone={() => { openDetailById(selected.id); load(); loadStats(); }}
+        />
+      )}
+
       {/* Destructive status confirmation */}
       <AdminModal
         open={!!confirmStatus}
@@ -803,6 +941,18 @@ function OrdersView() {
             Order <span className="font-mono font-medium">{selected?.orderNumber}</span> will be marked as{" "}
             <span className="font-medium">{confirmStatus}</span>. This notifies the customer.
           </p>
+          {confirmStatus === "REFUNDED" && selected?.paymentStatus === "PAID" && (
+            <p className="text-sm text-slate-600 mt-3 bg-slate-50 rounded-xl p-3">
+              Only some items coming back?{" "}
+              <button
+                onClick={() => { setConfirmStatus(null); setReturnOpen(true); }}
+                className="font-medium text-indigo-600 hover:underline"
+              >
+                Return individual items instead
+              </button>{" "}
+              — e.g. 1 of 4 — and keep the rest of the order.
+            </p>
+          )}
         </div>
       </AdminModal>
     </div>

@@ -7,6 +7,9 @@ export const productVariantColorPartSchema = z.object({
 });
 
 export const productVariantSchema = z.object({
+  // Existing variant id when editing — the variant is updated in place so its
+  // stock ledger, order lines and purchase-order lines stay attached to it.
+  id: z.string().min(1).optional(),
   color: z.string().optional(),
   colorHex: z.string().optional(),
   // Per-region breakdown for a variant that is itself multi-color, e.g.
@@ -20,6 +23,10 @@ export const productVariantSchema = z.object({
   priceAdjustment: z.number().default(0),
   isActive: z.boolean().default(true),
   stock: z.number().int().min(0).default(0),
+  // The stock figure the form was loaded with. When editing, only the change
+  // (stock − stockBase) is booked as a stock adjustment, so sales made while
+  // the form was open aren't undone.
+  stockBase: z.number().int().min(0).optional(),
 });
 
 export const productImageSchema = z.object({
@@ -54,6 +61,9 @@ const productFields = {
   costPrice: z.number().min(0).optional().nullable(),
   sku: z.string().optional(),
   barcode: z.string().optional(),
+  // VAT rate override. Null = inherit from the category (then parents, then
+  // the store default rate).
+  taxRateId: z.string().min(1).nullable(),
   isActive: z.boolean(),
   isFeatured: z.boolean(),
   isNew: z.boolean(),
@@ -70,6 +80,7 @@ export const productSchema = z.object({
   isFeatured: productFields.isFeatured.default(false),
   isNew: productFields.isNew.default(true),
   isBestSeller: productFields.isBestSeller.default(false),
+  taxRateId: productFields.taxRateId.optional(),
   attributes: productFields.attributes.optional().default({}),
   customSpecs: productFields.customSpecs.optional().default([]),
   variants: productFields.variants.default([]),

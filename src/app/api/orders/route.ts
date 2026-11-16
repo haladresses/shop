@@ -4,7 +4,9 @@ import { getAuthFromRequest, userHasAnyPermission } from "@/lib/auth";
 import { ok, paginated, error, unauthorized, serverError } from "@/lib/api/response";
 import { createOrderSchema } from "@/lib/validations/order";
 import { generateOrderNumber } from "@/lib/utils";
-import { calculateWaselleeCost } from "@/lib/wasellee";
+import { PricingError, onlineShippingCost, priceCart } from "@/lib/orderPricing";
+import { nextDocumentNumber } from "@/lib/sequences";
+import { recordPromotionRedemptions } from "@/lib/promotions";
 
 export async function GET(req: NextRequest) {
   try {
@@ -90,85 +92,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let discount = 0;
-    if (couponCode) {
-      const coupon = await prisma.coupon.findUnique({
-        where: { code: couponCode.toUpperCase(), isActive: true },
-      });
-      if (coupon && (!coupon.maxUses || coupon.usedCount < coupon.maxUses)) {
-        if (!coupon.expiresAt || coupon.expiresAt > new Date()) {
-          // Apply discount (computed after subtotal is known)
-        }
-      }
-    }
-
-    // Calculate prices
-    const productIds = items.map((i) => i.productId);
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds }, isActive: true },
-      include: { variants: { include: { inventory: true } } },
+    // Prices, promotions, delivery fee and VAT are all worked out server-side
+    // (never trust client-submitted prices) by the same code that powers the
+    // checkout summary, so the shopper is charged exactly what they saw.
+    const { orderItemsData, orderMoney, pricing } = await priceCart(items, {
+      channel: "ONLINE",
+      shipping: (subtotal) =>
+        onlineShippingCost({ shippingMethod, branch: waselleeBranch, deliveryType: waselleeDeliveryType ?? "HOME_DELIVERY" }, subtotal),
     });
-
-    let subtotal = 0;
-    const orderItemsData = [];
-
-    for (const item of items) {
-      const product = products.find((p) => p.id === item.productId);
-      if (!product) return error(`Product ${item.productId} not found`);
-
-      let unitPrice = Number(product.salePrice || product.basePrice);
-      let variant = null;
-      // A product sold in sizes/colours must be ordered as one exact option,
-      // otherwise stock can't be reduced and the order wouldn't say what was sold.
-      const activeOptions = product.variants.filter((v) => v.isActive);
-      if (!item.variantId && activeOptions.length > 0) {
-        return error(`Please choose the size / colour for ${product.nameEn}`);
-      }
-      if (item.variantId) {
-        variant = activeOptions.find((v) => v.id === item.variantId) || null;
-        if (!variant) return error(`Variant not found for ${product.nameEn}`);
-        if (variant) unitPrice += Number(variant.priceAdjustment);
-        if ((variant.inventory?.quantity ?? 0) < item.quantity) {
-          return error(`Not enough stock for ${product.nameEn} (${[variant.color, variant.size].filter(Boolean).join(" / ") || "this option"}) — ${variant.inventory?.quantity ?? 0} left`);
-        }
-      }
-
-      const itemTotal = unitPrice * item.quantity;
-      subtotal += itemTotal;
-
-      orderItemsData.push({
-        productId: item.productId,
-        variantId: item.variantId || null,
-        quantity: item.quantity,
-        unitPrice,
-        unitCost: product.costPrice,
-        total: itemTotal,
-        // A durable copy of what was actually ordered (name, color, size, SKU)
-        // so the admin always sees the exact selection even if the variant is
-        // later edited or removed from the product.
-        productSnapshot: {
-          nameEn: product.nameEn,
-          nameAr: product.nameAr,
-          price: unitPrice,
-          sku: variant?.sku || product.sku || null,
-          color: variant?.color || null,
-          colorHex: variant?.colorHex || null,
-          colorParts: variant?.colorParts || null,
-          size: variant?.size || null,
-        },
-      });
-    }
-
-    // Shipping cost is always computed server-side — never trust a client-submitted price.
-    const shippingCost =
-      shippingMethod === "STORE_PICKUP"
-        ? 0 // Customer collects in person — no delivery involved.
-        : shippingMethod === "WASELLEE" && waselleeBranch
-        ? calculateWaselleeCost(waselleeBranch, waselleeDeliveryType!)
-        : subtotal >= 10
-        ? 0
-        : 1.5; // Free shipping over 10 OMR
-    const total = subtotal + shippingCost - discount;
 
     const order = await prisma.$transaction(async (tx) => {
       // Claim stock atomically — re-checks the live quantity (not the copy
@@ -189,13 +120,11 @@ export async function POST(req: NextRequest) {
       const created = await tx.order.create({
         data: {
           orderNumber: generateOrderNumber(),
+          invoiceNumber: await nextDocumentNumber(tx, "INV"),
           userId: sessionUser?.id || null,
           guestEmail: !sessionUser ? body.guestEmail : null,
           guestName: !sessionUser ? body.guestName : null,
-          subtotal,
-          shippingCost,
-          discount,
-          total,
+          ...orderMoney,
           couponCode: couponCode || null,
           notes,
           shippingAddress,
@@ -206,7 +135,7 @@ export async function POST(req: NextRequest) {
           items: { create: orderItemsData },
           payments: {
             create: {
-              amount: total,
+              amount: orderMoney.total,
               method: paymentMethod as never,
               status: "UNPAID",
             },
@@ -235,6 +164,7 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      await recordPromotionRedemptions(tx, created.id, pricing.appliedPromotions);
       return created;
     });
 
@@ -251,6 +181,7 @@ export async function POST(req: NextRequest) {
 
     return ok(order, 201);
   } catch (e) {
+    if (e instanceof PricingError) return error(e.message, e.status);
     if (e instanceof Error && e.message.includes("Not enough stock")) {
       return error(e.message, 409);
     }

@@ -1,12 +1,16 @@
 import { InventoryTxType, Prisma } from "@prisma/client";
 import prisma from "@/lib/db";
 
+// Movement types staff can book by hand on the Inventory screen.
 export const INVENTORY_TX_TYPES = ["PURCHASE", "SALE", "RETURN", "ADJUSTMENT", "DAMAGE", "TRANSFER"] as const;
+// Every type that can appear in the ledger (PURCHASE_RETURN is only booked
+// by returning goods to a supplier from a purchase order).
+export const ALL_INVENTORY_TX_TYPES = [...INVENTORY_TX_TYPES, "PURCHASE_RETURN"] as const;
 
 // Movements that always add / always remove stock. ADJUSTMENT is signed
 // (a stock-count correction can go either way).
 const INBOUND: InventoryTxType[] = ["PURCHASE", "RETURN"];
-const OUTBOUND: InventoryTxType[] = ["SALE", "DAMAGE", "TRANSFER"];
+const OUTBOUND: InventoryTxType[] = ["SALE", "DAMAGE", "TRANSFER", "PURCHASE_RETURN"];
 
 export function signedDelta(type: InventoryTxType, quantity: number): number {
   if (INBOUND.includes(type)) return Math.abs(quantity);

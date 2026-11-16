@@ -6,6 +6,8 @@ import { getAuthFromRequest, userHasAnyPermission } from "@/lib/auth";
 import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
 import { round3 } from "@/lib/finance";
 import { returnedByLine } from "@/lib/posShift";
+import { lineRefund } from "@/lib/orderPricing";
+import { nextDocumentNumber } from "@/lib/sequences";
 
 const returnSchema = z.object({
   orderId: z.string().min(1),
@@ -19,9 +21,11 @@ const returnSchema = z.object({
 });
 
 /**
- * Return (part of) a sale: refunds the customer, puts the units back in stock
- * (unless damaged) and records a Refund so the finance report nets it out.
- * The refund is the lines' price less their share of any order discount.
+ * Return (part of) a sale — any number of units of any line, e.g. 1 of the 4
+ * items bought: refunds the customer, puts those units back in stock (unless
+ * damaged) and records a Refund (credit note) so finance and the VAT report
+ * net it out. Each unit refunds exactly what was paid for it: price less its
+ * share of promotions/discount, plus its VAT.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -47,6 +51,7 @@ export async function POST(req: NextRequest) {
     const discountRatio = Number(order.subtotal) > 0 ? Number(order.discount) / Number(order.subtotal) : 0;
 
     let amount = 0;
+    let taxAmount = 0;
     const refundItems: Prisma.InputJsonValue[] = [];
     for (const r of items) {
       const line = order.items.find((i) => i.id === r.orderItemId);
@@ -58,18 +63,29 @@ export async function POST(req: NextRequest) {
       const unitPrice = Number(line.unitPrice);
       const unitCost =
         line.unitCost != null ? Number(line.unitCost) : line.product.costPrice != null ? Number(line.product.costPrice) : 0;
-      amount += unitPrice * r.quantity * (1 - discountRatio);
+      const due = lineRefund(line, r.quantity, discountRatio);
+      amount += due.amount;
+      taxAmount += due.tax;
       refundItems.push({
         orderItemId: line.id,
         productId: line.productId,
         variantId: line.variantId,
         quantity: r.quantity,
         unitPrice,
+        amount: due.amount,
+        tax: due.tax,
         // Damaged units are a loss: they stay in COGS, so no cost comes back.
         unitCost: restock ? unitCost : 0,
       });
     }
-    amount = round3(Math.min(amount, Number(order.total) - Number(order.refundedAmount)));
+    const cap = Number(order.total) - Number(order.refundedAmount);
+    if (amount > cap) {
+      // Never refund more than is left on the order; scale the VAT with it.
+      taxAmount = amount > 0 ? (taxAmount * cap) / amount : 0;
+      amount = cap;
+    }
+    amount = round3(Math.max(0, amount));
+    taxAmount = round3(Math.max(0, taxAmount));
 
     const totalUnits = order.items.reduce((s, i) => s + i.quantity, 0);
     const unitsAfter =
@@ -100,7 +116,17 @@ export async function POST(req: NextRequest) {
       }
 
       const created = await tx.refund.create({
-        data: { orderId, amount, method, reason: reason || null, items: refundItems, restocked: restock, createdBy: user.id },
+        data: {
+          orderId,
+          amount,
+          taxAmount,
+          creditNoteNumber: await nextDocumentNumber(tx, "CN"),
+          method,
+          reason: reason || null,
+          items: refundItems,
+          restocked: restock,
+          createdBy: user.id,
+        },
       });
 
       await tx.order.update({
@@ -113,7 +139,7 @@ export async function POST(req: NextRequest) {
       return created;
     });
 
-    return ok({ ...refund, amount: Number(refund.amount), fullyReturned }, 201);
+    return ok({ ...refund, amount: Number(refund.amount), taxAmount: Number(refund.taxAmount), fullyReturned }, 201);
   } catch (e) {
     return serverError(e);
   }

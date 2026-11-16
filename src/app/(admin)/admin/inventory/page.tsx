@@ -77,7 +77,7 @@ type Tx = {
 
 type Category = { id: string; nameEn: string };
 
-const TX_TYPES = ["PURCHASE", "SALE", "RETURN", "ADJUSTMENT", "DAMAGE", "TRANSFER"];
+const TX_TYPES = ["PURCHASE", "SALE", "RETURN", "ADJUSTMENT", "DAMAGE", "TRANSFER", "PURCHASE_RETURN"];
 const TX_LABEL: Record<string, string> = {
   PURCHASE: "Stock in (purchase)",
   SALE: "Sale",
@@ -85,6 +85,7 @@ const TX_LABEL: Record<string, string> = {
   ADJUSTMENT: "Stock count correction",
   DAMAGE: "Damaged / lost",
   TRANSFER: "Transfer out",
+  PURCHASE_RETURN: "Returned to supplier",
 };
 const INBOUND = ["PURCHASE", "RETURN"];
 const num = (n: number) => n.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 });
@@ -432,7 +433,7 @@ function AdjustModal({ item, onClose, onSaved }: { item: InventoryItem; onClose:
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">Movement type</label>
           <select className="admin-input admin-select" value={type} onChange={(e) => setType(e.target.value)}>
-            {TX_TYPES.filter((t) => t !== "SALE").map((t) => <option key={t} value={t}>{TX_LABEL[t]}</option>)}
+            {TX_TYPES.filter((t) => t !== "SALE" && t !== "PURCHASE_RETURN").map((t) => <option key={t} value={t}>{TX_LABEL[t]}</option>)}
           </select>
         </div>
         {type === "ADJUSTMENT" ? (

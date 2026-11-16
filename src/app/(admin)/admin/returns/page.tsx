@@ -1,12 +1,21 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { LuPackageX, LuPlus, LuRotateCcw, LuUndo2 } from "react-icons/lu";
+import { LuPackageX, LuPlus, LuPrinter, LuRotateCcw, LuUndo2 } from "react-icons/lu";
+import toast from "react-hot-toast";
 import ReturnModal from "@/components/pos/ReturnModal";
+import PrintArea from "@/components/print/PrintArea";
+import { SaleDocument } from "@/components/print/SaleDocument";
+import { printArea } from "@/lib/print";
+import { refundToCreditNote, type InvoiceData, type StoreInfo } from "@/lib/invoice";
+import { DEFAULT_TAX_SETTINGS, type TaxSettings } from "@/lib/taxCalc";
 
 type RefundRow = {
   id: string;
   createdAt: string;
   amount: number;
+  taxAmount: number;
+  creditNoteNumber: string | null;
+  items: unknown;
   method: string;
   reason: string | null;
   restocked: boolean;
@@ -28,6 +37,26 @@ export default function ReturnsPage() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ search: "", from: "", to: "", method: "" });
   const [newOpen, setNewOpen] = useState(false);
+  const [vatSum, setVatSum] = useState(0);
+  const [store, setStore] = useState<StoreInfo>({});
+  const [tax, setTax] = useState<TaxSettings>(DEFAULT_TAX_SETTINGS);
+  const [doc, setDoc] = useState<InvoiceData | null>(null);
+  const [printing, setPrinting] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/settings?group=general").then((r) => r.json()).then((d) => d.success && setStore(d.data)).catch(() => {});
+    fetch("/api/tax/settings").then((r) => r.json()).then((d) => d.success && setTax(d.data)).catch(() => {});
+  }, []);
+
+  /** Bilingual A4 credit note for one return (needs the full order for names and VAT). */
+  const printCreditNote = async (r: RefundRow) => {
+    setPrinting(r.id);
+    const d = await fetch(`/api/orders/${r.order.id}`, { cache: "no-store" }).then((x) => x.json()).catch(() => null);
+    setPrinting(null);
+    if (!d?.success) return toast.error("Could not load the order");
+    setDoc(refundToCreditNote(d.data, r as unknown as Record<string, unknown>));
+    setTimeout(() => printArea("returns-credit-note", { page: "a4", title: r.creditNoteNumber || "Credit note" }), 50);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,6 +69,7 @@ export default function ReturnsPage() {
       setTotal(d.data.meta.total);
       setTotalPages(Math.max(1, d.data.meta.totalPages));
       setDamaged(d.data.damagedCount);
+      setVatSum(d.data.vatSum ?? 0);
     }
     setLoading(false);
   }, [page, filters]);
@@ -58,12 +88,12 @@ export default function ReturnsPage() {
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Stat icon={LuUndo2} label="Returns" value={total.toLocaleString()} />
-        <Stat icon={LuRotateCcw} label="Refunded" value={`${num(sum)} OMR`} />
+        <Stat icon={LuRotateCcw} label={vatSum > 0 ? `Refunded (incl. ${num(vatSum)} VAT)` : "Refunded"} value={`${num(sum)} OMR`} />
         <Stat icon={LuPackageX} label="Damaged (not restocked)" value={damaged.toLocaleString()} />
       </div>
 
       <div className="rounded-2xl border border-slate-200/70 bg-white p-3 flex flex-col md:flex-row md:items-center gap-2 flex-wrap">
-        <input value={filters.search} onChange={(e) => setFilter("search", e.target.value)} placeholder="Order number or reason" className="admin-input !py-2 text-sm md:max-w-xs" />
+        <input value={filters.search} onChange={(e) => setFilter("search", e.target.value)} placeholder="Order, credit note no. or reason" className="admin-input !py-2 text-sm md:max-w-xs" />
         <select value={filters.method} onChange={(e) => setFilter("method", e.target.value)} className="admin-input admin-select !py-2 text-sm md:max-w-[180px]">
           <option value="">All refund methods</option>
           <option value="CASH">Cash</option>
@@ -95,19 +125,23 @@ export default function ReturnsPage() {
               <thead>
                 <tr>
                   <th>Date</th>
+                  <th>Credit note</th>
                   <th>Order</th>
                   <th className="text-right">Units</th>
                   <th>Refund by</th>
                   <th>Stock</th>
                   <th>Reason</th>
                   <th>By</th>
+                  <th className="text-right">VAT</th>
                   <th className="text-right">Amount</th>
+                  <th />
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id}>
                     <td className="whitespace-nowrap text-sm">{new Date(r.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</td>
+                    <td className="font-mono text-xs whitespace-nowrap">{r.creditNoteNumber || "—"}</td>
                     <td>
                       <span className="font-medium text-slate-800">{r.order.orderNumber}</span>
                       <p className="text-xs text-slate-400">{r.order.source === "POS" ? "In-store" : "Online"} · total {num(r.order.total)}</p>
@@ -119,7 +153,13 @@ export default function ReturnsPage() {
                     </td>
                     <td className="max-w-[240px] truncate text-sm text-slate-600">{r.reason || "—"}</td>
                     <td className="text-sm text-slate-500">{r.createdBy || "—"}</td>
+                    <td className="text-right tabular-nums text-slate-500">{r.taxAmount > 0 ? num(r.taxAmount) : "—"}</td>
                     <td className="text-right tabular-nums font-semibold">{num(r.amount)}</td>
+                    <td>
+                      <button onClick={() => printCreditNote(r)} disabled={printing === r.id} className="p-1.5 text-slate-400 hover:text-slate-700 disabled:opacity-40" title="Print credit note (English + Arabic)">
+                        <LuPrinter size={15} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -136,6 +176,11 @@ export default function ReturnsPage() {
       </div>
 
       <ReturnModal open={newOpen} onClose={() => { setNewOpen(false); load(); }} onDone={load} />
+      {doc && (
+        <PrintArea id="returns-credit-note">
+          <SaleDocument data={doc} store={store} tax={tax} layout="a4" />
+        </PrintArea>
+      )}
     </div>
   );
 }

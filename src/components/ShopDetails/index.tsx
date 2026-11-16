@@ -24,6 +24,7 @@ import {
   type CategoryAttribute,
 } from "@/lib/attributes";
 import { flyToCart } from "@/lib/cartFx";
+import { describePromotion, isPromotionLive, productQualifies, type PromotionRule } from "@/lib/promotionEngine";
 import { WishlistButton } from "@/components/Common/ProductActions";
 
 const StarIcon = ({ filled }: { filled: boolean }) => (
@@ -64,6 +65,8 @@ const ShopDetails = () => {
     { id: string; imageUrl: string; customerName: string | null; caption: string | null }[]
   >([]);
   const [waLightbox, setWaLightbox] = useState<string | null>(null);
+  // Promotions this product is part of right now (buy X get Y, mix & match …).
+  const [promos, setPromos] = useState<PromotionRule[]>([]);
 
   useEffect(() => {
     const slug = new URLSearchParams(window.location.search).get("slug");
@@ -114,6 +117,32 @@ const ShopDetails = () => {
       ignore = true;
     };
   }, [api?.id]);
+
+  // Live promotions that cover this product (same rules the checkout applies).
+  useEffect(() => {
+    if (!api?.id) return;
+    let ignore = false;
+    fetch("/api/promotions/active?channel=ONLINE")
+      .then((r) => r.json())
+      .then((d) => {
+        if (ignore || !d.success) return;
+        const categoryId = (api as ApiProduct & { categoryId?: string }).categoryId;
+        const ancestry: Record<string, string[]> = d.data.categoryAncestry ?? {};
+        const base = Number(api.basePrice) || 0;
+        const salePrice = api.salePrice != null ? Number(api.salePrice) : null;
+        const line = {
+          productId: api.id,
+          categoryIds: categoryId ? ancestry[categoryId] ?? [categoryId] : [],
+          onSale: salePrice != null && salePrice < base,
+        };
+        const rules: PromotionRule[] = d.data.rules ?? [];
+        setPromos(rules.filter((r) => isPromotionLive(r, "ONLINE") && productQualifies(r, line)));
+      })
+      .catch(() => {});
+    return () => {
+      ignore = true;
+    };
+  }, [api]);
 
   // All product images, primary first then by sortOrder (mirrors mapApiProduct's ordering).
   const sortedImages = useMemo(() => {
@@ -440,6 +469,37 @@ const ShopDetails = () => {
                   <span className="text-dark-4 text-lg line-through mb-0.5">{base.toFixed(3)}</span>
                 )}
               </div>
+
+              {promos.length > 0 && (
+                <div className="mb-6 space-y-2.5">
+                  {promos.map((p) => {
+                    const rule = describePromotion(p);
+                    const badge = isArabic ? p.badgeAr || rule.ar : p.badgeEn || rule.en;
+                    const name = isArabic ? p.nameAr || p.nameEn : p.nameEn;
+                    const desc = isArabic ? p.descriptionAr || p.descriptionEn : p.descriptionEn;
+                    const until = p.endsAt
+                      ? new Date(p.endsAt).toLocaleDateString(isArabic ? "ar-OM" : "en-GB", { day: "numeric", month: "long", timeZone: "Asia/Muscat" })
+                      : null;
+                    return (
+                      <div key={p.id} className="qa-fade flex items-start gap-3 rounded-lg bg-blue-light-5 px-4 py-3">
+                        <span className="shrink-0 rounded-md bg-blue px-2.5 py-1 text-custom-sm font-semibold text-white">{badge}</span>
+                        <div className="min-w-0 text-custom-sm">
+                          <p className="font-medium text-blue-dark">{name}</p>
+                          {desc && <p className="text-dark-4 mt-0.5">{desc}</p>}
+                          {until && (
+                            <p className="text-dark-4 mt-0.5">
+                              {isArabic ? `العرض ساري حتى ${until}` : `Offer ends ${until}`}
+                            </p>
+                          )}
+                          <p className="text-dark-4 mt-0.5">
+                            {isArabic ? "يُطبَّق الخصم تلقائياً في سلة التسوق." : "Applied automatically at checkout."}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
 
               <div id="pdp-options">
               {/* Colors */}

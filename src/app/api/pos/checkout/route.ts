@@ -6,6 +6,9 @@ import { ok, error, unauthorized, forbidden, serverError } from "@/lib/api/respo
 import { generateOrderNumber } from "@/lib/utils";
 import { round3 } from "@/lib/finance";
 import { getOpenShift } from "@/lib/posShift";
+import { PricingError, priceCart } from "@/lib/orderPricing";
+import { nextDocumentNumber } from "@/lib/sequences";
+import { recordPromotionRedemptions } from "@/lib/promotions";
 
 const itemSchema = z.object({
   productId: z.string().min(1),
@@ -28,6 +31,8 @@ const checkoutSchema = z.object({
   discount: z.number().min(0).default(0),
   customerPhone: z.string().optional(),
   customerName: z.string().max(100).optional(),
+  // Business customer's VAT number, printed on their tax invoice.
+  customerVatNumber: z.string().trim().max(30).optional(),
   notes: z.string().max(500).optional(),
 });
 
@@ -41,61 +46,13 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) return error(parsed.error.issues[0].message);
     const { items, customerPhone, customerName, notes } = parsed.data;
 
-    const productIds = [...new Set(items.map((i) => i.productId))];
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds }, isActive: true },
-      include: { variants: { include: { inventory: true } } },
+    // Promotions, the cashier's manual discount and VAT — the same shared
+    // calculation the POS screen used to show the total.
+    const { orderItemsData, orderMoney, pricing } = await priceCart(items, {
+      channel: "POS",
+      discount: parsed.data.discount,
     });
-
-    let subtotal = 0;
-    const orderItemsData = [];
-    // Stock is (re-)checked atomically inside the transaction below; this is
-    // just to fail fast with a clear message before we even open one.
-    for (const item of items) {
-      const product = products.find((p) => p.id === item.productId);
-      if (!product) return error(`Product ${item.productId} not found`);
-
-      let variant = null;
-      // A product sold in sizes/colours must be ordered as one exact option,
-      // otherwise stock can't be reduced and the order wouldn't say what was sold.
-      const activeOptions = product.variants.filter((v) => v.isActive);
-      if (!item.variantId && activeOptions.length > 0) {
-        return error(`Please choose the size / colour for ${product.nameEn}`);
-      }
-      if (item.variantId) {
-        variant = activeOptions.find((v) => v.id === item.variantId) || null;
-        if (!variant) return error(`Variant not found for ${product.nameEn}`);
-        if ((variant.inventory?.quantity ?? 0) < item.quantity) {
-          return error(`Not enough stock for ${product.nameEn} (${[variant.color, variant.size].filter(Boolean).join(" / ") || "this option"}) — ${variant.inventory?.quantity ?? 0} left`);
-        }
-      }
-
-      const unitPrice = Number(product.salePrice ?? product.basePrice) + Number(variant?.priceAdjustment ?? 0);
-      const itemTotal = unitPrice * item.quantity;
-      subtotal += itemTotal;
-
-      orderItemsData.push({
-        productId: item.productId,
-        variantId: item.variantId || null,
-        quantity: item.quantity,
-        unitPrice,
-        unitCost: product.costPrice,
-        total: itemTotal,
-        productSnapshot: {
-          nameEn: product.nameEn,
-          nameAr: product.nameAr,
-          price: unitPrice,
-          sku: variant?.sku || product.sku || null,
-          color: variant?.color || null,
-          colorHex: variant?.colorHex || null,
-          colorParts: variant?.colorParts || null,
-          size: variant?.size || null,
-        },
-      });
-    }
-
-    const discount = round3(Math.min(parsed.data.discount, subtotal));
-    const total = round3(subtotal - discount);
+    const total = orderMoney.total;
 
     // Payments must cover the total exactly (cash overpayment is change, and
     // is tracked via amountTendered rather than as a payment).
@@ -136,12 +93,11 @@ export async function POST(req: NextRequest) {
       const created = await tx.order.create({
         data: {
           orderNumber: generateOrderNumber(),
+          invoiceNumber: await nextDocumentNumber(tx, "INV"),
           userId: customer?.id ?? null,
           guestName: customer ? null : customerName?.trim() || "Walk-in Customer",
-          subtotal,
-          shippingCost: 0,
-          discount,
-          total,
+          ...orderMoney,
+          customerVatNumber: parsed.data.customerVatNumber || null,
           notes,
           shippingAddress: {
             nameEn: customer?.nameEn || customerName?.trim() || "Walk-in Customer",
@@ -162,7 +118,7 @@ export async function POST(req: NextRequest) {
             create: payments.map((p) => ({ amount: p.amount, method: p.method, status: "PAID" as const })),
           },
         },
-        include: { items: true, payments: true },
+        include: { items: true, payments: true, cashier: { select: { nameEn: true } } },
       });
 
       for (const item of items) {
@@ -181,11 +137,13 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      await recordPromotionRedemptions(tx, created.id, pricing.appliedPromotions);
       return created;
     });
 
     return ok(order, 201);
   } catch (e) {
+    if (e instanceof PricingError) return error(e.message, e.status);
     if (e instanceof Error && e.message.includes("Not enough stock")) {
       return error(e.message, 409);
     }

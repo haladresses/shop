@@ -31,6 +31,8 @@ type Totals = {
   discounts: number;
   shipping: number;
   refunds: number;
+  /** Output VAT on these sales less VAT reversed by refunds — a liability, not revenue. */
+  vat: number;
   netSales: number;
   cogs: number;
   grossProfit: number;
@@ -58,10 +60,11 @@ function returnedCost(items: Prisma.JsonValue | null): number {
 async function computeTotals(from: Date, to: Date): Promise<Totals> {
   const [[sales], [cogsRow], refunds, expenseAgg] = await Promise.all([
     prisma.$queryRaw<
-      { orders: number; gross: unknown; discount: unknown; shipping: unknown; online: unknown; pos: unknown }[]
+      { orders: number; gross: unknown; discount: unknown; shipping: unknown; vat: unknown; online: unknown; pos: unknown }[]
     >`
       SELECT COUNT(*)::int AS orders,
              COALESCE(SUM(o.total), 0) AS gross,
+             COALESCE(SUM(o."taxTotal"), 0) AS vat,
              COALESCE(SUM(o.discount), 0) AS discount,
              COALESCE(SUM(o."shippingCost"), 0) AS shipping,
              COALESCE(SUM(CASE WHEN o.source = 'ONLINE' THEN o.total ELSE 0 END), 0) AS online,
@@ -77,7 +80,7 @@ async function computeTotals(from: Date, to: Date): Promise<Totals> {
       WHERE ${PAID_ORDER} AND o."createdAt" BETWEEN ${from} AND ${to}`,
     prisma.refund.findMany({
       where: { createdAt: { gte: from, lte: to } },
-      select: { amount: true, items: true },
+      select: { amount: true, taxAmount: true, items: true },
     }),
     prisma.expense.aggregate({
       where: { date: { gte: from, lte: to } },
@@ -86,10 +89,13 @@ async function computeTotals(from: Date, to: Date): Promise<Totals> {
   ]);
 
   const refundTotal = refunds.reduce((s, r) => s + num(r.amount), 0);
+  const refundVat = refunds.reduce((s, r) => s + num(r.taxAmount), 0);
   const refundedCost = refunds.reduce((s, r) => s + returnedCost(r.items), 0);
 
   const gross = num(sales.gross);
-  const netSales = gross - refundTotal;
+  // VAT collected belongs to the tax authority: revenue is net of it.
+  const vat = num(sales.vat) - refundVat;
+  const netSales = gross - refundTotal - vat;
   const cogs = num(cogsRow.cogs) - refundedCost;
   const grossProfit = netSales - cogs;
   const expenses = num(expenseAgg._sum.amount);
@@ -99,6 +105,7 @@ async function computeTotals(from: Date, to: Date): Promise<Totals> {
     discounts: round3(num(sales.discount)),
     shipping: round3(num(sales.shipping)),
     refunds: round3(refundTotal),
+    vat: round3(vat),
     netSales: round3(netSales),
     cogs: round3(cogs),
     grossProfit: round3(grossProfit),
@@ -163,11 +170,12 @@ export async function GET(req: NextRequest) {
       computeTotals(from, to),
       computeTotals(businessDayStart(prevFromKey), businessDayEnd(prevToKey)),
       prisma.$queryRaw<
-        { bucket: string; orders: number; gross: unknown; discount: unknown; online: unknown; pos: unknown }[]
+        { bucket: string; orders: number; gross: unknown; discount: unknown; vat: unknown; online: unknown; pos: unknown }[]
       >`
         SELECT to_char(date_trunc(${unit}, ${orderTs}), 'YYYY-MM-DD') AS bucket,
                COUNT(*)::int AS orders,
                SUM(o.total) AS gross,
+               SUM(o."taxTotal") AS vat,
                SUM(o.discount) AS discount,
                SUM(CASE WHEN o.source = 'ONLINE' THEN o.total ELSE 0 END) AS online,
                SUM(CASE WHEN o.source = 'POS' THEN o.total ELSE 0 END) AS pos
@@ -185,7 +193,7 @@ export async function GET(req: NextRequest) {
         GROUP BY 1`,
       prisma.refund.findMany({
         where: { createdAt: { gte: from, lte: to } },
-        select: { amount: true, items: true, createdAt: true },
+        select: { amount: true, taxAmount: true, items: true, createdAt: true },
       }),
       prisma.$queryRaw<{ bucket: string; amount: unknown }[]>`
         SELECT to_char(date_trunc(${unit}, ${localTs(`e.date`)}), 'YYYY-MM-DD') AS bucket,
@@ -198,7 +206,7 @@ export async function GET(req: NextRequest) {
       >`
         SELECT p.id AS "productId", p."nameEn", p."nameAr",
                SUM(oi.quantity)::int AS qty,
-               SUM(oi.total) AS revenue,
+               SUM(oi.total - CASE WHEN o."pricesIncludeTax" THEN oi."taxAmount" ELSE 0 END) AS revenue,
                SUM(oi.quantity * COALESCE(oi."unitCost", p."costPrice", 0)) AS cost,
                BOOL_AND(COALESCE(oi."unitCost", p."costPrice") IS NOT NULL) AS "hasCost"
         FROM order_items oi
@@ -211,7 +219,7 @@ export async function GET(req: NextRequest) {
       prisma.$queryRaw<{ categoryId: string; nameEn: string; qty: number; revenue: unknown; cost: unknown }[]>`
         SELECT c.id AS "categoryId", c."nameEn",
                SUM(oi.quantity)::int AS qty,
-               SUM(oi.total) AS revenue,
+               SUM(oi.total - CASE WHEN o."pricesIncludeTax" THEN oi."taxAmount" ELSE 0 END) AS revenue,
                SUM(oi.quantity * COALESCE(oi."unitCost", p."costPrice", 0)) AS cost
         FROM order_items oi
         JOIN orders o ON o.id = oi."orderId"
@@ -249,7 +257,7 @@ export async function GET(req: NextRequest) {
     const series = new Map(
       keys.map((k) => [
         k,
-        { bucket: k, orders: 0, grossSales: 0, discounts: 0, online: 0, pos: 0, refunds: 0, cogs: 0, items: 0, expenses: 0 },
+        { bucket: k, orders: 0, grossSales: 0, discounts: 0, vat: 0, online: 0, pos: 0, refunds: 0, cogs: 0, items: 0, expenses: 0 },
       ]),
     );
     for (const r of salesBuckets) {
@@ -258,6 +266,7 @@ export async function GET(req: NextRequest) {
       b.orders = r.orders;
       b.grossSales = num(r.gross);
       b.discounts = num(r.discount);
+      b.vat += num(r.vat);
       b.online = num(r.online);
       b.pos = num(r.pos);
     }
@@ -271,6 +280,7 @@ export async function GET(req: NextRequest) {
       const b = series.get(bucketKey(toBusinessDateKey(r.createdAt), g));
       if (!b) continue;
       b.refunds += num(r.amount);
+      b.vat -= num(r.taxAmount);
       b.cogs -= returnedCost(r.items);
     }
     for (const r of expenseBuckets) {
@@ -279,7 +289,7 @@ export async function GET(req: NextRequest) {
     }
 
     const breakdown = Array.from(series.values()).map((b) => {
-      const netSales = b.grossSales - b.refunds;
+      const netSales = b.grossSales - b.refunds - b.vat;
       const grossProfit = netSales - b.cogs;
       return {
         bucket: b.bucket,
@@ -288,6 +298,7 @@ export async function GET(req: NextRequest) {
         grossSales: round3(b.grossSales),
         discounts: round3(b.discounts),
         refunds: round3(b.refunds),
+        vat: round3(b.vat),
         netSales: round3(netSales),
         onlineSales: round3(b.online),
         posSales: round3(b.pos),

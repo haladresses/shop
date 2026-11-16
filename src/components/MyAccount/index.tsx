@@ -38,6 +38,9 @@ type OrderDetail = {
   shippingCost: number;
   discount: number;
   total: number;
+  taxTotal?: number;
+  pricesIncludeTax?: boolean;
+  invoiceNumber?: string | null;
   refundedAmount: number;
   shippingAddress: Record<string, string> | null;
   shippingMethod: string;
@@ -432,6 +435,12 @@ function OrderView({ id, t, isArabic, waPhone, onBack, onChanged }: { id: string
           <Row label={t("Subtotal", "المجموع الفرعي")} value={o.subtotal} />
           {o.discount > 0 && <Row label={t("Discount", "الخصم")} value={-o.discount} />}
           {o.shippingCost > 0 && <Row label={t("Delivery", "التوصيل")} value={o.shippingCost} />}
+          {(o.taxTotal ?? 0) > 0 && (
+            <Row
+              label={o.pricesIncludeTax === false ? t("VAT", "ضريبة القيمة المضافة") : t("Includes VAT", "شامل ضريبة القيمة المضافة")}
+              value={o.taxTotal ?? 0}
+            />
+          )}
           <div className="flex justify-between font-semibold text-dark text-base pt-1">
             <dt>{t("Total", "الإجمالي")}</dt>
             <dd className="tabular-nums">{o.total.toFixed(3)} {t("OMR", "ر.ع.")}</dd>

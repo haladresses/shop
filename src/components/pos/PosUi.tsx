@@ -1,6 +1,9 @@
 "use client";
 import { useEffect } from "react";
 import { LuX } from "react-icons/lu";
+import { SaleDocument } from "@/components/print/SaleDocument";
+import type { InvoiceData, StoreInfo } from "@/lib/invoice";
+import type { TaxSettings } from "@/lib/taxCalc";
 
 export const omr = (n: number) => `${n.toFixed(3)} OMR`;
 
@@ -50,7 +53,7 @@ export function PosModal({
   if (!open) return null;
   const width = { sm: "max-w-sm", md: "max-w-lg", lg: "max-w-2xl", xl: "max-w-4xl" }[size];
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] pos-fade-in" onClick={onClose} />
       <div
         role="dialog"
@@ -70,79 +73,26 @@ export function PosModal({
   );
 }
 
-export type ReceiptData = {
-  orderNumber: string;
-  items: { name: string; nameAr?: string; variant: string; quantity: number; unitPrice: number; total: number }[];
-  subtotal: number;
-  discount: number;
-  total: number;
-  payments: { method: string; amount: number }[];
-  amountTendered: number | null;
-  changeGiven: number | null;
-  cashierName: string;
-  customerName?: string;
-  createdAt: string;
-  title?: string;
-};
-
-export type StoreInfo = { store_name_en?: string; store_name_ar?: string; store_address?: string; store_phone?: string };
+export type { StoreInfo } from "@/lib/invoice";
+/** A printed bill (sale or credit note) — see lib/invoice.ts. */
+export type ReceiptData = InvoiceData;
 
 const METHOD_LABEL: Record<string, string> = { CASH: "Cash", CARD: "Card", BANK_TRANSFER: "Bank transfer", STORE_CREDIT: "Store credit" };
 export const methodLabel = (m: string) => METHOD_LABEL[m] ?? m;
 
-/** 80mm thermal-printer friendly receipt; it's the only thing that prints. */
-export function Receipt({ data, store }: { data: ReceiptData; store: StoreInfo }) {
-  return (
-    <div className="pos-receipt w-full max-w-[340px] bg-white rounded-2xl shadow-sm border border-slate-200 p-5 font-mono text-[13px] text-slate-800">
-      <div className="text-center mb-3">
-        <p className="font-bold text-base">{store.store_name_en || "Hala Dresses"}</p>
-        {store.store_name_ar && <p className="text-sm" dir="rtl">{store.store_name_ar}</p>}
-        {store.store_address && <p className="text-slate-500 text-xs">{store.store_address}</p>}
-        {store.store_phone && <p className="text-slate-500 text-xs">{store.store_phone}</p>}
-        {data.title && <p className="mt-2 font-semibold uppercase tracking-wider">{data.title}</p>}
-      </div>
-      <div className="border-t border-dashed border-slate-300 my-2" />
-      <p>No: {data.orderNumber}</p>
-      <p>Date: {new Date(data.createdAt).toLocaleString("en-GB")}</p>
-      <p>Cashier: {data.cashierName}</p>
-      {data.customerName && <p>Customer: {data.customerName}</p>}
-      <div className="border-t border-dashed border-slate-300 my-2" />
-      {data.items.map((it, i) => (
-        <div key={i} className="mb-1.5">
-          <div className="flex justify-between gap-2">
-            <span className="min-w-0 break-words">{it.name}</span>
-            <span className="shrink-0">{it.total.toFixed(3)}</span>
-          </div>
-          <div className="text-[11px] text-slate-500">
-            {[it.variant, `${it.quantity} × ${it.unitPrice.toFixed(3)}`].filter(Boolean).join(" · ")}
-          </div>
-        </div>
-      ))}
-      <div className="border-t border-dashed border-slate-300 my-2" />
-      <Row label="Subtotal" value={data.subtotal} />
-      {data.discount > 0 && <Row label="Discount" value={-data.discount} />}
-      <div className="flex justify-between font-bold text-base mt-1">
-        <span>TOTAL</span>
-        <span>{omr(data.total)}</span>
-      </div>
-      <div className="border-t border-dashed border-slate-300 my-2" />
-      {data.payments.map((p, i) => (
-        <Row key={i} label={methodLabel(p.method)} value={p.amount} />
-      ))}
-      {data.amountTendered != null && <Row label="Cash tendered" value={data.amountTendered} />}
-      {data.changeGiven != null && data.changeGiven > 0 && <Row label="Change" value={data.changeGiven} bold />}
-      <div className="border-t border-dashed border-slate-300 my-2" />
-      <p className="text-center text-xs text-slate-500">Thank you for shopping with us!</p>
-      <p className="text-center text-xs text-slate-500" dir="rtl">شكراً لتسوقكم معنا</p>
-    </div>
-  );
-}
+type TaxInfo = Pick<TaxSettings, "enabled" | "vatNumber" | "legalNameEn" | "legalNameAr" | "crNumber" | "invoiceFooterEn" | "invoiceFooterAr">;
 
-function Row({ label, value, bold }: { label: string; value: number; bold?: boolean }) {
+/**
+ * On-screen preview of the 80 mm bilingual (English + Arabic) receipt. Print
+ * it by rendering the same <SaleDocument> inside a <PrintArea> and calling
+ * printArea(id, { page: "receipt" }).
+ */
+export function Receipt({ data, store, tax }: { data: InvoiceData; store: StoreInfo; tax: TaxInfo }) {
   return (
-    <div className={`flex justify-between ${bold ? "font-semibold" : ""}`}>
-      <span>{label}</span>
-      <span>{value.toFixed(3)}</span>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 overflow-x-auto">
+      <div className="mx-auto w-fit">
+        <SaleDocument data={data} store={store} tax={tax} layout="thermal" />
+      </div>
     </div>
   );
 }
