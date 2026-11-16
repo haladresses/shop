@@ -49,8 +49,9 @@ const LIST_SELECT = {
 
 /**
  * Purchase orders.
- *   ?status=DRAFT|ORDERED|PARTIALLY_RECEIVED|RECEIVED|CANCELLED|open|all
- *   ?supplierId=  ?payment=unpaid|partial|paid|overdue  ?search=  ?from=&to= (order date)
+ *   ?status=DRAFT|ORDERED|PARTIALLY_RECEIVED|RECEIVED|CANCELLED|open|received|all
+ *     (open = awaiting delivery; received = has goods received — part or all)
+ *   ?supplierId=  ?payment=unpaid|partial|paid|overdue|open  ?search=  ?from=&to= (order date)
  *   ?page=&pageSize=
  */
 export async function GET(req: NextRequest) {
@@ -90,7 +91,9 @@ export async function GET(req: NextRequest) {
     const statusWhere: Prisma.PurchaseOrderWhereInput =
       status === "open"
         ? { status: { in: ["ORDERED", "PARTIALLY_RECEIVED"] } }
-        : STATUSES.includes(status as PurchaseOrderStatus)
+        : status === "received"
+          ? { status: { in: ["PARTIALLY_RECEIVED", "RECEIVED"] } }
+          : STATUSES.includes(status as PurchaseOrderStatus)
           ? { status: status as PurchaseOrderStatus }
           : {};
     const paymentWhere: Prisma.PurchaseOrderWhereInput = payment
@@ -107,8 +110,22 @@ export async function GET(req: NextRequest) {
       // Payment state is derived (total − returns − paid), so filter in memory.
       const all = (await prisma.purchaseOrder.findMany({ where, orderBy, select: LIST_SELECT })).map(serializePurchaseOrderRow);
       const filtered = all.filter((r) =>
-        payment === "unpaid" ? r.paymentStatus === "UNPAID" : payment === "partial" ? r.paymentStatus === "PARTIAL" : payment === "paid" ? r.paymentStatus === "PAID" : payment === "overdue" ? r.overdue : true,
+        payment === "unpaid"
+          ? r.paymentStatus === "UNPAID"
+          : payment === "partial"
+            ? r.paymentStatus === "PARTIAL"
+            : payment === "paid"
+              ? r.paymentStatus === "PAID"
+              : payment === "overdue"
+                ? r.overdue
+                : payment === "open"
+                  ? r.outstanding > 0.0005
+                  : true,
       );
+      // Payables read best soonest-due first.
+      if (payment === "open" || payment === "overdue") {
+        filtered.sort((a, b) => (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999") || (a.orderDate ?? "").localeCompare(b.orderDate ?? ""));
+      }
       total = filtered.length;
       rows = filtered.slice((page - 1) * pageSize, page * pageSize);
     } else {
