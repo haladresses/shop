@@ -14,13 +14,15 @@ export async function GET(req: NextRequest) {
     if (["payments", "security"].includes(group) && !canManageSettings) {
       return forbidden();
     }
+    // Personal preferences (e.g. each person's Dashboard shortcuts) have their own API.
+    if (group === "user-prefs") return forbidden();
 
     const settings = await prisma.setting.findMany({
       where: group
         ? { group }
         : canManageSettings
-          ? {}
-          : { NOT: { key: { in: [ROLE_PERMISSIONS_SETTING_KEY, THAWANI_SETTINGS_KEY] } } },
+          ? { group: { not: "user-prefs" } }
+          : { NOT: { key: { in: [ROLE_PERMISSIONS_SETTING_KEY, THAWANI_SETTINGS_KEY] } }, group: { not: "user-prefs" } },
       orderBy: [{ group: "asc" }, { key: "asc" }],
     });
 

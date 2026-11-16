@@ -33,8 +33,10 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
+    // New shoppers get the built-in Customer role straight away.
+    const customerRole = await prisma.appRole.findUnique({ where: { key: "customer" }, select: { id: true } });
     const user = await prisma.user.create({
-      data: { email, passwordHash, nameEn, nameAr, phone },
+      data: { email, passwordHash, nameEn, nameAr, phone, roleId: customerRole?.id ?? null },
     });
 
     const token = await createSession(user.id);
