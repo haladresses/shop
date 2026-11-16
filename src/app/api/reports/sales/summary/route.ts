@@ -15,6 +15,7 @@ import {
   parseFilters,
   refundWhere,
   salesCte,
+  sellerBreakdown,
   type SaleAggRow,
 } from "../shared";
 
@@ -44,8 +45,7 @@ export async function GET(req: NextRequest) {
       refundsByChannel,
       payments,
       refundsByMethod,
-      bySeller,
-      refundsBySeller,
+      sellers,
       byHour,
       topProducts,
       promotions,
@@ -68,13 +68,7 @@ export async function GET(req: NextRequest) {
         SELECT r.method, COUNT(*)::int AS count, COALESCE(SUM(r.amount), 0) AS amount, COALESCE(SUM(r."taxAmount"), 0) AS vat
         FROM refunds r JOIN orders o ON o.id = r."orderId" WHERE ${rwAnyMethod} ${f.method ? Prisma.sql`AND r.method = ${f.method}` : Prisma.empty}
         GROUP BY 1 ORDER BY amount DESC`,
-      prisma.$queryRaw<(SaleAggRow & { source: string; cashierId: string | null; first: Date; last: Date })[]>`
-        ${cte}
-        SELECT so.source, so."cashierId", ${SALE_AGGREGATES}, MIN(so."createdAt") AS first, MAX(so."createdAt") AS last
-        FROM so GROUP BY so.source, so."cashierId"`,
-      prisma.$queryRaw<(RefundAgg & { createdBy: string | null })[]>`
-        SELECT r."createdBy", COUNT(*)::int AS count, COALESCE(SUM(r.amount), 0) AS amount, COALESCE(SUM(r."taxAmount"), 0) AS vat
-        FROM refunds r JOIN orders o ON o.id = r."orderId" WHERE ${rw} GROUP BY 1`,
+      sellerBreakdown(f),
       prisma.$queryRaw<{ hour: number; orders: number; items: number; gross: unknown; vat: unknown }[]>`
         ${cte}
         SELECT so.hour, COUNT(*)::int AS orders, COALESCE(SUM(so.items), 0)::int AS items, COALESCE(SUM(so.total), 0) AS gross, COALESCE(SUM(so."taxTotal"), 0) AS vat
@@ -119,54 +113,6 @@ export async function GET(req: NextRequest) {
     const cashSales = byMethod.find((m) => m.method === "CASH")?.amount ?? 0;
     const cashRefunds = byMethod.find((m) => m.method === "CASH")?.refunds ?? 0;
 
-    // ── Salespeople ──
-    const sellerIds = new Set<string>();
-    for (const s of bySeller) if (s.cashierId) sellerIds.add(s.cashierId);
-    for (const r of refundsBySeller) if (r.createdBy) sellerIds.add(r.createdBy);
-    const users = sellerIds.size
-      ? await prisma.user.findMany({ where: { id: { in: Array.from(sellerIds) } }, select: { id: true, nameEn: true, nameAr: true, email: true } })
-      : [];
-    const nameOf = new Map(users.map((u) => [u.id, u.nameEn || u.nameAr || u.email]));
-    const sellerKey = (source: string, cashierId: string | null) => (source === "ONLINE" ? ONLINE_SELLER : cashierId ?? UNKNOWN_SELLER);
-    const sellerName = (key: string) => (key === ONLINE_SELLER ? "Online store" : key === UNKNOWN_SELLER ? "Unassigned" : nameOf.get(key) ?? "Unknown user");
-    const sellerMap = new Map<string, { sale?: (typeof bySeller)[number]; refund?: (typeof refundsBySeller)[number] }>();
-    for (const s of bySeller) {
-      const k = sellerKey(s.source, s.cashierId);
-      const prev = sellerMap.get(k);
-      // Several rows can fold into one key (e.g. online orders with a cashier) — merge.
-      if (prev?.sale) {
-        const a = prev.sale;
-        prev.sale = {
-          ...a,
-          orders: a.orders + s.orders,
-          items: a.items + s.items,
-          subtotal: num(a.subtotal) + num(s.subtotal),
-          offers: num(a.offers) + num(s.offers),
-          discounts: num(a.discounts) + num(s.discounts),
-          shipping: num(a.shipping) + num(s.shipping),
-          vat: num(a.vat) + num(s.vat),
-          gross: num(a.gross) + num(s.gross),
-          first: a.first < s.first ? a.first : s.first,
-          last: a.last > s.last ? a.last : s.last,
-        };
-      } else sellerMap.set(k, { ...prev, sale: s });
-    }
-    for (const r of refundsBySeller) {
-      const k = r.createdBy ?? UNKNOWN_SELLER;
-      sellerMap.set(k, { ...sellerMap.get(k), refund: r });
-    }
-    const grossTotal = num(totals?.gross);
-    const sellers = Array.from(sellerMap.entries())
-      .map(([key, v]) => ({
-        sellerId: key,
-        name: sellerName(key),
-        ...figures(v.sale, v.refund ?? {}),
-        share: grossTotal > 0 ? round3((num(v.sale?.gross) / grossTotal) * 100) : 0,
-        firstSale: v.sale?.first ? new Date(v.sale.first).toISOString() : null,
-        lastSale: v.sale?.last ? new Date(v.sale.last).toISOString() : null,
-      }))
-      .sort((a, b) => b.gross - a.gross || b.refunds - a.refunds);
-
     // ── POS register shifts that overlap the period ──
     const shiftRows =
       f.channel === "ONLINE"
@@ -199,7 +145,7 @@ export async function GET(req: NextRequest) {
       byMethod,
       unrecorded: Math.abs(unrecorded) > 0.0005 ? unrecorded : 0,
       cash: { sales: round3(cashSales), refunds: round3(cashRefunds), net: round3(cashSales - cashRefunds) },
-      bySeller: sellers,
+      bySeller: sellers.rows,
       byHour: byHour.map((h) => ({ hour: h.hour, orders: h.orders, items: h.items, gross: round3(num(h.gross)), vat: round3(num(h.vat)) })),
       topProducts: topProducts.map((p) => ({
         productId: p.productId,

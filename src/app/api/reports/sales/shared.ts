@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { Prisma } from "@prisma/client";
+import prisma from "@/lib/db";
 import { BUSINESS_TZ, addDays, businessDayEnd, businessDayStart, daysBetween, isDateKey, round3, toBusinessDateKey } from "@/lib/finance";
 
 // Shared filters and SQL building blocks for the sales reports.
@@ -11,6 +12,10 @@ import { BUSINESS_TZ, addDays, businessDayEnd, businessDayStart, daysBetween, is
 //    separately: net = gross − refunds.
 //  • Gross = order total as charged (incl. VAT and delivery); VAT-exclusive
 //    net = net − (VAT collected − VAT reversed by refunds).
+//  • Salesperson: POS sales belong to their cashier, online orders to
+//    "Online store". Refunds of POS sales belong to whoever processed them
+//    (Refund.createdBy); refunds of online orders to "Online store" — the
+//    same rule in the filters and in the breakdown, so rows add up.
 
 export const ONLINE_SELLER = "__online";
 export const UNKNOWN_SELLER = "__unknown";
@@ -81,8 +86,8 @@ export function refundWhere(f: ReportFilters, opts: { ignoreMethod?: boolean } =
   const parts: Prisma.Sql[] = [Prisma.sql`r."createdAt" BETWEEN ${f.from} AND ${f.to}`];
   if (f.channel !== "ALL") parts.push(Prisma.sql`o.source::text = ${f.channel}`);
   if (f.seller === ONLINE_SELLER) parts.push(Prisma.sql`o.source::text = 'ONLINE'`);
-  else if (f.seller === UNKNOWN_SELLER) parts.push(Prisma.sql`r."createdBy" IS NULL`);
-  else if (f.seller) parts.push(Prisma.sql`r."createdBy" = ${f.seller}`);
+  else if (f.seller === UNKNOWN_SELLER) parts.push(Prisma.sql`(o.source::text = 'POS' AND r."createdBy" IS NULL)`);
+  else if (f.seller) parts.push(Prisma.sql`(o.source::text = 'POS' AND r."createdBy" = ${f.seller})`);
   if (f.method && !opts.ignoreMethod) parts.push(Prisma.sql`r.method = ${f.method}`);
   if (f.shiftId) {
     parts.push(Prisma.sql`EXISTS (
@@ -177,4 +182,106 @@ export function figures(s: Partial<SaleAggRow> | undefined, refunds: { count?: n
     netExVat: round3(net - (vat - refundVat)),
     avgTicket: orders > 0 ? round3(gross / orders) : 0,
   };
+}
+
+// ───────────────────────── salespeople ─────────────────────────
+
+export type SellerRow = SalesFigures & {
+  sellerId: string;
+  name: string;
+  /** % of gross sales in the period. */
+  share: number;
+  firstSale: string | null;
+  lastSale: string | null;
+};
+
+type RefundAggRow = { count: number; amount: unknown; vat: unknown };
+
+/**
+ * Sales per salesperson: POS sales by cashier, online orders as "Online
+ * store". POS refunds go to whoever processed them (Refund.createdBy),
+ * online-order refunds to "Online store" — every refund counted exactly once.
+ */
+export async function sellerBreakdown(f: ReportFilters): Promise<{ rows: SellerRow[]; gross: number }> {
+  const cte = salesCte(f);
+  const [sales, refunds] = await Promise.all([
+    prisma.$queryRaw<(SaleAggRow & { seller: string; first: Date; last: Date })[]>`
+      ${cte}
+      SELECT CASE WHEN so.source = 'ONLINE' THEN ${ONLINE_SELLER} ELSE COALESCE(so."cashierId", ${UNKNOWN_SELLER}) END AS seller,
+             ${SALE_AGGREGATES}, MIN(so."createdAt") AS first, MAX(so."createdAt") AS last
+      FROM so GROUP BY 1`,
+    prisma.$queryRaw<(RefundAggRow & { seller: string })[]>`
+      SELECT CASE WHEN o.source::text = 'ONLINE' THEN ${ONLINE_SELLER} ELSE COALESCE(r."createdBy", ${UNKNOWN_SELLER}) END AS seller,
+             COUNT(*)::int AS count,
+             COALESCE(SUM(r.amount), 0) AS amount, COALESCE(SUM(r."taxAmount"), 0) AS vat
+      FROM refunds r JOIN orders o ON o.id = r."orderId" WHERE ${refundWhere(f)} GROUP BY 1`,
+  ]);
+  const ids = new Set<string>([...sales.map((s) => s.seller), ...refunds.map((r) => r.seller)]);
+  ids.delete(ONLINE_SELLER);
+  ids.delete(UNKNOWN_SELLER);
+  const users = ids.size
+    ? await prisma.user.findMany({ where: { id: { in: Array.from(ids) } }, select: { id: true, nameEn: true, nameAr: true, email: true } })
+    : [];
+  const nameOf = new Map(users.map((u) => [u.id, u.nameEn || u.nameAr || u.email]));
+  const label = (k: string) => (k === ONLINE_SELLER ? "Online store" : k === UNKNOWN_SELLER ? "Unassigned" : nameOf.get(k) ?? "Unknown user");
+
+  const gross = sales.reduce((t, s) => t + num(s.gross), 0);
+  const keys = new Set<string>([...sales.map((s) => s.seller), ...refunds.map((r) => r.seller)]);
+  const rows: SellerRow[] = Array.from(keys).map((k) => {
+    const s = sales.find((x) => x.seller === k);
+    const r = refunds.find((x) => x.seller === k);
+    return {
+      sellerId: k,
+      name: label(k),
+      ...figures(s, r ?? {}),
+      share: gross > 0 ? round3((num(s?.gross) / gross) * 100) : 0,
+      firstSale: s?.first ? new Date(s.first).toISOString() : null,
+      lastSale: s?.last ? new Date(s.last).toISOString() : null,
+    };
+  });
+  rows.sort((a, b) => b.gross - a.gross || b.refunds - a.refunds);
+  return { rows, gross: round3(gross) };
+}
+
+// ───────────────────────── categories ─────────────────────────
+
+export type CategoryNode = { id: string; nameEn: string; nameAr: string; parentId: string | null; sortOrder: number };
+
+export async function loadCategories(): Promise<CategoryNode[]> {
+  return prisma.category.findMany({
+    select: { id: true, nameEn: true, nameAr: true, parentId: true, sortOrder: true },
+    orderBy: [{ sortOrder: "asc" }, { nameEn: "asc" }],
+  });
+}
+
+/** A category and all of its sub-categories (any depth). */
+export function withDescendants(rootId: string, cats: CategoryNode[]): string[] {
+  const children = new Map<string, string[]>();
+  for (const c of cats) if (c.parentId) children.set(c.parentId, [...(children.get(c.parentId) ?? []), c.id]);
+  const out: string[] = [];
+  const stack = [rootId];
+  const seen = new Set<string>();
+  while (stack.length) {
+    const id = stack.pop()!;
+    if (seen.has(id)) continue;
+    seen.add(id);
+    out.push(id);
+    stack.push(...(children.get(id) ?? []));
+  }
+  return out;
+}
+
+/** Refund lines in the period (from Refund.items), as a reusable SQL source `rl`. */
+export function refundLinesCte(f: ReportFilters): Prisma.Sql {
+  return Prisma.sql`rl AS (
+    SELECT it->>'productId' AS "productId", NULLIF(it->>'variantId', '') AS "variantId",
+           COALESCE((it->>'quantity')::numeric, 0) AS qty,
+           COALESCE((it->>'amount')::numeric, COALESCE((it->>'unitPrice')::numeric, 0) * COALESCE((it->>'quantity')::numeric, 0)) AS amount,
+           COALESCE((it->>'tax')::numeric, 0) AS tax,
+           COALESCE((it->>'quantity')::numeric, 0) * COALESCE((it->>'unitCost')::numeric, 0) AS cost
+    FROM refunds r
+    JOIN orders o ON o.id = r."orderId"
+    CROSS JOIN LATERAL jsonb_array_elements(CASE WHEN jsonb_typeof(r.items) = 'array' THEN r.items ELSE '[]'::jsonb END) AS it
+    WHERE ${refundWhere(f)}
+  )`;
 }
