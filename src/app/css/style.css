@@ -45,6 +45,110 @@
   }
 }
 
+/* ───────── Scrollbars (whole site: storefront, admin, POS, seller) ─────────
+   A slim rounded "slider" on an invisible track. The thumb is painted inside
+   a transparent border, so it looks ~4px wide but has a 10px grab area, and
+   it widens and darkens when you grab it. Colours come from CSS variables, so any area can re-theme its own
+   scrollbars (dark sidebars do, below). Chrome / Edge / Safari use
+   ::-webkit-scrollbar; Firefox gets the standard thin + colour equivalent
+   (Chrome ≥121 would let those standard properties override the custom
+   look, so they're only applied where ::-webkit-scrollbar isn't supported). */
+/* The page's own scrollbar uses the brand colour; everything inside the
+   page — panels, tables, modals, drawers — goes back to neutral slate.
+   (Chrome paints the page scrollbar from <body>, Firefox from <html>, so
+   both carry the brand colours and the reset starts at body's children.) */
+:root,
+body {
+  --sb-size: 10px;
+  --sb-thumb: rgb(140 59 73 / 0.55);
+  --sb-thumb-hover: rgb(140 59 73 / 0.75);
+  --sb-thumb-active: rgb(140 59 73 / 0.9);
+}
+body > * {
+  --sb-thumb: rgb(100 116 139 / 0.32);
+  --sb-thumb-hover: rgb(100 116 139 / 0.5);
+  --sb-thumb-active: rgb(71 85 105 / 0.75);
+}
+
+*::-webkit-scrollbar {
+  width: var(--sb-size);
+  height: var(--sb-size);
+  background: transparent;
+}
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track-piece,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--sb-thumb);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  min-height: 36px;
+  min-width: 36px;
+}
+*:hover::-webkit-scrollbar-thumb {
+  background-color: var(--sb-thumb-hover);
+}
+*::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:active {
+  background-color: var(--sb-thumb-active);
+  border-width: 2px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-thumb) transparent;
+  }
+  *:hover {
+    scrollbar-color: var(--sb-thumb-hover) transparent;
+  }
+}
+
+/* Dark surfaces (admin & seller sidebars, or any element with
+   .scrollbar-on-dark): a faint light thumb that firms up on hover. (It is
+   never fully hidden: Chrome doesn't reliably repaint a scrollbar when only
+   its container's :hover changes, so hover can only strengthen it.) */
+.admin-sidebar,
+.seller-sidebar,
+.scrollbar-on-dark {
+  --sb-thumb: rgb(255 255 255 / 0.16);
+  --sb-thumb-hover: rgb(255 255 255 / 0.28);
+  --sb-thumb-active: rgb(255 255 255 / 0.45);
+}
+
+/* Opt-in variants. */
+.scrollbar-thin { --sb-size: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { border-width: 1px; }
+/* Reserve the scrollbar's space so content doesn't shift when it appears. */
+.scrollbar-stable { scrollbar-gutter: stable; }
+
+/* Storefront: keep the page from jumping sideways when a modal / drawer
+   locks scrolling (the scrollbar's space stays reserved). */
+html:has(> body.has-mobile-nav) {
+  scrollbar-gutter: stable;
+}
+
+/* Scrolling inside a modal or drawer never drags the page behind it. */
+.admin-modal-body,
+[role="dialog"] .overflow-y-auto,
+[aria-modal="true"] .overflow-y-auto {
+  overscroll-behavior: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
 /* third-party libraries CSS */
 
 /* clears the ‘X’ from Internet Explorer */
