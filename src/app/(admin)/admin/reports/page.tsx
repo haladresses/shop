@@ -1,214 +1,201 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
-import { LuCalendarRange, LuChartColumn, LuMonitor, LuScanBarcode, LuWallet } from "react-icons/lu";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { toBusinessDateKey } from "@/lib/finance";
+import type { StoreInfo } from "@/lib/invoice";
+import { DEFAULT_TAX_SETTINGS, type TaxSettings } from "@/lib/taxCalc";
+import Filters, { PRESETS, TABS, filterLabel, presetRange, rangeLabel, type FilterState, type Meta, type Preset, type Tab } from "@/components/admin/reports/Filters";
+import { ReportContext } from "@/components/admin/reports/shared";
+import SummaryTab from "@/components/admin/reports/SummaryTab";
+import DaysTab from "@/components/admin/reports/DaysTab";
+import SellersTab from "@/components/admin/reports/SellersTab";
+import ReceiptsTab from "@/components/admin/reports/ReceiptsTab";
+import PaymentsTab from "@/components/admin/reports/PaymentsTab";
+import ProductsTab from "@/components/admin/reports/ProductsTab";
+import CategoriesTab from "@/components/admin/reports/CategoriesTab";
 
-type SourceStat = { revenue: number; orders: number };
+// Sales Report — accountant-style tables only (no charts): daily summary,
+// by day, salesperson, receipt, payment method, product and category. Every
+// filter and the open tab live in the URL so a report can be bookmarked or
+// shared.
 
-type DayStat = {
-  date: string;
-  onlineRevenue: number;
-  posRevenue: number;
-  onlineOrders: number;
-  posOrders: number;
-};
-
-type Report = {
-  range: { from: string; to: string };
-  totals: { revenue: number; orders: number; avgOrderValue: number };
-  bySource: { ONLINE: SourceStat; POS: SourceStat };
-  byDay: DayStat[];
-};
-
-const omr = (n: number) => `${n.toFixed(3)} OMR`;
-// Local calendar date, not toISOString() (which is UTC and would shift the
-// day depending on the viewer's timezone offset — e.g. late-night Muscat
-// time rolling into the wrong UTC day).
-const toISODate = (d: Date) => {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-};
-
-type Preset = "today" | "7d" | "30d" | "month" | "custom";
-
-function presetRange(preset: Preset): { from: string; to: string } {
-  const to = new Date();
-  const from = new Date();
-  if (preset === "7d") from.setDate(from.getDate() - 6);
-  else if (preset === "30d") from.setDate(from.getDate() - 29);
-  else if (preset === "month") from.setDate(1);
-  return { from: toISODate(from), to: toISODate(to) };
-}
-
-const StatCard = ({
-  icon: Icon, accent, ring, value, label,
-}: { icon: React.ElementType; accent: string; ring: string; value: string; label: string }) => (
-  <div className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-    <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${accent} ring-4 ${ring} flex items-center justify-center text-white flex-shrink-0`}>
-      <Icon size={22} />
-    </div>
-    <div className="min-w-0">
-      <p className="text-lg sm:text-xl font-bold text-slate-800 leading-tight truncate">{value}</p>
-      <p className="text-xs sm:text-sm text-slate-500 truncate">{label}</p>
-    </div>
-  </div>
-);
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+// Params that belong to one tab and are dropped when switching tabs.
+const TAB_PARAMS = ["q", "page", "scope", "cat", "variants", "top"];
 
 export default function SalesReportPage() {
-  const [preset, setPreset] = useState<Preset>("30d");
-  const [range, setRange] = useState(() => presetRange("30d"));
-  const [report, setReport] = useState<Report | null>(null);
-  const [loading, setLoading] = useState(true);
+  return (
+    <Suspense fallback={<p className="text-sm text-slate-500">Loading…</p>}>
+      <SalesReport />
+    </Suspense>
+  );
+}
 
-  const load = useCallback(async (r: { from: string; to: string }) => {
-    setLoading(true);
-    const res = await fetch(`/api/reports/sales?from=${r.from}&to=${r.to}`, { cache: "no-store" });
-    const data = await res.json();
-    if (data.success) setReport(data.data);
-    setLoading(false);
-  }, []);
+function SalesReport() {
+  const sp = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  useEffect(() => { load(range); }, [range, load]);
-
-  const applyPreset = (p: Preset) => {
-    setPreset(p);
-    if (p !== "custom") setRange(presetRange(p));
+  const tab = (TABS.some((t) => t.id === sp.get("tab")) ? sp.get("tab") : "summary") as Tab;
+  const preset = (PRESETS.some((p) => p.id === sp.get("preset")) ? sp.get("preset") : "today") as Preset;
+  const today = toBusinessDateKey(new Date());
+  const range =
+    preset === "custom"
+      ? {
+          from: DATE_RE.test(sp.get("from") || "") ? sp.get("from")! : today,
+          to: DATE_RE.test(sp.get("to") || "") ? sp.get("to")! : today,
+        }
+      : presetRange(preset, today);
+  const filters: FilterState = {
+    preset,
+    from: range.from,
+    to: range.to < range.from ? range.from : range.to,
+    channel: sp.get("channel") || "",
+    seller: sp.get("seller") || "",
+    method: sp.get("method") || "",
+    shift: sp.get("shift") || "",
   };
 
-  const online = report?.bySource.ONLINE ?? { revenue: 0, orders: 0 };
-  const pos = report?.bySource.POS ?? { revenue: 0, orders: 0 };
-  const totalRevenue = report?.totals.revenue ?? 0;
-  const onlineShare = totalRevenue > 0 ? (online.revenue / totalRevenue) * 100 : 0;
-  const posShare = totalRevenue > 0 ? (pos.revenue / totalRevenue) * 100 : 0;
+  const setParams = useCallback(
+    (patch: Record<string, string | undefined>) => {
+      const next = new URLSearchParams(sp.toString());
+      for (const [k, v] of Object.entries(patch)) {
+        if (v) next.set(k, v);
+        else next.delete(k);
+      }
+      // Only custom ranges need explicit dates in the URL.
+      if (next.get("preset") !== "custom") {
+        next.delete("from");
+        next.delete("to");
+      }
+      const qs = next.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [sp, router, pathname],
+  );
+
+  const changeFilters = (patch: Partial<FilterState>) => {
+    const p: Record<string, string | undefined> = { page: undefined };
+    if (patch.preset && patch.preset !== "custom") {
+      // A named period: its dates are worked out from today on every visit.
+      p.preset = patch.preset === "today" ? undefined : patch.preset;
+    } else if (patch.preset === "custom" || patch.from !== undefined || patch.to !== undefined) {
+      p.preset = "custom";
+      p.from = patch.from ?? filters.from;
+      p.to = patch.to ?? filters.to;
+      if (p.from && p.to && p.to < p.from) p.to = p.from;
+    }
+    for (const k of ["channel", "seller", "method", "shift"] as const) if (patch[k] !== undefined) p[k] = patch[k] || undefined;
+    setParams(p);
+  };
+
+  const switchTab = (t: Tab, extra: Record<string, string | undefined> = {}) => {
+    const p: Record<string, string | undefined> = { tab: t === "summary" ? undefined : t };
+    for (const k of TAB_PARAMS) p[k] = undefined;
+    setParams({ ...p, ...extra });
+  };
+
+  // Query string the report APIs share.
+  const apiQuery = useMemo(() => {
+    const q = new URLSearchParams({ from: filters.from, to: filters.to });
+    if (filters.channel) q.set("channel", filters.channel);
+    if (filters.seller) q.set("seller", filters.seller);
+    if (filters.method) q.set("method", filters.method);
+    if (filters.shift) q.set("shift", filters.shift);
+    return q.toString();
+  }, [filters.from, filters.to, filters.channel, filters.seller, filters.method, filters.shift]);
+
+  const [meta, setMeta] = useState<Meta | null>(null);
+  const [store, setStore] = useState<StoreInfo>({});
+  const [tax, setTax] = useState<TaxSettings>(DEFAULT_TAX_SETTINGS);
+  useEffect(() => {
+    fetch("/api/settings?group=general").then((r) => r.json()).then((d) => d.success && setStore(d.data)).catch(() => {});
+    fetch("/api/tax/settings").then((r) => r.json()).then((d) => d.success && setTax(d.data)).catch(() => {});
+  }, []);
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch(`/api/reports/sales/meta?from=${filters.from}&to=${filters.to}`, { cache: "no-store", signal: ctrl.signal })
+      .then((r) => r.json())
+      .then((d) => d.success && setMeta(d.data))
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, [filters.from, filters.to]);
+
+  const ctx = useMemo(
+    () => ({
+      store,
+      tax,
+      rangeLabel: rangeLabel(filters.from, filters.to),
+      filterLabel: filterLabel(filters, meta),
+      fileStem: `sales-${filters.from === filters.to ? filters.from : `${filters.from}_${filters.to}`}`,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [store, tax, filters.from, filters.to, filters.channel, filters.seller, filters.method, filters.shift, meta],
+  );
+
+  const onTabChange = useCallback((patch: Record<string, string | undefined>) => setParams(patch), [setParams]);
 
   return (
-    <div className="space-y-5">
-      {/* Date range */}
-      <div className="rounded-2xl border border-slate-200/70 bg-white p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {([
-            ["today", "Today"], ["7d", "7 days"], ["30d", "30 days"], ["month", "This month"],
-          ] as [Preset, string][]).map(([p, label]) => (
+    <ReportContext value={ctx}>
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-800">
+              Sales Report <span className="text-base font-normal text-slate-400" dir="rtl">تقرير المبيعات</span>
+            </h1>
+            <p className="text-sm text-slate-500">
+              {ctx.rangeLabel}
+              {ctx.filterLabel && ` · ${ctx.filterLabel}`}
+            </p>
+          </div>
+          <p className="text-xs text-slate-400 max-w-md">
+            A sale counts when paid (or later refunded), on the day it was made; refunds count on the day they were given. Same rules as Finance.
+          </p>
+        </div>
+
+        <Filters f={filters} meta={meta} onChange={changeFilters} />
+
+        <div className="flex gap-1 overflow-x-auto border-b border-slate-200 -mx-1 px-1">
+          {TABS.map((t) => (
             <button
-              key={p}
-              onClick={() => applyPreset(p)}
-              className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
-                preset === p ? "bg-slate-800 border-slate-800 text-white" : "border-slate-200 text-slate-600 hover:border-slate-300"
+              key={t.id}
+              type="button"
+              onClick={() => switchTab(t.id)}
+              className={`shrink-0 px-3.5 py-2 text-sm font-medium border-b-2 -mb-px ${
+                tab === t.id ? "border-slate-800 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
-              {label}
+              {t.label}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 sm:ml-auto">
-          <LuCalendarRange size={16} className="text-slate-400 flex-shrink-0 hidden sm:block" />
-          <input
-            type="date"
-            value={range.from}
-            max={range.to}
-            onChange={(e) => { setPreset("custom"); setRange((r) => ({ ...r, from: e.target.value })); }}
-            className="admin-input !py-1.5 text-sm !w-auto"
+
+        {tab === "summary" && <SummaryTab query={apiQuery} single={filters.from === filters.to} />}
+        {tab === "days" && <DaysTab query={apiQuery} />}
+        {tab === "sellers" && <SellersTab query={apiQuery} onOpenReceipts={(id) => switchTab("receipts", { seller: id })} />}
+        {tab === "receipts" && (
+          <ReceiptsTab
+            query={apiQuery}
+            search={sp.get("q") || ""}
+            page={Math.max(1, parseInt(sp.get("page") || "1") || 1)}
+            scope={sp.get("scope") || ""}
+            onChange={onTabChange}
           />
-          <span className="text-slate-400 text-sm flex-shrink-0">to</span>
-          <input
-            type="date"
-            value={range.to}
-            min={range.from}
-            onChange={(e) => { setPreset("custom"); setRange((r) => ({ ...r, to: e.target.value })); }}
-            className="admin-input !py-1.5 text-sm !w-auto"
+        )}
+        {tab === "payments" && <PaymentsTab query={apiQuery} />}
+        {tab === "products" && (
+          <ProductsTab
+            query={apiQuery}
+            meta={meta}
+            categoryId={sp.get("cat") || ""}
+            variants={sp.get("variants") === "1"}
+            search={sp.get("q") || ""}
+            top={sp.get("top") || ""}
+            onChange={onTabChange}
           />
-        </div>
+        )}
+        {tab === "categories" && <CategoriesTab query={apiQuery} onOpenCategory={(id) => switchTab("products", { cat: id })} />}
       </div>
-
-      {loading ? (
-        <div className="flex justify-center py-16"><div className="spinner" /></div>
-      ) : (
-        <>
-          {/* Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <StatCard icon={LuWallet} accent="from-fuchsia-500 to-pink-500" ring="ring-fuchsia-100" value={omr(totalRevenue)} label="Total Revenue" />
-            <StatCard icon={LuChartColumn} accent="from-indigo-500 to-violet-500" ring="ring-indigo-100" value={String(report?.totals.orders ?? 0)} label="Paid Orders" />
-            <StatCard icon={LuWallet} accent="from-amber-400 to-orange-500" ring="ring-amber-100" value={omr(report?.totals.avgOrderValue ?? 0)} label="Average Order" />
-          </div>
-
-          {/* By channel */}
-          <div className="admin-card p-4 sm:p-5">
-            <p className="text-xs font-semibold text-slate-500 uppercase mb-3">Revenue by channel</p>
-
-            <div className="h-2.5 w-full rounded-full overflow-hidden bg-slate-100 flex mb-4">
-              <div className="h-full bg-sky-500" style={{ width: `${onlineShare}%` }} />
-              <div className="h-full bg-emerald-500" style={{ width: `${posShare}%` }} />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="flex items-center gap-3 rounded-xl border border-slate-100 p-3.5">
-                <div className="w-10 h-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
-                  <LuMonitor size={18} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800">Online</p>
-                  <p className="text-xs text-slate-400">{online.orders} order{online.orders === 1 ? "" : "s"}</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-bold text-slate-800">{omr(online.revenue)}</p>
-                  <p className="text-xs text-slate-400">{onlineShare.toFixed(0)}%</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 rounded-xl border border-slate-100 p-3.5">
-                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                  <LuScanBarcode size={18} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-slate-800">POS</p>
-                  <p className="text-xs text-slate-400">{pos.orders} order{pos.orders === 1 ? "" : "s"}</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-bold text-slate-800">{omr(pos.revenue)}</p>
-                  <p className="text-xs text-slate-400">{posShare.toFixed(0)}%</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Daily breakdown */}
-          <div className="admin-card">
-            <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100">
-              <p className="text-sm font-semibold text-slate-700">Daily breakdown</p>
-            </div>
-            {!report || report.byDay.length === 0 ? (
-              <p className="text-center py-10 text-sm text-slate-400">No paid orders in this range</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="admin-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th className="text-right">Online Revenue</th>
-                      <th className="text-center">Online Orders</th>
-                      <th className="text-right">POS Revenue</th>
-                      <th className="text-center">POS Orders</th>
-                      <th className="text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...report.byDay].reverse().map((d) => (
-                      <tr key={d.date}>
-                        <td className="font-medium text-slate-700 whitespace-nowrap">{d.date}</td>
-                        <td className="text-right whitespace-nowrap">{omr(d.onlineRevenue)}</td>
-                        <td className="text-center text-slate-500">{d.onlineOrders}</td>
-                        <td className="text-right whitespace-nowrap">{omr(d.posRevenue)}</td>
-                        <td className="text-center text-slate-500">{d.posOrders}</td>
-                        <td className="text-right font-medium whitespace-nowrap">{omr(d.onlineRevenue + d.posRevenue)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-    </div>
+    </ReportContext>
   );
 }
