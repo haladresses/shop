@@ -44,7 +44,7 @@ export function assignBlockReason(actor: Actor, role: RoleShape): string | null 
   if (role.type === Role.SUPER_ADMIN) return actor.isSuper ? null : "Only a super admin can give the Super Admin role.";
   if (actor.isSuper) return null;
   if (role.rank >= actor.rank) return "This role is at or above your own level.";
-  if (permissionsBeyond(actor, role.permissions).length) return "This role has permissions you don't have.";
+  if (permissionsBeyond(actor, sanitizePermissions(role.permissions)).length) return "This role has permissions you don't have.";
   return null;
 }
 
@@ -54,7 +54,7 @@ export function manageBlockReason(actor: Actor, role: RoleShape): string | null 
   if (actor.isSuper) return null;
   if (role.id && actor.roleId === role.id) return "You can't edit your own role.";
   if (role.rank >= actor.rank) return "This role is at or above your own level.";
-  if (permissionsBeyond(actor, role.permissions).length) return "This role has permissions you don't have.";
+  if (permissionsBeyond(actor, sanitizePermissions(role.permissions)).length) return "This role has permissions you don't have.";
   return null;
 }
 

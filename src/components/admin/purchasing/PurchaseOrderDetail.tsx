@@ -159,7 +159,6 @@ export default function PurchaseOrderDetail({ id }: { id: string }) {
   const ordered = po.items.reduce((s, i) => s + i.quantity, 0);
   const received = po.items.reduce((s, i) => s + i.receivedQty, 0);
   const returned = po.items.reduce((s, i) => s + i.returnedQty, 0);
-  const pct = ordered ? Math.round((received / ordered) * 100) : 0;
   const canReceive = perms.receive && ["DRAFT", "ORDERED", "PARTIALLY_RECEIVED"].includes(po.status) && received < ordered;
   const canReturn = perms.receive && received - returned > 0 && po.status !== "CANCELLED";
   const canPay = perms.pay && ["ORDERED", "PARTIALLY_RECEIVED", "RECEIVED"].includes(po.status) && po.outstanding > 0.0005;
@@ -243,15 +242,11 @@ export default function PurchaseOrderDetail({ id }: { id: string }) {
       <div className="grid lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 admin-card p-5">
           <Timeline po={po} />
-          <div className="mt-5">
-            <div className="flex justify-between text-sm mb-1.5">
-              <span className="text-slate-600">Received <strong className="text-slate-800">{received}</strong> of {ordered} units{returned > 0 && ` · ${returned} returned`}</span>
-              <span className="text-slate-500 tabular-nums">{pct}%</span>
-            </div>
-            <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-              <div className={`h-full rounded-full transition-all duration-500 ${pct >= 100 ? "bg-emerald-500" : "bg-amber-400"}`} style={{ width: `${Math.min(100, pct)}%` }} />
-            </div>
-          </div>
+          <p className="mt-5 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            Received <strong className="font-semibold text-slate-800 tabular-nums">{received} of {ordered}</strong> units
+            {received < ordered && ["ORDERED", "PARTIALLY_RECEIVED"].includes(po.status) && <>, {ordered - received} still to come</>}
+            {returned > 0 && <>, {returned} returned to the supplier</>}.
+          </p>
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 text-sm">
             <Info label="Expected" value={fmtDate(po.expectedDate)} warn={!!po.expectedDate && po.expectedDate < todayKey() && ["ORDERED", "PARTIALLY_RECEIVED"].includes(po.status)} />
             <Info label="Payment due" value={fmtDate(po.dueDate)} warn={po.overdue} />

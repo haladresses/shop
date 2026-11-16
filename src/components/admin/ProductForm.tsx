@@ -478,8 +478,6 @@ export default function ProductForm({
     router.push("/admin/products");
   };
 
-  const pct = attrDefs.length ? Math.round((answered / attrDefs.length) * 100) : 0;
-
   return (
     <form onSubmit={handleSubmit} className="space-y-5 w-full">
       {error && (
@@ -675,18 +673,15 @@ export default function ProductForm({
         </div>
 
         {attrDefs.length > 0 && !attrLoading && (
-          <div className="mb-5">
-            <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="text-slate-500">{answered} of {attrDefs.length} answered</span>
-              {requiredLeft.length > 0 ? (
-                <span className="text-rose-600 font-medium">{requiredLeft.length} required left</span>
-              ) : (
-                <span className="text-emerald-600 inline-flex items-center gap-1"><LuCircleCheck size={12} /> Required fields done</span>
-              )}
-            </div>
-            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-              <div className="h-full rounded-full bg-indigo-500 transition-[width] duration-300" style={{ width: `${pct}%` }} />
-            </div>
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg bg-slate-50 px-3 py-2 text-sm">
+            <span className="text-slate-600">
+              <strong className="font-semibold text-slate-800 tabular-nums">{answered} of {attrDefs.length}</strong> details filled
+            </span>
+            {requiredLeft.length > 0 ? (
+              <span className="text-rose-600 font-medium">{requiredLeft.length} required still empty</span>
+            ) : (
+              <span className="text-emerald-700 inline-flex items-center gap-1"><LuCircleCheck size={14} /> All required details filled</span>
+            )}
           </div>
         )}
 

@@ -183,7 +183,7 @@ export default function RoleEditor({ id }: { id: string | null }) {
             ["permissions", "Details & permissions"],
             ["people", `People with this role · ${role.userCount}`],
           ] as const).map(([k, label]) => (
-            <button key={k} onClick={() => setTab(k)} className={`shrink-0 pb-2.5 text-sm font-medium border-b-2 -mb-px transition ${tab === k ? "border-indigo-500 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-800"}`}>
+            <button key={k} onClick={() => setTab(k)} className={`shrink-0 pb-2.5 text-sm font-medium border-b-2 -mb-px ${tab === k ? "border-indigo-500 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-800"}`}>
               {label}
             </button>
           ))}
@@ -219,7 +219,7 @@ export default function RoleEditor({ id }: { id: string | null }) {
 
       {/* Save bar */}
       {tab === "permissions" && (canEditPerms || canEditLabels) && dirty && (
-        <div className="fixed bottom-5 inset-x-4 sm:inset-x-auto sm:start-1/2 sm:-translate-x-1/2 rtl:sm:translate-x-1/2 z-40 flex items-center justify-between sm:justify-start gap-3 rounded-2xl bg-slate-900 text-white ps-5 pe-2 py-2 shadow-2xl admin-slide-up">
+        <div className="fixed bottom-5 inset-x-4 sm:inset-x-auto sm:start-1/2 sm:-translate-x-1/2 rtl:sm:translate-x-1/2 z-40 flex items-center justify-between sm:justify-start gap-3 rounded-2xl bg-slate-900 text-white ps-5 pe-2 py-2 shadow-2xl">
           <span className="text-sm">{isNew ? "New role" : "Unsaved changes"} · {isSuperRole ? "All" : form.permissions.size} permissions</span>
           <span className="flex gap-1">
             {!isNew && initial && (
@@ -284,7 +284,7 @@ function Details({
               disabled={!canEditLabels}
               onClick={() => set({ color: c })}
               aria-label={`Colour ${c}`}
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-white transition disabled:cursor-not-allowed ${form.color === c ? "ring-2 ring-offset-2 ring-slate-400" : "hover:scale-110"}`}
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-white disabled:cursor-not-allowed ${form.color === c ? "ring-2 ring-offset-2 ring-slate-400" : ""}`}
               style={{ backgroundColor: c }}
             >
               {form.color === c && <LuCheck size={15} />}
@@ -303,7 +303,7 @@ function Details({
                   type="button"
                   disabled={structureLocked}
                   onClick={() => set({ type: t })}
-                  className={`rounded-xl px-3 py-2 text-start ring-1 transition disabled:cursor-not-allowed ${form.type === t ? "ring-indigo-300 bg-indigo-50" : "ring-slate-200 enabled:hover:bg-slate-50"} ${structureLocked && form.type !== t ? "opacity-40" : ""}`}
+                  className={`rounded-xl px-3 py-2 text-start ring-1 disabled:cursor-not-allowed ${form.type === t ? "ring-indigo-300 bg-indigo-50" : "ring-slate-200 enabled:hover:bg-slate-50"} ${structureLocked && form.type !== t ? "opacity-40" : ""}`}
                 >
                   <span className={`block text-sm font-medium ${form.type === t ? "text-indigo-700" : "text-slate-700"}`}>{TYPE_META[t].label}</span>
                   <span className="block text-[11px] text-slate-500 leading-snug">{TYPE_META[t].hint}</span>

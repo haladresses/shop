@@ -127,12 +127,12 @@ export default function UserDrawer({ id, onClose, onChanged }: { id: string; onC
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="absolute inset-0 bg-slate-900/40 admin-fade-in" onClick={onClose} />
-      <aside className="relative w-full sm:max-w-2xl h-full bg-slate-50 shadow-2xl flex flex-col admin-slide-up" role="dialog" aria-modal="true" aria-label={name || "Account"}>
+      <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} />
+      <aside className="relative w-full sm:max-w-2xl h-full bg-slate-50 shadow-2xl flex flex-col" role="dialog" aria-modal="true" aria-label={name || "Account"}>
         {/* Header */}
         <div className="bg-white border-b border-slate-200 px-4 sm:px-6 pt-4">
           <div className="flex items-start gap-3">
-            {u ? <Avatar name={name} color={u.appRole?.color} muted={!u.isActive} size="lg" /> : <span className="w-14 h-14 rounded-full bg-slate-100 animate-pulse" />}
+            {u ? <Avatar name={name} color={u.appRole?.color} muted={!u.isActive} size="lg" /> : <span className="w-14 h-14 rounded-full bg-slate-100" />}
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-2">
                 <h2 className="text-lg font-semibold text-slate-900 truncate">{u ? u.nameEn || "Unnamed" : "Loading..."}</h2>
@@ -165,7 +165,7 @@ export default function UserDrawer({ id, onClose, onChanged }: { id: string; onC
           </div>
           <nav className="flex gap-5 mt-4 -mb-px overflow-x-auto no-scrollbar">
             {tabs.map(([k, label]) => (
-              <button key={k} onClick={() => setTab(k)} className={`shrink-0 pb-2.5 text-sm font-medium border-b-2 transition ${tab === k ? "border-indigo-500 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-800"}`}>
+              <button key={k} onClick={() => setTab(k)} className={`shrink-0 pb-2.5 text-sm font-medium border-b-2 ${tab === k ? "border-indigo-500 text-slate-900" : "border-transparent text-slate-500 hover:text-slate-800"}`}>
                 {label}
               </button>
             ))}
@@ -175,7 +175,7 @@ export default function UserDrawer({ id, onClose, onChanged }: { id: string; onC
         {/* Body */}
         <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4">
           {failed && <p className="rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-3">{failed}</p>}
-          {!u && !failed && <div className="h-64 rounded-xl bg-white ring-1 ring-slate-200 animate-pulse" />}
+          {!u && !failed && <p className="text-sm text-slate-500">Loading...</p>}
           {u && locked && (
             <p className="flex items-start gap-2 rounded-xl bg-amber-50 text-amber-800 text-sm px-4 py-3">
               <LuLock size={15} className="mt-0.5 shrink-0" /> {u.manageReason ?? "You can't change this account."} View only.
@@ -315,7 +315,7 @@ function AccessTab({ u, groups, onSave }: { u: Detail; groups: PermissionGroup[]
                 disabled={disabled}
                 onClick={() => setRoleId(r.id)}
                 title={!r.assignable && r.reason ? r.reason : undefined}
-                className={`flex items-start gap-2.5 rounded-xl px-3 py-2.5 text-start ring-1 transition disabled:cursor-not-allowed ${selected ? "ring-2 ring-indigo-400 bg-indigo-50/60" : "ring-slate-200 enabled:hover:bg-slate-50"} ${disabled && !selected ? "opacity-45" : ""}`}
+                className={`flex items-start gap-2.5 rounded-xl px-3 py-2.5 text-start ring-1 disabled:cursor-not-allowed ${selected ? "ring-2 ring-indigo-400 bg-indigo-50/60" : "ring-slate-200 enabled:hover:bg-slate-50"} ${disabled && !selected ? "opacity-45" : ""}`}
               >
                 <span className="mt-1 w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: r.color }} />
                 <span className="min-w-0 flex-1">

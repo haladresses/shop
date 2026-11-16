@@ -12,7 +12,6 @@ import {
   LuTriangleAlert,
 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
-import { BarList, ColumnChart, VIZ } from "@/components/admin/charts";
 import { EXPENSE_CATEGORIES, Granularity } from "@/lib/finance";
 
 type Totals = {
@@ -83,12 +82,12 @@ const iso = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.ge
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const G_LABEL: Record<Granularity, string> = { day: "Daily", week: "Weekly", month: "Monthly", year: "Yearly" };
 
-function bucketLabel(key: string, g: Granularity, long = false): string {
+function bucketLabel(key: string, g: Granularity): string {
   const [y, m, d] = key.split("-").map(Number);
   if (g === "year") return String(y);
-  if (g === "month") return long ? `${MONTHS[m - 1]} ${y}` : `${MONTHS[m - 1]} ’${String(y).slice(2)}`;
-  if (g === "week") return long ? `Week of ${d} ${MONTHS[m - 1]} ${y}` : `${d} ${MONTHS[m - 1]}`;
-  return long ? `${d} ${MONTHS[m - 1]} ${y}` : `${d} ${MONTHS[m - 1]}`;
+  if (g === "month") return `${MONTHS[m - 1]} ${y}`;
+  if (g === "week") return `Week of ${d} ${MONTHS[m - 1]} ${y}`;
+  return `${d} ${MONTHS[m - 1]} ${y}`;
 }
 
 /** Default window for each view: 30 days / 12 weeks / 12 months / 5 years. */
@@ -163,7 +162,7 @@ export default function FinancePage() {
     if (!data) return;
     const head = ["Period", "Orders", "Items sold", "Gross sales", "Discounts", "Refunds", "VAT", "Net sales", "Online", "POS", "Cost of goods", "Gross profit", "Expenses", "Net profit"];
     const rows = data.breakdown.map((b) => [
-      bucketLabel(b.bucket, data.range.granularity, true), b.orders, b.itemsSold, b.grossSales, b.discounts, b.refunds, b.vat ?? 0, b.netSales,
+      bucketLabel(b.bucket, data.range.granularity), b.orders, b.itemsSold, b.grossSales, b.discounts, b.refunds, b.vat ?? 0, b.netSales,
       b.onlineSales, b.posSales, b.cogs, b.grossProfit, b.expenses, b.netProfit,
     ]);
     const csv = [head, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -182,7 +181,7 @@ export default function FinancePage() {
           <button
             key={id}
             onClick={() => setTab(id)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${tab === id ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+            className={`px-4 py-2 rounded-xl text-sm font-medium ${tab === id ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
           >
             {label}
           </button>
@@ -199,7 +198,7 @@ export default function FinancePage() {
                 <button
                   key={g}
                   onClick={() => pickGranularity(g)}
-                  className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg font-medium transition-colors ${granularity === g ? "bg-white shadow-sm text-slate-800" : "text-slate-500 hover:text-slate-700"}`}
+                  className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg font-medium ${granularity === g ? "bg-white shadow-sm text-slate-800" : "text-slate-500 hover:text-slate-700"}`}
                 >
                   {G_LABEL[g]}
                 </button>
@@ -232,7 +231,7 @@ export default function FinancePage() {
           {!data || !t || !p ? (
             <div className="flex justify-center py-16"><div className="spinner" /></div>
           ) : (
-            <div className={`space-y-5 transition-opacity ${loading ? "opacity-60" : ""}`}>
+            <div className={`space-y-5 ${loading ? "opacity-60" : ""}`}>
               {data.linesMissingCost > 0 && (
                 <div className="flex items-start gap-2.5 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 px-4 py-3 text-sm">
                   <LuTriangleAlert size={18} className="shrink-0 mt-0.5" />
@@ -253,60 +252,59 @@ export default function FinancePage() {
                 <Kpi label="Items sold" value={t.itemsSold.toLocaleString()} change={pctChange(t.itemsSold, p.itemsSold)} />
                 <Kpi label="Refunds" value={omr(t.refunds)} change={pctChange(t.refunds, p.refunds)} invert />
               </div>
-              <p className="text-xs text-slate-400 -mt-2">Change vs previous period {data.previousRange.from} → {data.previousRange.to}</p>
+              <p className="text-xs text-slate-400 -mt-2">Change compared with the previous period, {data.previousRange.from} to {data.previousRange.to}</p>
 
-              <div className="grid lg:grid-cols-2 gap-5">
-                <Card title="Net sales" subtitle={`${G_LABEL[data.range.granularity]} · after refunds, excl. VAT`}>
-                  <ColumnChart
-                    ariaLabel="Net sales per period"
-                    data={data.breakdown.map((b) => ({ key: b.bucket, label: bucketLabel(b.bucket, data.range.granularity), value: b.netSales }))}
-                    format={omr}
-                    renderTooltip={(_, i) => {
-                      const b = data.breakdown[i];
-                      return (
-                        <div className="space-y-0.5">
-                          <p className="font-semibold text-slate-800 mb-1">{bucketLabel(b.bucket, data.range.granularity, true)}</p>
-                          <TipRow label="Net sales" value={omr(b.netSales)} />
-                          <TipRow label="Online / POS" value={`${num(b.onlineSales)} / ${num(b.posSales)}`} />
-                          <TipRow label="Orders" value={String(b.orders)} />
-                        </div>
-                      );
-                    }}
-                  />
-                </Card>
-                <Card
-                  title="Net profit"
-                  subtitle="After cost of goods and expenses"
-                  legend={
-                    <div className="flex items-center gap-3 text-xs text-slate-500">
-                      <span className="flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-sm" style={{ background: VIZ.positive }} /> Profit</span>
-                      <span className="flex items-center gap-1.5"><i className="w-2.5 h-2.5 rounded-sm" style={{ background: VIZ.negative }} /> Loss</span>
-                    </div>
-                  }
-                >
-                  <ColumnChart
-                    ariaLabel="Net profit or loss per period"
-                    diverging
-                    data={data.breakdown.map((b) => ({ key: b.bucket, label: bucketLabel(b.bucket, data.range.granularity), value: b.netProfit }))}
-                    format={omr}
-                    renderTooltip={(_, i) => {
-                      const b = data.breakdown[i];
-                      return (
-                        <div className="space-y-0.5">
-                          <p className="font-semibold text-slate-800 mb-1">{bucketLabel(b.bucket, data.range.granularity, true)}</p>
-                          <TipRow label="Net sales" value={num(b.netSales)} />
-                          <TipRow label="− Cost of goods" value={num(b.cogs)} />
-                          <TipRow label="− Expenses" value={num(b.expenses)} />
-                          <TipRow label={b.netProfit < 0 ? "Net loss" : "Net profit"} value={omr(b.netProfit)} strong />
-                        </div>
-                      );
-                    }}
-                  />
-                </Card>
-              </div>
+              <Card
+                title={`${G_LABEL[data.range.granularity]} sales and profit`}
+                subtitle="Amounts in OMR. Net sales are after refunds and without VAT. Newest first."
+                flush
+              >
+                <div className="overflow-auto max-h-[520px]">
+                  <table className="admin-table tabular-nums">
+                    <thead className="sticky top-0 z-10">
+                      <tr>
+                        <th>Period</th>
+                        <th className="text-right">Orders</th>
+                        <th className="text-right">Net sales</th>
+                        <th className="text-right">Refunds</th>
+                        <th className="text-right">Cost of goods</th>
+                        <th className="text-right">Gross profit</th>
+                        <th className="text-right">Expenses</th>
+                        <th className="text-right">Net profit</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...data.breakdown].reverse().map((b) => (
+                        <tr key={b.bucket}>
+                          <td className="whitespace-nowrap">{bucketLabel(b.bucket, data.range.granularity)}</td>
+                          <td className="text-right">{b.orders}</td>
+                          <td className="text-right">{num(b.netSales)}</td>
+                          <td className="text-right text-slate-500">{num(b.refunds)}</td>
+                          <td className="text-right text-slate-500">{num(b.cogs)}</td>
+                          <td className="text-right">{num(b.grossProfit)}</td>
+                          <td className="text-right text-slate-500">{num(b.expenses)}</td>
+                          <td className={`text-right font-semibold ${b.netProfit < 0 ? "text-rose-600" : "text-slate-800"}`}>{num(b.netProfit)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="sticky bottom-0 z-10">
+                      <tr>
+                        <td className={TOTAL}>Total</td>
+                        <td className={`${TOTAL} text-right`}>{t.orders.toLocaleString()}</td>
+                        <td className={`${TOTAL} text-right`}>{num(t.netSales)}</td>
+                        <td className={`${TOTAL} text-right`}>{num(t.refunds)}</td>
+                        <td className={`${TOTAL} text-right`}>{num(t.cogs)}</td>
+                        <td className={`${TOTAL} text-right`}>{num(t.grossProfit)}</td>
+                        <td className={`${TOTAL} text-right`}>{num(t.expenses)}</td>
+                        <td className={`${TOTAL} text-right ${t.netProfit < 0 ? "!text-rose-600" : ""}`}>{num(t.netProfit)}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </Card>
 
               <div className="grid lg:grid-cols-3 gap-5">
-                <Card title="Profit & loss statement" subtitle={`${data.range.from} → ${data.range.to}`}>
+                <Card title="Profit & loss statement" subtitle={`${data.range.from} to ${data.range.to}, in OMR`}>
                   <dl className="text-sm divide-y divide-slate-100">
                     <PlRow label="Sales (incl. shipping)" value={t.grossSales} />
                     <PlRow label="  discounts given" value={t.discounts} muted />
@@ -324,36 +322,78 @@ export default function FinancePage() {
                   </dl>
                 </Card>
 
-                <Card title="Sales channels & payments">
-                  <ChannelSplit online={t.onlineSales} pos={t.posSales} />
-                  <div className="mt-5">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">Payment methods</p>
-                    {data.paymentMethods.length === 0 ? (
-                      <p className="text-sm text-slate-400">No payments in this period.</p>
-                    ) : (
-                      <BarList
-                        items={data.paymentMethods.map((m) => ({
-                          label: m.method.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase()),
-                          value: m.amount,
-                          sub: `${m.count} payments`,
-                        }))}
-                        format={num}
-                      />
-                    )}
-                  </div>
-                </Card>
+                <div className="space-y-5 min-w-0">
+                  <Card title="Sales by channel" subtitle="Paid orders in OMR, before refunds" flush>
+                    <ChannelTable online={t.onlineSales} pos={t.posSales} />
+                  </Card>
 
-                <Card title="Top categories">
+                  <Card title="Payment methods" subtitle="Money received in OMR" flush>
+                    {data.paymentMethods.length === 0 ? (
+                      <p className="px-5 pb-5 text-sm text-slate-400">No payments in this period.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="admin-table tabular-nums">
+                          <thead>
+                            <tr>
+                              <th>Method</th>
+                              <th className="text-right">Payments</th>
+                              <th className="text-right">Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {data.paymentMethods.map((m) => (
+                              <tr key={m.method}>
+                                <td>{m.method.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase())}</td>
+                                <td className="text-right">{m.count}</td>
+                                <td className="text-right">{num(m.amount)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          <tfoot>
+                            <tr>
+                              <td className={TOTAL}>Total</td>
+                              <td className={`${TOTAL} text-right`}>{data.paymentMethods.reduce((s, m) => s + m.count, 0)}</td>
+                              <td className={`${TOTAL} text-right`}>{num(data.paymentMethods.reduce((s, m) => s + m.amount, 0))}</td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    )}
+                  </Card>
+                </div>
+
+                <Card title="Top categories" subtitle="Best 8 by sales, amounts in OMR" flush>
                   {data.topCategories.length === 0 ? (
-                    <p className="text-sm text-slate-400">No sales in this period.</p>
+                    <p className="px-5 pb-5 text-sm text-slate-400">No sales in this period.</p>
                   ) : (
-                    <BarList items={data.topCategories.map((c) => ({ label: c.name, value: c.revenue, sub: `${c.quantity} sold · profit ${num(c.profit)}` }))} format={num} />
+                    <div className="overflow-x-auto">
+                      <table className="admin-table tabular-nums">
+                        <thead>
+                          <tr>
+                            <th>Category</th>
+                            <th className="text-right">Sold</th>
+                            <th className="text-right">Sales</th>
+                            <th className="text-right">Profit</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.topCategories.map((c) => (
+                            <tr key={c.categoryId}>
+                              <td>{c.name}</td>
+                              <td className="text-right">{c.quantity}</td>
+                              <td className="text-right">{num(c.revenue)}</td>
+                              <td className={`text-right ${c.profit < 0 ? "text-rose-600" : ""}`}>{num(c.profit)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
                 </Card>
               </div>
 
-              <Card title="Best-selling products" subtitle="Revenue, purchase cost and profit per product">
-                <div className="overflow-x-auto -mx-5">
+              <Card title="Best-selling products" subtitle="Best 15 by sales: revenue, purchase cost and profit in OMR" flush>
+                <div className="overflow-x-auto">
                   <table className="admin-table">
                     <thead>
                       <tr>
@@ -386,39 +426,6 @@ export default function FinancePage() {
                   </table>
                 </div>
               </Card>
-
-              <Card title="Breakdown by period" subtitle="Table view of the charts above">
-                <div className="overflow-x-auto -mx-5 max-h-[520px] overflow-y-auto">
-                  <table className="admin-table">
-                    <thead className="sticky top-0 bg-white">
-                      <tr>
-                        <th>Period</th>
-                        <th className="text-right">Orders</th>
-                        <th className="text-right">Net sales</th>
-                        <th className="text-right">Refunds</th>
-                        <th className="text-right">COGS</th>
-                        <th className="text-right">Gross profit</th>
-                        <th className="text-right">Expenses</th>
-                        <th className="text-right">Net profit</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[...data.breakdown].reverse().map((b) => (
-                        <tr key={b.bucket}>
-                          <td className="whitespace-nowrap">{bucketLabel(b.bucket, data.range.granularity, true)}</td>
-                          <td className="text-right tabular-nums">{b.orders}</td>
-                          <td className="text-right tabular-nums">{num(b.netSales)}</td>
-                          <td className="text-right tabular-nums text-slate-500">{num(b.refunds)}</td>
-                          <td className="text-right tabular-nums text-slate-500">{num(b.cogs)}</td>
-                          <td className="text-right tabular-nums">{num(b.grossProfit)}</td>
-                          <td className="text-right tabular-nums text-slate-500">{num(b.expenses)}</td>
-                          <td className={`text-right tabular-nums font-semibold ${b.netProfit < 0 ? "text-rose-600" : "text-slate-800"}`}>{num(b.netProfit)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
             </div>
           )}
         </>
@@ -427,17 +434,18 @@ export default function FinancePage() {
   );
 }
 
-function Card({ title, subtitle, legend, children }: { title: string; subtitle?: string; legend?: React.ReactNode; children: React.ReactNode }) {
+/** Bold totals row cell, same look as the Sales Report tables. */
+const TOTAL = "font-bold text-slate-900 bg-slate-100 border-t-2 border-slate-300 whitespace-nowrap";
+
+/** White card with a title; `flush` lets a table run edge to edge under the title. */
+function Card({ title, subtitle, flush, children }: { title: string; subtitle?: string; flush?: boolean; children: React.ReactNode }) {
   return (
-    <section className="bg-white rounded-2xl border border-slate-200/70 p-5 min-w-0">
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div>
-          <h3 className="font-semibold text-slate-800">{title}</h3>
-          {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
-        </div>
-        {legend}
+    <section className="admin-card min-w-0">
+      <div className="px-5 pt-4 pb-3">
+        <h3 className="font-semibold text-slate-800">{title}</h3>
+        {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
       </div>
-      {children}
+      <div className={flush ? "" : "px-5 pb-5"}>{children}</div>
     </section>
   );
 }
@@ -474,36 +482,42 @@ function PlRow({ label, value, strong, muted, highlight }: { label: string; valu
   );
 }
 
-function TipRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
-  return (
-    <div className={`flex justify-between gap-4 ${strong ? "font-semibold text-slate-800 pt-0.5" : ""}`}>
-      <span className="text-slate-500">{label}</span>
-      <span className="tabular-nums">{value}</span>
-    </div>
-  );
-}
-
-function ChannelSplit({ online, pos }: { online: number; pos: number }) {
+/** Online vs in-store sales as two plain rows with their share and a total. */
+function ChannelTable({ online, pos }: { online: number; pos: number }) {
   const total = online + pos;
-  const op = total > 0 ? (online / total) * 100 : 0;
+  // One decimal, and the two shares always add up to exactly 100%.
+  const onlineShare = total > 0 ? Math.round((online / total) * 1000) / 10 : 0;
+  const share = (v: number) => (total > 0 ? `${v.toFixed(1)}%` : "-");
   return (
-    <div>
-      <div className="flex h-3 rounded-full overflow-hidden bg-slate-100 gap-[2px]">
-        {online > 0 && <div style={{ width: `${op}%`, background: VIZ.series1 }} />}
-        {pos > 0 && <div style={{ width: `${100 - op}%`, background: VIZ.series2 }} />}
-      </div>
-      <div className="grid grid-cols-2 gap-3 mt-3 text-sm">
-        <div>
-          <p className="flex items-center gap-1.5 text-slate-500 text-xs"><i className="w-2.5 h-2.5 rounded-sm" style={{ background: VIZ.series1 }} /> Online store</p>
-          <p className="font-semibold text-slate-800 tabular-nums">{num(online)}</p>
-          <p className="text-xs text-slate-400">{op.toFixed(0)}%</p>
-        </div>
-        <div>
-          <p className="flex items-center gap-1.5 text-slate-500 text-xs"><i className="w-2.5 h-2.5 rounded-sm" style={{ background: VIZ.series2 }} /> In-store POS</p>
-          <p className="font-semibold text-slate-800 tabular-nums">{num(pos)}</p>
-          <p className="text-xs text-slate-400">{total > 0 ? (100 - op).toFixed(0) : 0}%</p>
-        </div>
-      </div>
+    <div className="overflow-x-auto">
+      <table className="admin-table tabular-nums">
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th className="text-right">Sales</th>
+            <th className="text-right">Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Online store</td>
+            <td className="text-right">{num(online)}</td>
+            <td className="text-right">{share(onlineShare)}</td>
+          </tr>
+          <tr>
+            <td>In store (POS)</td>
+            <td className="text-right">{num(pos)}</td>
+            <td className="text-right">{share(100 - onlineShare)}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td className={TOTAL}>Total</td>
+            <td className={`${TOTAL} text-right`}>{num(total)}</td>
+            <td className={`${TOTAL} text-right`}>{share(100)}</td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   );
 }

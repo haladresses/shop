@@ -50,6 +50,9 @@ async function main() {
     },
   });
 
+  // Roles: the five built-in roles (app_roles) are created from the permission
+  // defaults in src/lib/permissions.ts and given to these users automatically
+  // the first time the app checks a permission (syncRoles), so nothing to seed here.
   console.log("✅ Users created");
 
   // ── Categories ────────────────────────────────────────────

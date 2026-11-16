@@ -42,6 +42,7 @@ const pageTitles: Record<string, string> = {
   "/admin/roles": "Roles & Permissions",
   "/admin/roles/new": "New Role",
   "/admin/settings": "Settings",
+  "/admin/profile": "My Profile",
   "/admin/legal-pages": "Legal Pages",
   "/admin/testimonials": "Testimonials",
   "/admin/countdown": "Countdown Deal",

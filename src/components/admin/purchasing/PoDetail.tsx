@@ -346,18 +346,11 @@ export default function PoDetail({ id }: { id: string }) {
                 </li>
               ))}
             </ol>
-            <div className="mt-4">
-              <div className="flex justify-between text-xs text-slate-500 mb-1">
-                <span>
-                  Received {progress.received} of {progress.ordered} units
-                  {progress.returned > 0 && ` · ${progress.returned} returned`}
-                </span>
-                <span>{progress.ordered ? Math.round((progress.received / progress.ordered) * 100) : 0}%</span>
-              </div>
-              <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${progress.ordered ? Math.min(100, (progress.received / progress.ordered) * 100) : 0}%` }} />
-              </div>
-            </div>
+            <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+              Received <strong className="font-semibold text-slate-800 tabular-nums">{progress.received} of {progress.ordered}</strong> units
+              {progress.received < progress.ordered && ["ORDERED", "PARTIALLY_RECEIVED"].includes(s) && <>, {progress.ordered - progress.received} still to come</>}
+              {progress.returned > 0 && <>, {progress.returned} returned to the supplier</>}.
+            </p>
           </div>
 
           {/* Lines */}
