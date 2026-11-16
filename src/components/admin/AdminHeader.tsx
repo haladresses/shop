@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { LuChevronDown, LuLogOut, LuMenu, LuStore, LuUserRound } from "react-icons/lu";
+import { usePathname, useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { LuChevronDown, LuLogOut, LuMenu, LuStar, LuStore, LuUserRound } from "react-icons/lu";
+import { useShortcuts } from "@/lib/adminShortcuts";
 
 type AdminUser = {
   nameEn?: string | null;
@@ -23,6 +25,8 @@ const roleName = (u: AdminUser) => u.appRole?.nameEn ?? u.role.replace("_", " ")
  */
 export default function AdminHeader({ title, onMenuClick }: { title?: string; onMenuClick?: () => void }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const { items: shortcuts, isPinned, toggle, ready } = useShortcuts();
   const [user, setUser] = useState<AdminUser | null>(null);
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -49,6 +53,20 @@ export default function AdminHeader({ title, onMenuClick }: { title?: string; on
     };
   }, [open]);
 
+  // Star: add this page to (or take it off) the Dashboard shortcuts.
+  const canPin = pathname !== "/admin" && !!title;
+  const pinned = isPinned(pathname);
+  const onStar = async () => {
+    if (!title) return;
+    if (!pinned && shortcuts.length >= 24) {
+      toast.error("You can keep up to 24 shortcuts. Remove one on the Dashboard first.");
+      return;
+    }
+    const saved = await toggle({ href: pathname, label: title });
+    if (!saved) toast.error("Couldn't update your shortcuts. Please try again.");
+    else toast.success(pinned ? "Removed from your Dashboard" : "Added to your Dashboard");
+  };
+
   const signOut = async () => {
     await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
     router.push("/signin");
@@ -69,6 +87,19 @@ export default function AdminHeader({ title, onMenuClick }: { title?: string; on
           <LuMenu size={22} />
         </button>
         {title && <h1 className="text-base sm:text-lg font-semibold text-slate-800 truncate">{title}</h1>}
+        {canPin && ready && (
+          <button
+            onClick={onStar}
+            className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
+              pinned ? "text-amber-500 hover:bg-amber-50" : "text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            }`}
+            title={pinned ? "Remove from Dashboard" : "Add this page to your Dashboard"}
+            aria-label={pinned ? "Remove from Dashboard" : "Add this page to your Dashboard"}
+            aria-pressed={pinned}
+          >
+            <LuStar size={20} fill={pinned ? "currentColor" : "none"} />
+          </button>
+        )}
       </div>
 
       {user && (

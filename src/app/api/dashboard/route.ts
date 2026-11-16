@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/db";
 import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
 import { ok, unauthorized, forbidden, serverError } from "@/lib/api/response";
+import { ORDER_TODOS } from "@/lib/orderTodos";
 import { BUSINESS_TZ, addDays, businessDayEnd, businessDayStart, enumerateBuckets, round3, toBusinessDateKey } from "@/lib/finance";
 
 const PAID = Prisma.sql`(o."paymentStatus" = 'PAID' OR o."refundedAmount" > 0)`;
@@ -61,11 +62,10 @@ export async function GET(req: NextRequest) {
           FROM order_items oi JOIN orders o ON o.id = oi."orderId" JOIN products p ON p.id = oi."productId"
           WHERE ${PAID} AND o."createdAt" >= ${businessDayStart(monthStartKey)}`,
         prisma.expense.aggregate({ where: { date: { gte: businessDayStart(monthStartKey) } }, _sum: { amount: true } }),
-        prisma.order.count({ where: { status: "PENDING" } }),
-        prisma.order.count({ where: { status: { in: ["CONFIRMED", "PROCESSING"] }, source: "ONLINE" } }),
-        prisma.order.count({
-          where: { paymentStatus: "UNPAID", payments: { some: { method: "BANK_TRANSFER" } }, status: { notIn: ["CANCELLED", "REFUNDED"] } },
-        }),
+        // Same rules as the Orders list filters (?todo=confirm|ship|transfer).
+        prisma.order.count({ where: ORDER_TODOS.confirm.where }),
+        prisma.order.count({ where: ORDER_TODOS.ship.where }),
+        prisma.order.count({ where: ORDER_TODOS.transfer.where }),
         prisma.inventory.count({ where: { quantity: { gt: 0, lte: prisma.inventory.fields.lowStockAlert } } }),
         prisma.inventory.count({ where: { quantity: { lte: 0 } } }),
         prisma.posShift.findMany({ where: { status: "OPEN" }, select: { openedAt: true, cashier: { select: { nameEn: true } } } }),

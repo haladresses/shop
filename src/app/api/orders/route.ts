@@ -9,6 +9,7 @@ import { nextDocumentNumber } from "@/lib/sequences";
 import { recordPromotionRedemptions } from "@/lib/promotions";
 import { orderItemCodeCondition } from "@/lib/barcodes";
 import { publicEmail } from "@/lib/validations/auth";
+import { ORDER_TODOS, isOrderTodo } from "@/lib/orderTodos";
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,8 +25,11 @@ export async function GET(req: NextRequest) {
     const paymentStatus = sp.get("paymentStatus") || "";
     const source = sp.get("source") || "";
     const search = sp.get("search") || "";
+    // Dashboard "Waiting for you" lists, e.g. ?todo=ship
+    const todo = sp.get("todo");
 
     const where = {
+      ...(isOrderTodo(todo) && { AND: [ORDER_TODOS[todo].where] }),
       ...(canViewAllOrders ? {} : { userId: user.id }),
       ...(status && { status: status as never }),
       ...(paymentStatus && { paymentStatus: paymentStatus as never }),

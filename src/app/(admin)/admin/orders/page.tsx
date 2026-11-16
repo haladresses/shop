@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback, Suspense } from "react";
+import { ORDER_TODOS, isOrderTodo } from "@/lib/orderTodos";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   LuSearch, LuChevronLeft, LuChevronRight, LuEye, LuShoppingBag,
@@ -189,6 +190,9 @@ function OrdersView() {
 
   const searchParams = useSearchParams();
   const router = useRouter();
+  // Opened from the Dashboard ("Waiting for you"): ?todo=confirm|ship|transfer
+  const todoParam = searchParams.get("todo");
+  const todo = isOrderTodo(todoParam) ? todoParam : null;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -198,12 +202,13 @@ function OrdersView() {
       ...(statusFilter && { status: statusFilter }),
       ...(payFilter && { paymentStatus: payFilter }),
       ...(sourceFilter && { source: sourceFilter }),
+      ...(todo && { todo }),
     });
     const res = await fetch(`/api/orders?${params}`);
     const data = await res.json();
     if (data.success) { setOrders(data.data); setTotal(data.meta.total); }
     setLoading(false);
-  }, [page, search, statusFilter, payFilter, sourceFilter]);
+  }, [page, search, statusFilter, payFilter, sourceFilter, todo]);
 
   const loadStats = useCallback(async () => {
     const res = await fetch("/api/orders/stats");
@@ -367,7 +372,21 @@ function OrdersView() {
         ))}
       </div>
 
-      {/* Toolbar — single professional row */}
+      {todo && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm">
+          <span className="text-amber-900">
+            Showing only: <strong>{ORDER_TODOS[todo].label}</strong>
+          </span>
+          <button
+            onClick={() => { setPage(1); router.replace("/admin/orders", { scroll: false }); }}
+            className="font-medium text-amber-900 underline"
+          >
+            Show all orders
+          </button>
+        </div>
+      )}
+
+      {/* Toolbar: single row */}
       <div className="flex items-center gap-2 sm:gap-3 rounded-2xl border border-slate-200/70 bg-white p-2 sm:p-2.5">
         <div className="relative min-w-0 flex-1">
           <LuSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />

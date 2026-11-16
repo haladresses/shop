@@ -198,6 +198,11 @@ function StockTab({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
+  // Opened pre-filtered from the Dashboard, e.g. /admin/inventory?status=low
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("status");
+    if (q === "in" || q === "low" || q === "out") setStatus(q);
+  }, []);
   const [categoryId, setCategoryId] = useState("");
   const [sort, setSort] = useState("updated");
   const [adjusting, setAdjusting] = useState<InventoryItem | null>(null);

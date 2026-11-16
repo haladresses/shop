@@ -5,6 +5,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { ADMIN_NAV_ITEMS } from "@/lib/permissions";
 import { Toaster } from "react-hot-toast";
+import { LuCircleAlert, LuCircleCheck } from "react-icons/lu";
 import "../admin.css";
 
 type MeResponse = {
@@ -130,7 +131,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
       <Toaster
         position="top-center"
-        toastOptions={{ duration: 2600, style: { fontSize: "0.875rem", borderRadius: "0.75rem" } }}
+        toastOptions={{
+          duration: 2600,
+          style: { fontSize: "0.875rem", borderRadius: "0.75rem" },
+          // Still icons: the library's own tick and cross only appear through an
+          // animation, which the admin turns off (see admin.css "No motion").
+          success: { icon: <LuCircleCheck size={20} className="text-emerald-600 shrink-0" /> },
+          error: { icon: <LuCircleAlert size={20} className="text-rose-600 shrink-0" /> },
+        }}
       />
     </div>
   );
