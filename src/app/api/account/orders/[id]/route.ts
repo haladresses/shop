@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
 import { getAuthFromRequest } from "@/lib/auth";
 import { ok, unauthorized, notFound, serverError } from "@/lib/api/response";
+import { productImageUrl } from "@/lib/productImage";
 
 /** One of the signed-in customer's orders (404 for anyone else's). No internal costs. */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -67,7 +68,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           nameAr: String(snap.nameAr ?? ""),
           color: (snap.color as string) ?? null,
           size: (snap.size as string) ?? null,
-          image: it.product.images[0]?.url ?? null,
+          image: productImageUrl(it.product.images),
           slug: it.product.slug,
         };
       }),

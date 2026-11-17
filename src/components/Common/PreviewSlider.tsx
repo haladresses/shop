@@ -7,6 +7,7 @@ import Image from "next/image";
 
 import { usePreviewSlider } from "@/app/context/PreviewSliderContext";
 import { useAppSelector } from "@/redux/store";
+import { PRODUCT_PLACEHOLDER } from "@/lib/productImage";
 
 const PreviewSliderModal = () => {
   const { closePreviewModal, isModalPreviewOpen } = usePreviewSlider();
@@ -14,7 +15,7 @@ const PreviewSliderModal = () => {
   const previews =
     product?.imgs?.previews && product.imgs.previews.length > 0
       ? product.imgs.previews
-      : ["/images/products/p1.png"];
+      : [PRODUCT_PLACEHOLDER];
 
   const sliderRef = useRef(null);
 

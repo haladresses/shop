@@ -9,6 +9,7 @@ import {
 import AdminModal from "@/components/admin/AdminModal";
 import { buildProductPayload, productToFormValue } from "@/components/admin/ProductForm";
 import { categorySelectOptions, type FlatCategory } from "@/lib/categoryTree";
+import { productImageUrl } from "@/lib/productImage";
 
 type Product = {
   id: string;
@@ -38,6 +39,8 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
+  const [suppliers, setSuppliers] = useState<{ id: string; nameEn: string }[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,16 +75,19 @@ export default function ProductsPage() {
       page: String(page),
       search,
       ...(categoryFilter && { categoryId: categoryFilter }),
+      ...(supplierFilter && { supplierId: supplierFilter }),
       ...(statusFilter && { isActive: statusFilter }),
     });
     const res = await fetch(`/api/products?${params}`, { cache: "no-store" });
     const data = await res.json();
     if (data.success) { setProducts(data.data); setTotal(data.meta.total); }
     setLoading(false);
-  }, [page, search, categoryFilter, statusFilter]);
+  }, [page, search, categoryFilter, supplierFilter, statusFilter]);
 
   useEffect(() => {
     fetch("/api/categories?tree=true").then(r => r.json()).then(d => { if (d.success) setCategories(d.data); });
+    // Supplier filter: only shown to staff who can see suppliers.
+    fetch("/api/suppliers?status=all&pageSize=500&sort=name").then(r => r.json()).then(d => { if (d.success) setSuppliers(d.data.items); }).catch(() => {});
   }, []);
 
   const categoryOptions = useMemo(() => categorySelectOptions(categories), [categories]);
@@ -215,6 +221,12 @@ export default function ProductsPage() {
           <option value="">All Categories</option>
           {categoryOptions.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
         </select>
+        {suppliers.length > 0 && (
+          <select className="admin-input admin-select !w-full sm:!w-48" value={supplierFilter} onChange={(e) => { setSupplierFilter(e.target.value); setPage(1); }} aria-label="Filter by supplier">
+            <option value="">All Suppliers</option>
+            {suppliers.map((s) => <option key={s.id} value={s.id}>{s.nameEn}</option>)}
+          </select>
+        )}
         <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5" role="group" aria-label="Filter by status">
           {([["", "All"], ["true", "Active"], ["false", "Hidden"]] as [StatusFilter, string][]).map(([v, label]) => (
             <button
@@ -248,12 +260,8 @@ export default function ProductsPage() {
             {products.map((p) => (
               <div key={p.id} className="bg-white rounded-2xl border border-slate-200/70 p-4">
                 <div className="flex gap-3">
-                  {p.images[0] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={p.images[0].url} alt={p.nameEn} className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
-                  ) : (
-                    <div className="w-16 h-16 bg-slate-100 rounded-xl flex items-center justify-center text-slate-300 flex-shrink-0"><LuShirt size={24} /></div>
-                  )}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={productImageUrl(p.images)} alt={p.nameEn} className="w-16 h-16 object-cover rounded-xl flex-shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="font-medium text-slate-800 truncate">{p.nameEn}</div>
                     <div className="text-xs text-slate-400 truncate" dir="rtl">{p.nameAr}</div>
@@ -296,12 +304,8 @@ export default function ProductsPage() {
                   {products.map((p) => (
                     <tr key={p.id}>
                       <td>
-                        {p.images[0] ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={p.images[0].url} alt={p.nameEn} className="w-12 h-12 object-cover rounded-lg" />
-                        ) : (
-                          <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300"><LuShirt size={22} /></div>
-                        )}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={productImageUrl(p.images)} alt={p.nameEn} className="w-12 h-12 object-cover rounded-lg" />
                       </td>
                       <td>
                         <div className="font-medium text-slate-800">{p.nameEn}</div>

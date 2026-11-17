@@ -3,6 +3,7 @@ import { OrderStatus, Prisma } from "@prisma/client";
 import prisma from "@/lib/db";
 import { getAuthFromRequest } from "@/lib/auth";
 import { ok, unauthorized, serverError } from "@/lib/api/response";
+import { productImageUrl } from "@/lib/productImage";
 
 /** The signed-in customer's own orders, newest first. */
 export async function GET(req: NextRequest) {
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
         createdAt: o.createdAt.toISOString(),
         itemCount: o._count.items,
         units: o.items.reduce((n, i) => n + i.quantity, 0),
-        thumbs: o.items.map((i) => i.product.images[0]?.url).filter(Boolean),
+        thumbs: o.items.map((i) => productImageUrl(i.product.images)),
         firstName: String(((o.items[0]?.productSnapshot ?? {}) as { nameEn?: string }).nameEn ?? ""),
       })),
       meta: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },

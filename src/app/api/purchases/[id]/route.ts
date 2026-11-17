@@ -18,6 +18,7 @@ import {
   serializeTask,
   supplierBalances,
 } from "@/lib/purchasing";
+import { productImageUrl } from "@/lib/productImage";
 
 /** Full purchase order: lines, deliveries, returns, payments, tasks and supplier. */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -103,7 +104,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         variantLabel: i.variantLabel,
         sku: i.sku,
         barcode: i.barcode,
-        imageUrl: i.product?.images[0]?.url ?? null,
+        imageUrl: i.product ? productImageUrl(i.product.images) : null,
         productActive: i.product?.isActive ?? null,
         onHand: i.variant?.inventory?.quantity ?? null,
         quantity: i.quantity,

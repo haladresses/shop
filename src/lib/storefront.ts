@@ -1,6 +1,7 @@
 import { Product } from "@/types/product";
+import { PRODUCT_PLACEHOLDER } from "@/lib/productImage";
 
-const PLACEHOLDER = "/images/products/p1.png";
+const PLACEHOLDER = PRODUCT_PLACEHOLDER;
 
 export type ApiProductImage = {
   url: string;
@@ -169,6 +170,8 @@ export async function fetchProducts(
     page: String(page),
     pageSize: String(pageSize),
     isActive: "true",
+    // Items with real photos are listed before ones showing the default picture.
+    photosFirst: "true",
   });
   if (search) query.set("search", search);
   if (categoryId) query.set("categoryId", categoryId);
@@ -214,7 +217,7 @@ export async function fetchProductBySlug(
   return json.success ? (json.data as ApiProduct) : null;
 }
 
-const CATEGORY_PLACEHOLDER = "/images/products/p1.png";
+const CATEGORY_PLACEHOLDER = PRODUCT_PLACEHOLDER;
 
 export type ApiCategory = {
   id: string;

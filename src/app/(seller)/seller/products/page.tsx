@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { LuChevronLeft, LuChevronRight, LuImage, LuPlus, LuX } from "react-icons/lu";
+import { LuChevronLeft, LuChevronRight, LuPlus, LuX } from "react-icons/lu";
+import { productImageUrl } from "@/lib/productImage";
 
 type Product = {
   id: string;
@@ -131,12 +132,8 @@ export default function SellerProductsPage() {
                 {products.map((p) => (
                   <tr key={p.id} className="border-t border-slate-100 hover:bg-slate-50">
                     <td className="px-4 py-3">
-                      {p.images[0] ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={p.images[0].url} alt={p.nameEn} className="w-12 h-12 object-cover rounded-lg" />
-                      ) : (
-                        <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300"><LuImage size={20} /></div>
-                      )}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={productImageUrl(p.images)} alt={p.nameEn} className="w-12 h-12 object-cover rounded-lg" />
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-800">{p.nameEn}</div>

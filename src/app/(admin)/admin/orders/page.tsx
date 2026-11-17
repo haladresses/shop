@@ -18,6 +18,7 @@ import { printArea } from "@/lib/print";
 import { orderToInvoice, refundToCreditNote, methodLabels, type StoreInfo } from "@/lib/invoice";
 import { DEFAULT_TAX_SETTINGS, type TaxSettings } from "@/lib/taxCalc";
 import { formatVariantLabel } from "@/lib/utils";
+import { productImageUrl } from "@/lib/productImage";
 
 type ShippingAddress = {
   nameEn?: string;
@@ -746,7 +747,7 @@ function OrdersView() {
               <div className="space-y-2">
                 {selected.items.map((item, i) => {
                   const name = item.product?.nameEn || item.productSnapshot?.nameEn || "Product";
-                  const img = item.product?.images?.[0]?.url;
+                  const img = item.product ? productImageUrl(item.product.images) : undefined;
                   // Prefer the live variant; fall back to the order-time snapshot
                   // (e.g. the variant was later edited or removed from the product).
                   const variantLabel = formatVariantLabel({

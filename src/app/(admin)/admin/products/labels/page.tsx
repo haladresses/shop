@@ -34,6 +34,7 @@ import {
 } from "@/lib/labels";
 import { LabelPrintJob, PagePreview, type LabelItem, type LabelOptions } from "./LabelSheet";
 import TemplateEditor from "./TemplateEditor";
+import { productImageUrl } from "@/lib/productImage";
 
 type ProductHit = { id: string; nameEn: string; nameAr?: string; basePrice: number | string; salePrice?: number | string | null; barcode?: string | null; images?: { url: string }[] };
 
@@ -517,7 +518,7 @@ function LabelsView() {
                   <div key={p.id} className="flex items-center gap-3 px-4 py-2.5">
                     <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden shrink-0">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      {p.images?.[0]?.url && <img src={p.images[0].url} alt="" className="w-full h-full object-cover" />}
+                      <img src={productImageUrl(p.images)} alt="" className="w-full h-full object-cover" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-slate-700 truncate">{p.nameEn}</p>

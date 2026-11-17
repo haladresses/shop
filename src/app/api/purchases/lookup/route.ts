@@ -6,6 +6,7 @@ import { guard } from "@/lib/api/guard";
 import { resolveProductTaxRates } from "@/lib/tax";
 import { NO_TAX, type RateInfo } from "@/lib/taxCalc";
 import { PAYABLE_STATUSES, dayKey, num } from "@/lib/purchasing";
+import { productImageUrl } from "@/lib/productImage";
 
 type Row = {
   key: string;
@@ -89,7 +90,7 @@ export async function GET(req: NextRequest) {
           variantLabel: label(i.variant),
           sku: i.variant.sku || p.sku,
           barcode: i.variant.barcode || p.barcode, productBarcode: p.barcode,
-          imageUrl: p.images[0]?.url ?? null,
+          imageUrl: productImageUrl(p.images),
           isActive: p.isActive,
           onHand: i.quantity,
           lowStockAlert: i.lowStockAlert,
@@ -123,7 +124,7 @@ export async function GET(req: NextRequest) {
           productId: p.id,
           nameEn: p.nameEn,
           nameAr: p.nameAr,
-          imageUrl: p.images[0]?.url ?? null,
+          imageUrl: productImageUrl(p.images),
           isActive: p.isActive,
           costPrice: p.costPrice == null ? null : num(p.costPrice),
         };

@@ -64,6 +64,10 @@ const productFields = {
   // VAT rate override. Null = inherit from the category (then parents, then
   // the store default rate).
   taxRateId: z.string().min(1).nullable(),
+  // Who the item is normally bought from. Null = not set.
+  supplierId: z.string().min(1).nullable(),
+  // Store department (Ladies, Girls, Boys, Baby, Gifts). Null = not set.
+  department: z.enum(["LADIES", "GIRLS", "BOYS", "BABY", "GIFTS"]).nullable(),
   isActive: z.boolean(),
   isFeatured: z.boolean(),
   isNew: z.boolean(),
@@ -81,6 +85,8 @@ export const productSchema = z.object({
   isNew: productFields.isNew.default(true),
   isBestSeller: productFields.isBestSeller.default(false),
   taxRateId: productFields.taxRateId.optional(),
+  supplierId: productFields.supplierId.optional(),
+  department: productFields.department.optional(),
   attributes: productFields.attributes.optional().default({}),
   customSpecs: productFields.customSpecs.optional().default([]),
   variants: productFields.variants.default([]),

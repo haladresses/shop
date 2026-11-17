@@ -15,6 +15,7 @@ import {
   supplierBalances,
 } from "@/lib/purchasing";
 import { r3 } from "@/lib/taxCalc";
+import { productImageUrl } from "@/lib/productImage";
 
 /** Supplier profile: details, balance, stats, orders, payments, returns, tasks, top products. */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -105,7 +106,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           productId: it.productId,
           nameEn: it.nameEn,
           nameAr: it.nameAr,
-          imageUrl: it.product?.images[0]?.url ?? null,
+          imageUrl: it.product ? productImageUrl(it.product.images) : null,
           units: it.quantity,
           spent: num(it.netAmount),
           lastUnitCost: num(it.unitCost),

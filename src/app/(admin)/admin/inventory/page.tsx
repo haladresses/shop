@@ -18,6 +18,7 @@ import {
 } from "react-icons/lu";
 import Link from "next/link";
 import AdminModal from "@/components/admin/AdminModal";
+import { productImageUrl } from "@/lib/productImage";
 
 type InventoryItem = {
   id: string;
@@ -314,10 +315,8 @@ function StockTab({
                     <td>
                       <div className="flex items-center gap-3 min-w-[220px]">
                         <div className="w-10 h-12 rounded-lg bg-slate-100 overflow-hidden shrink-0">
-                          {item.variant.product.images[0] && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={item.variant.product.images[0].url} alt="" loading="lazy" className="w-full h-full object-cover" />
-                          )}
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={productImageUrl(item.variant.product.images)} alt="" loading="lazy" className="w-full h-full object-cover" />
                         </div>
                         <div className="min-w-0">
                           <a href={`/admin/products/${item.variant.product.id}`} className="font-medium text-slate-800 hover:text-indigo-600 truncate block max-w-[260px]">{item.variant.product.nameEn}</a>

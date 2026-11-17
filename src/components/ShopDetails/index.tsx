@@ -27,6 +27,7 @@ import {
 import { flyToCart } from "@/lib/cartFx";
 import { describePromotion, isPromotionLive, productQualifies, type PromotionRule } from "@/lib/promotionEngine";
 import { WishlistButton } from "@/components/Common/ProductActions";
+import { PRODUCT_PLACEHOLDER } from "@/lib/productImage";
 
 const StarIcon = ({ filled }: { filled: boolean }) => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className={filled ? "fill-[#FFA645]" : "fill-gray-4"}>
@@ -42,7 +43,7 @@ const Chevron = ({ dir }: { dir: "left" | "right" }) => (
 
 const pick = (en: string, ar: string, isArabic: boolean) => (isArabic ? ar || en : en);
 
-const GALLERY_PLACEHOLDER = "/images/products/p1.png";
+const GALLERY_PLACEHOLDER = PRODUCT_PLACEHOLDER;
 
 const ShopDetails = () => {
   const dispatch = useDispatch<AppDispatch>();
