@@ -1,6 +1,6 @@
 import { BackupType } from "@prisma/client";
 import prisma from "@/lib/db";
-import { createBackup } from "@/lib/backup";
+import { createBackup, failInterruptedBackups } from "@/lib/backup";
 
 const CHECK_INTERVAL_MS = 30 * 60 * 1000; // re-check every 30 minutes
 const FIRST_CHECK_DELAY_MS = 60 * 1000; // let the app finish booting first
@@ -22,6 +22,10 @@ async function setSetting(key: string, value: string) {
 
 async function tick() {
   try {
+    await failInterruptedBackups().catch((e) =>
+      console.error("[backup-scheduler] could not clean up interrupted backups:", e)
+    );
+
     const enabled = (await getSetting("backup_schedule_enabled")) === "true";
     if (!enabled) return;
 
@@ -32,10 +36,8 @@ async function tick() {
     const lastRun = lastRunStr ? new Date(lastRunStr) : null;
     if (lastRun && Date.now() - lastRun.getTime() < intervalMs) return;
 
-    const retentionStr = await getSetting("backup_retention_count");
-    const retention = retentionStr ? parseInt(retentionStr, 10) : undefined;
-
-    await createBackup({ type: BackupType.SCHEDULED, retention });
+    // Old backups are pruned to the "Keep last N backups" setting by createBackup.
+    await createBackup({ type: BackupType.SCHEDULED });
     await setSetting("backup_last_run_at", new Date().toISOString());
   } catch (e) {
     console.error("[backup-scheduler] scheduled backup failed:", e);

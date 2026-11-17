@@ -854,6 +854,8 @@ model AuditLog {
 enum BackupType {
   MANUAL
   SCHEDULED
+  // Taken automatically right before a restore, so the restore can be undone.
+  PRE_RESTORE
 }
 
 enum BackupStatus {

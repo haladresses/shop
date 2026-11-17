@@ -4,25 +4,43 @@ import { promises as fsp } from "fs";
 import os from "os";
 import path from "path";
 import { randomUUID } from "crypto";
+import { Readable } from "stream";
+import { pipeline } from "stream/promises";
+import type { ReadableStream as NodeReadableStream } from "stream/web";
 import { BackupStatus } from "@prisma/client";
 import prisma from "@/lib/db";
 import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
-import { ok, error, unauthorized, forbidden, serverError } from "@/lib/api/response";
-import { restoreBackup, BACKUP_DIR } from "@/lib/backup";
+import { ok, error, unauthorized, forbidden } from "@/lib/api/response";
+import { restoreBackup, BACKUP_DIR, BackupError, describeBackupError } from "@/lib/backup";
+
+export const runtime = "nodejs";
 
 const CONFIRMATION_PHRASE = "RESTORE";
 
+function sessionTokenOf(req: NextRequest): string | undefined {
+  return (
+    req.cookies.get("session_token")?.value ||
+    req.headers.get("Authorization")?.replace("Bearer ", "") ||
+    undefined
+  );
+}
+
 export async function POST(req: NextRequest) {
-  let tempFilePath: string | null = null;
+  let uploadPath: string | null = null;
 
   try {
     const admin = await getAuthFromRequest(req);
     if (!admin) return unauthorized();
     if (!(await userHasPermission(admin, "admin.backups.restore"))) return forbidden();
 
-    const formData = await req.formData();
-    const confirm = formData.get("confirm");
-    if (confirm !== CONFIRMATION_PHRASE) {
+    let formData: FormData;
+    try {
+      formData = await req.formData();
+    } catch {
+      return error("The upload could not be read. It may have been interrupted. Try again.");
+    }
+
+    if (formData.get("confirm") !== CONFIRMATION_PHRASE) {
       return error(`Type "${CONFIRMATION_PHRASE}" to confirm this action`);
     }
 
@@ -30,51 +48,69 @@ export async function POST(req: NextRequest) {
     const backupId = formData.get("backupId");
     const uploaded = formData.get("file");
 
-    let sourcePath: string;
+    let archivePath: string;
+    let source: string;
 
     if (typeof backupId === "string" && backupId) {
       const backup = await prisma.backup.findUnique({ where: { id: backupId } });
       if (!backup || backup.status !== BackupStatus.COMPLETED) {
         return error("Backup not found", 404);
       }
-      sourcePath = path.join(BACKUP_DIR, backup.filename);
-      if (!fs.existsSync(sourcePath)) return error("Backup file is missing on disk", 404);
-    } else if (uploaded instanceof File) {
-      if (!uploaded.name.endsWith(".tar.gz")) {
-        return error("Backup file must be a .tar.gz archive");
+      archivePath = path.join(BACKUP_DIR, backup.filename);
+      if (!fs.existsSync(archivePath)) {
+        return error("The file of this backup is missing from the server's backups folder.", 404);
       }
-      await fsp.mkdir(BACKUP_DIR, { recursive: true });
-      tempFilePath = path.join(
+      source = backup.filename;
+    } else if (uploaded instanceof File && uploaded.size > 0) {
+      // The archive's content is checked by restoreBackup, so any file name is accepted here.
+      uploadPath = path.join(
         /* turbopackIgnore: true */ os.tmpdir(),
-        `hala-restore-upload-${randomUUID()}.tar.gz`
+        `hala-restore-upload-${randomUUID()}`
       );
-      const buffer = Buffer.from(await uploaded.arrayBuffer());
-      await fsp.writeFile(tempFilePath, buffer);
-      sourcePath = tempFilePath;
+      await pipeline(
+        Readable.fromWeb(uploaded.stream() as unknown as NodeReadableStream),
+        fs.createWriteStream(uploadPath)
+      );
+      archivePath = uploadPath;
+      source = uploaded.name;
     } else {
-      return error("Provide either an existing backupId or upload a backup file");
+      return error("Choose a backup from the history or upload a backup file");
     }
 
-    await restoreBackup(sourcePath, { restoreFiles });
+    const result = await restoreBackup(archivePath, {
+      restoreFiles,
+      userId: admin.id,
+      sessionToken: sessionTokenOf(req),
+    });
 
+    // The admin's account may not exist in the restored data.
+    const adminStillExists = (await prisma.user.count({ where: { id: admin.id } })) > 0;
     await prisma.auditLog
       .create({
         data: {
-          userId: admin.id,
+          userId: adminStillExists ? admin.id : null,
           action: "RESTORE",
           entity: "Database",
-          entityId: typeof backupId === "string" ? backupId : "uploaded-file",
+          entityId: typeof backupId === "string" && backupId ? backupId : "uploaded-file",
+          newData: {
+            source,
+            restoredBy: admin.email,
+            backupCreatedAt: result.backupCreatedAt,
+            safetyBackupId: result.safetyBackupId,
+            schemaUpdates: result.schemaUpdates,
+            filesRestored: result.filesRestored,
+            warnings: result.warnings,
+          },
         },
       })
-      .catch(() => {});
+      .catch((e) => console.error("[backup restore] could not write the audit log:", e));
 
-    return ok({
-      message:
-        "Restore completed. Active sessions were reset by the restored data. You may need to sign in again.",
-    });
+    return ok(result);
   } catch (e) {
-    return serverError(e);
+    console.error("[backup restore]", e);
+    if (e instanceof BackupError) return error(e.message, e.status);
+    return error(`Restore failed: ${describeBackupError(e)}`, 500);
   } finally {
-    if (tempFilePath) await fsp.rm(tempFilePath, { force: true }).catch(() => {});
+    if (uploadPath) await fsp.rm(uploadPath, { force: true }).catch(() => {});
   }
 }
