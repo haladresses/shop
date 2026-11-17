@@ -8,12 +8,12 @@ const CategoryItem = ({ category, active, onSelect }) => {
       type="button"
       className={`${
         active ? "text-blue" : "text-dark"
-      } group flex items-center justify-between ease-out duration-200 hover:text-blue`}
+      } group flex items-center justify-between gap-3 text-start ease-out duration-200 hover:text-blue`}
       onClick={() => onSelect(active ? "" : category.slug)}
     >
       <div className="flex items-center gap-2">
         <div
-          className={`cursor-pointer flex items-center justify-center rounded w-4 h-4 border ${
+          className={`shrink-0 cursor-pointer flex items-center justify-center rounded w-4 h-4 border ${
             active ? "border-blue bg-blue" : "bg-white border-gray-3"
           }`}
         >
@@ -41,7 +41,7 @@ const CategoryItem = ({ category, active, onSelect }) => {
       <span
         className={`${
           active ? "text-white bg-blue" : "bg-gray-2"
-        } inline-flex rounded-[30px] text-custom-xs px-2 ease-out duration-200 group-hover:text-white group-hover:bg-blue`}
+        } shrink-0 inline-flex rounded-[30px] text-custom-xs px-2 ease-out duration-200 group-hover:text-white group-hover:bg-blue`}
       >
         {category.products}
       </span>

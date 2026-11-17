@@ -92,9 +92,13 @@ function normalizeItem(raw: unknown): TestimonialItem {
   };
 }
 
-/** Coerce an unknown value (from the settings store) into a typed testimonial array. */
+/**
+ * Coerce an unknown value (from the settings store) into a typed testimonial array.
+ * Nothing saved yet → the starter testimonials. A saved empty list means the
+ * owner removed them all, so it stays empty and the section is hidden.
+ */
 export function normalizeTestimonials(raw: unknown): TestimonialItem[] {
-  if (!Array.isArray(raw) || raw.length === 0) return DEFAULT_TESTIMONIALS;
+  if (!Array.isArray(raw)) return DEFAULT_TESTIMONIALS;
   return raw
     .map(normalizeItem)
     .filter((t) => t.reviewEn || t.reviewAr);

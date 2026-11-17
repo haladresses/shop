@@ -2,7 +2,7 @@
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { fetchTestimonials, mapTestimonial, DEFAULT_TESTIMONIALS, TestimonialItem } from "@/lib/testimonials";
+import { fetchTestimonials, mapTestimonial, TestimonialItem } from "@/lib/testimonials";
 
 // Import Swiper styles
 import "swiper/css/navigation";
@@ -13,13 +13,14 @@ import SectionHeading from "@/components/Common/SectionHeading";
 const Testimonials = () => {
   const { language, isArabic } = useLanguage();
   const sliderRef = useRef(null);
-  const [items, setItems] = useState<TestimonialItem[]>(DEFAULT_TESTIMONIALS);
+  // Start empty: the saved list decides what shows, and nothing flashes first.
+  const [items, setItems] = useState<TestimonialItem[]>([]);
 
   useEffect(() => {
     const controller = new AbortController();
     fetchTestimonials(controller.signal)
       .then(setItems)
-      .catch(() => setItems(DEFAULT_TESTIMONIALS));
+      .catch(() => setItems([]));
     return () => controller.abort();
   }, []);
 

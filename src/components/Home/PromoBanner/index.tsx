@@ -4,17 +4,18 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { fetchPromoBanner, DEFAULT_PROMO_TILES, PromoTile } from "@/lib/promoBanner";
+import { fetchPromoBanner, PromoTile } from "@/lib/promoBanner";
 
 const PromoBanner = () => {
   const { isArabic } = useLanguage();
-  const [tiles, setTiles] = useState<PromoTile[]>(DEFAULT_PROMO_TILES);
+  // Start empty: the saved tiles decide what shows, and nothing flashes first.
+  const [tiles, setTiles] = useState<PromoTile[]>([]);
 
   useEffect(() => {
     const controller = new AbortController();
     fetchPromoBanner(controller.signal)
       .then(setTiles)
-      .catch(() => setTiles(DEFAULT_PROMO_TILES));
+      .catch(() => setTiles([]));
     return () => controller.abort();
   }, []);
 
