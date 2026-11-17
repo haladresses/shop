@@ -36,7 +36,8 @@ import {
   LuX,
 } from "react-icons/lu";
 import { formatVariantLabel } from "@/lib/utils";
-import { PosModal, Receipt, ReceiptData, StoreInfo, beep, methodLabel, omr } from "@/components/pos/PosUi";
+import { PadKey, PosModal, Receipt, ReceiptData, StoreInfo, beep, methodLabel, omr } from "@/components/pos/PosUi";
+import LockScreen, { type LockUser } from "@/components/pos/LockScreen";
 import PrintArea from "@/components/print/PrintArea";
 import { SaleDocument } from "@/components/print/SaleDocument";
 import { printArea } from "@/lib/print";
@@ -47,6 +48,9 @@ import { DEFAULT_TAX_SETTINGS, NO_TAX, type RateInfo, type TaxSettings } from "@
 import ReturnModal from "@/components/pos/ReturnModal";
 import CartItemModal from "@/components/pos/CartItemModal";
 import StockCheckModal from "@/components/pos/StockCheckModal";
+
+/** The till locks itself after this long without a tap, click or key press. */
+const POS_IDLE_LOCK_MS = 2 * 60 * 1000;
 
 // ───────────────────────── types ─────────────────────────
 
@@ -194,6 +198,9 @@ export default function PosPage() {
   const [cashierName, setCashierName] = useState("");
   // Staff who can also open the admin panel get a "Back to admin" button.
   const [canOpenAdmin, setCanOpenAdmin] = useState(false);
+  // Screen lock (Lock button, or POS_IDLE_LOCK_MS without use).
+  const [locked, setLocked] = useState(false);
+  const [lockUser, setLockUser] = useState<LockUser | null>(null);
   const [storeInfo, setStoreInfo] = useState<StoreInfo>({});
   const [taxSettings, setTaxSettings] = useState<TaxSettings>(DEFAULT_TAX_SETTINGS);
   const [promoRules, setPromoRules] = useState<PromotionRule[]>([]);
@@ -304,6 +311,14 @@ export default function PosPage() {
         if (d.success && d.data?.permissions?.includes("pos.access")) {
           setCashierName(d.data.nameEn || d.data.email);
           await enterTerminal();
+          return;
+        }
+        // Reloaded while locked: the session answers as signed out, but the
+        // till must come back to the lock screen, not the staff picker.
+        const l = await fetch("/api/pos/lock", { cache: "no-store" }).then((r) => r.json()).catch(() => null);
+        if (l?.data?.locked) {
+          setLockUser(l.data.user);
+          setLocked(true);
         } else loadStaff();
       })
       .catch(() => loadStaff())
@@ -347,8 +362,8 @@ export default function PosPage() {
   }, []);
 
   useEffect(() => {
-    if (screen === "terminal" && !payOpen) scanInputRef.current?.focus();
-  }, [screen, cart.length, payOpen]);
+    if (screen === "terminal" && !payOpen && !locked) scanInputRef.current?.focus();
+  }, [screen, cart.length, payOpen, locked]);
 
   // ── catalog (paged, infinite scroll) ──
   const fetchCatalog = useCallback(
@@ -677,6 +692,55 @@ export default function PosPage() {
     writeHeld(next);
   };
 
+  // ── screen lock ──
+  const lockTill = useCallback(() => {
+    setLocked(true);
+    postJson<{ user: LockUser }>("/api/pos/lock", { action: "lock" })
+      .then((d) => d.success && d.data && setLockUser(d.data.user))
+      .catch(() => {});
+  }, []);
+
+  const handleUnlocked = async (user: LockUser) => {
+    setLockUser(user);
+    setCashierName(user.nameEn || user.nameAr);
+    // Reloaded while locked: the terminal behind the lock was never loaded.
+    if (screen === "picker" || screen === "pin") await enterTerminal();
+    setLocked(false);
+  };
+
+  // Someone else takes over: park the current sale under Held so it isn't lost.
+  const switchUserFromLock = () => {
+    if (cart.length > 0) holdCart();
+    setLocked(false);
+    setLockUser(null);
+    switchUser();
+  };
+
+  // Auto-lock after POS_IDLE_LOCK_MS without a tap, click, scroll or key.
+  // Time in another tab counts as idle, but the lock waits until the till is
+  // on screen again, so a POS tab in the background never signs the admin
+  // panel out from under you.
+  const signedIn = screen === "openShift" || screen === "terminal" || screen === "receipt" || screen === "zreport";
+  useEffect(() => {
+    if (!signedIn || locked) return;
+    let last = Date.now();
+    const bump = () => {
+      last = Date.now();
+    };
+    const check = () => {
+      if (document.visibilityState === "visible" && Date.now() - last >= POS_IDLE_LOCK_MS) lockTill();
+    };
+    const events = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"] as const;
+    events.forEach((e) => window.addEventListener(e, bump, { capture: true, passive: true }));
+    document.addEventListener("visibilitychange", check);
+    const timer = setInterval(check, 5000);
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, bump, { capture: true }));
+      document.removeEventListener("visibilitychange", check);
+      clearInterval(timer);
+    };
+  }, [signedIn, locked, lockTill]);
+
   // ── payment ──
   const openPay = (mode: PayMode = "CASH") => {
     if (cart.length === 0) return;
@@ -742,7 +806,7 @@ export default function PosPage() {
 
   // ── keyboard shortcuts on the terminal ──
   useEffect(() => {
-    if (screen !== "terminal") return;
+    if (screen !== "terminal" || locked) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "F2") {
         e.preventDefault();
@@ -777,6 +841,19 @@ export default function PosPage() {
       </div>
     );
   }
+
+  const lockOverlay = locked ? (
+    <LockScreen user={lockUser} fallbackName={cashierName} onUnlocked={handleUnlocked} onSwitchUser={switchUserFromLock} />
+  ) : null;
+  // The screen stays mounted behind the lock (nothing is lost) but can't be reached.
+  const withLock = (node: React.ReactNode) => (
+    <>
+      <div inert={locked}>{node}</div>
+      {lockOverlay}
+    </>
+  );
+
+  if (lockOverlay && (screen === "picker" || screen === "pin")) return lockOverlay;
 
   if (screen === "picker") {
     return (
@@ -867,7 +944,7 @@ export default function PosPage() {
   }
 
   if (screen === "openShift") {
-    return (
+    return withLock(
       <PosBackdrop>
         <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl p-8 w-full max-w-md">
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
@@ -908,7 +985,7 @@ export default function PosPage() {
   }
 
   if (screen === "receipt" && receipt) {
-    return (
+    return withLock(
       <div className="min-h-screen p-6 flex flex-col items-center justify-center bg-slate-100">
         <div className="print:hidden mb-5 flex flex-col items-center text-center">
           <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3 pos-pop-in">
@@ -940,7 +1017,7 @@ export default function PosPage() {
   if (screen === "zreport" && zReport) {
     const diff = zReport.difference ?? 0;
     const balanced = Math.abs(diff) < 0.0005;
-    return (
+    return withLock(
       <PosBackdrop>
         <div className="w-full max-w-4xl grid md:grid-cols-[1fr_auto] gap-6 items-start">
           <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl p-7 sm:p-8 print:hidden">
@@ -1018,7 +1095,7 @@ export default function PosPage() {
     />
   );
 
-  return (
+  return withLock(
     <div className="h-[100dvh] flex flex-col bg-slate-100 overflow-hidden">
       {/* Header */}
       <header className="flex items-center gap-2 bg-white border-b border-slate-200 px-3 sm:px-5 h-14 shrink-0 print:hidden">
@@ -1041,11 +1118,12 @@ export default function PosPage() {
         <HeaderBtn icon={LuRotateCcw} label="Return" onClick={() => setReturnOpen(true)} />
         <HeaderBtn icon={LuArrowDownToLine} label="Cash in" onClick={() => setCashOpen("IN")} className="hidden lg:inline-flex" />
         <HeaderBtn icon={LuArrowUpFromLine} label="Cash out" onClick={() => setCashOpen("OUT")} className="hidden lg:inline-flex" />
-        <HeaderBtn icon={LuLock} label="Close shift" onClick={() => setCloseOpen(true)} />
+        <HeaderBtn icon={LuWallet} label="Close shift" onClick={() => setCloseOpen(true)} />
         <HeaderBtn icon={LuMaximize} label="Fullscreen" onClick={toggleFullscreen} className="hidden md:inline-flex" />
         <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-500 px-2">
           <LuClock size={14} /> {now?.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
         </div>
+        <HeaderBtn icon={LuLock} label="Lock" onClick={lockTill} />
         {canOpenAdmin && (
           <a
             href="/admin"
@@ -1411,14 +1489,6 @@ function PosBackdrop({ children }: { children: React.ReactNode }) {
     <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-[#F7F2EE]">
       <div className="flex flex-col items-center w-full">{children}</div>
     </div>
-  );
-}
-
-function PadKey({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
-  return (
-    <button onClick={onClick} disabled={disabled} className="h-16 rounded-2xl bg-white border border-slate-200 text-2xl font-medium text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-95 transition disabled:opacity-40">
-      {children}
-    </button>
   );
 }
 

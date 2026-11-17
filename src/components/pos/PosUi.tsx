@@ -28,6 +28,15 @@ export function beep(kind: "ok" | "error" = "ok") {
   }
 }
 
+/** One key of the on-screen PIN pad (sign-in and lock screen). */
+export function PadKey({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button onClick={onClick} disabled={disabled} className="h-16 rounded-2xl bg-white border border-slate-200 text-2xl font-medium text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-95 transition disabled:opacity-40">
+      {children}
+    </button>
+  );
+}
+
 export function PosModal({
   open,
   onClose,

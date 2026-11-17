@@ -225,6 +225,9 @@ model Session {
   userId    String
   token     String   @unique
   expiresAt DateTime
+  // Set while the POS screen is locked: the session counts as signed out
+  // everywhere until the same person unlocks it with their PIN.
+  lockedAt  DateTime?
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

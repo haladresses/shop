@@ -56,6 +56,8 @@ export async function getSessionUser(token: string) {
 
   if (!session || session.expiresAt < new Date()) return null;
   if (!session.user.isActive) return null;
+  // A locked POS screen: nothing works on this session until it is unlocked.
+  if (session.lockedAt) return null;
 
   return session.user;
 }
