@@ -100,11 +100,10 @@ function PurchaseOrders() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-800">Purchase orders</h1>
           <p className="text-sm text-slate-500">Orders placed with suppliers, deliveries received into stock and what is still owed.</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={exportCsv} className="admin-btn admin-btn-secondary"><LuDownload size={15} /> CSV</button>
+          <button onClick={exportCsv} className="admin-btn admin-btn-secondary"><LuDownload size={15} /> Export CSV</button>
           {perms.managePurchases && (
             <Link href="/admin/purchases/new" className="admin-btn admin-btn-primary"><LuPlus size={16} /> New purchase order</Link>
           )}
@@ -122,7 +121,7 @@ function PurchaseOrders() {
           <button
             key={t.id}
             onClick={() => reset(() => setStatus(t.id))}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-sm font-medium transition-colors ${
+            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-sm font-medium ${
               status === t.id ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
           >
@@ -185,7 +184,7 @@ function PurchaseOrders() {
                       <Link href={`/admin/purchases/${r.id}`} onClick={(e) => e.stopPropagation()} className="font-mono font-medium text-indigo-600 hover:underline">{r.number}</Link>
                       <p className="text-xs text-slate-500">
                         {fmtDate(r.orderDate)}
-                        {r.supplierReference && ` · inv ${r.supplierReference}`}
+                        {r.supplierReference && ` · invoice ${r.supplierReference}`}
                       </p>
                     </td>
                     <td>
@@ -197,10 +196,10 @@ function PurchaseOrders() {
                       <span className="tabular-nums">{r.unitsReceived}/{r.unitsOrdered}</span>
                       <span className="text-slate-400 text-xs"> units</span>
                       {r.lateDelivery && (
-                        <span className="flex items-center gap-1 text-xs text-rose-600"><LuTruck size={12} /> late · exp. {fmtDate(r.expectedDate)}</span>
+                        <span className="flex items-center gap-1 text-xs text-rose-600"><LuTruck size={12} /> late · expected {fmtDate(r.expectedDate)}</span>
                       )}
                       {!r.lateDelivery && r.expectedDate && ["ORDERED", "PARTIALLY_RECEIVED"].includes(r.status) && (
-                        <span className="block text-xs text-slate-400">exp. {fmtDate(r.expectedDate)}</span>
+                        <span className="block text-xs text-slate-400">Expected {fmtDate(r.expectedDate)}</span>
                       )}
                     </td>
                     <td className="text-right tabular-nums">{fmt3(r.total)}</td>

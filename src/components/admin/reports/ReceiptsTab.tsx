@@ -8,6 +8,7 @@ import { SaleDocument } from "@/components/print/SaleDocument";
 import { printArea } from "@/lib/print";
 import { orderToInvoice } from "@/lib/invoice";
 import { DataTable, Pager, StatusLine, channelName, downloadCsv, f3, fmtDateTime, int, methodName, useReport, useReportCtx } from "./shared";
+import { orderStatusLabel, paymentStatusLabel } from "@/components/admin/labels";
 
 type Receipt = {
   id: string;
@@ -171,10 +172,10 @@ export default function ReceiptsTab({
           {
             key: "status",
             label: "Status",
-            value: (r) => `${r.status} · ${r.paymentStatus}`,
+            value: (r) => `${orderStatusLabel(r.status)} · ${paymentStatusLabel(r.paymentStatus)}`,
             render: (r) => (
               <span className="text-xs whitespace-nowrap">
-                {r.status} · <span className={r.paymentStatus === "PAID" ? "text-emerald-700" : r.paymentStatus === "REFUNDED" ? "text-rose-700" : "text-amber-700"}>{r.paymentStatus}</span>
+                {orderStatusLabel(r.status)} · <span className={r.paymentStatus === "PAID" ? "text-emerald-700" : r.paymentStatus === "REFUNDED" ? "text-rose-700" : "text-amber-700"}>{paymentStatusLabel(r.paymentStatus)}</span>
               </span>
             ),
           },
@@ -239,7 +240,7 @@ function ReceiptModal({ id, onClose }: { id: string; onClose: () => void }) {
                 ["Channel", channelName(data.source)],
                 ["Salesperson", data.source === "ONLINE" ? "Online store" : data.cashier?.nameEn || "Unassigned"],
                 ["Customer", inv.customerName || "-"],
-                ["Status", `${data.status} · ${data.paymentStatus}`],
+                ["Status", `${orderStatusLabel(data.status)} · ${paymentStatusLabel(data.paymentStatus)}`],
               ].map(([k, v]) => (
                 <tr key={k} className="border-b border-slate-100">
                   <td className="py-1 pr-4 text-slate-500 w-36">{k}</td>
@@ -254,7 +255,7 @@ function ReceiptModal({ id, onClose }: { id: string; onClose: () => void }) {
               <thead>
                 <tr>
                   <th className="!px-2.5 !py-1.5">Item</th>
-                  <th className="!px-2.5 !py-1.5 text-right">Qty</th>
+                  <th className="!px-2.5 !py-1.5 text-right">Quantity</th>
                   <th className="!px-2.5 !py-1.5 text-right">Price</th>
                   <th className="!px-2.5 !py-1.5 text-right">Offer</th>
                   <th className="!px-2.5 !py-1.5 text-right">Discount</th>
@@ -295,7 +296,7 @@ function ReceiptModal({ id, onClose }: { id: string; onClose: () => void }) {
               {data.payments.map((p, i) => (
                 <div key={i} className="flex justify-between border-b border-slate-100 py-1">
                   <span>
-                    {methodName(p.method)} <span className="text-xs text-slate-400">{p.status}</span>
+                    {methodName(p.method)} <span className="text-xs text-slate-400">{paymentStatusLabel(p.status)}</span>
                   </span>
                   <span className="tabular-nums">{f3(n(p.amount))}</span>
                 </div>

@@ -193,7 +193,7 @@ export default function VatReportTab() {
             <button
               key={p.id}
               onClick={() => choose(p.id)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
                 preset === p.id ? "bg-indigo-600 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
               }`}
             >
@@ -366,8 +366,8 @@ function Kpi({ icon: Icon, label, value, sub, tone }: { icon: React.ElementType;
       </span>
       <div className="min-w-0">
         <p className="text-xs text-slate-500">{label}</p>
-        <p className="text-lg font-bold text-slate-800 tabular-nums truncate">{value}</p>
-        {sub && <p className="text-[11px] text-slate-400 truncate">{sub}</p>}
+        <p className="text-lg font-bold text-slate-800 tabular-nums break-words">{value}</p>
+        {sub && <p className="text-[11px] text-slate-400">{sub}</p>}
       </div>
     </div>
   );
@@ -452,7 +452,7 @@ function Documents({ data, tab, setTab }: { data: Report; tab: DocTab; setTab: (
                     <p className="text-xs text-slate-400">{s.orderNumber}</p>
                   </td>
                   <td className="whitespace-nowrap">{fmtDate(s.date)}</td>
-                  <td className="text-xs">{s.source}</td>
+                  <td className="text-xs">{s.source === "ONLINE" ? "Online" : s.source}</td>
                   <td>
                     {s.customer}
                     {s.customerVatNumber && <span className="block text-[11px] text-slate-400 font-mono">VAT {s.customerVatNumber}</span>}
@@ -601,7 +601,7 @@ function VatPrint({
 }) {
   const cell: React.CSSProperties = { border: "1px solid #000", padding: "6px 8px", fontSize: 12 };
   return (
-    <div style={{ fontFamily: "Vazirmatn, SBC, Arial, 'Segoe UI', Tahoma, sans-serif", color: "#000", background: "#fff" }}>
+    <div style={{ fontFamily: "Vazirmatn, Inter, SBC, Arial, 'Segoe UI', Tahoma, sans-serif", color: "#000", background: "#fff" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24, borderBottom: "2px solid #000", paddingBottom: 10 }}>
         <div>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{legalEn}</div>

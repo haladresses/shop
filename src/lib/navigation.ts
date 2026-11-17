@@ -13,38 +13,12 @@ export type NavItem = {
   submenu: NavSubItem[];
 };
 
+// Matches the live menu so the header does not flash template links before
+// the saved menu loads.
 export const DEFAULT_NAV_ITEMS: NavItem[] = [
   { labelEn: "Home", labelAr: "الرئيسية", path: "/", newTab: false, submenu: [] },
   { labelEn: "Collections", labelAr: "التشكيلات", path: "/shop", newTab: false, submenu: [] },
   { labelEn: "Contact", labelAr: "اتصل بنا", path: "/contact", newTab: false, submenu: [] },
-  {
-    labelEn: "Client Area",
-    labelAr: "حسابي",
-    path: "/",
-    newTab: false,
-    submenu: [
-      { labelEn: "Full Collection", labelAr: "كل التشكيلة", path: "/shop", newTab: false },
-      { labelEn: "Special Picks", labelAr: "العروض الخاصة", path: "/shop-without-sidebar", newTab: false },
-      { labelEn: "Checkout", labelAr: "الدفع", path: "/checkout", newTab: false },
-      { labelEn: "Shopping Bag", labelAr: "سلة التسوق", path: "/cart", newTab: false },
-      { labelEn: "Wishlist", labelAr: "المفضلة", path: "/wishlist", newTab: false },
-      { labelEn: "Client Login", labelAr: "تسجيل الدخول", path: "/signin", newTab: false },
-      { labelEn: "Create Account", labelAr: "إنشاء حساب", path: "/signup", newTab: false },
-      { labelEn: "My Account", labelAr: "حسابي", path: "/my-account", newTab: false },
-    ],
-  },
-  {
-    labelEn: "Journal",
-    labelAr: "المدونة",
-    path: "/",
-    newTab: false,
-    submenu: [
-      { labelEn: "Journal With Sidebar", labelAr: "المدونة مع الشريط الجانبي", path: "/blogs/blog-grid-with-sidebar", newTab: false },
-      { labelEn: "Journal Grid", labelAr: "شبكة المدونة", path: "/blogs/blog-grid", newTab: false },
-      { labelEn: "Journal Story With Sidebar", labelAr: "تفاصيل المقال مع الشريط", path: "/blogs/blog-details-with-sidebar", newTab: false },
-      { labelEn: "Journal Story", labelAr: "تفاصيل المقال", path: "/blogs/blog-details", newTab: false },
-    ],
-  },
 ];
 
 export const NAV_MENU_KEY = "nav_menu";

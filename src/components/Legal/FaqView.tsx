@@ -40,7 +40,7 @@ const FaqView = () => {
     <>
       <Breadcrumb title={title} pages={[title]} />
 
-      <section className="overflow-hidden py-14 sm:py-20 bg-gray-2">
+      <section className="overflow-hidden py-14 sm:py-20 bg-meta">
         <div className="max-w-[900px] w-full mx-auto px-4 sm:px-8 xl:px-0">
           <div className={isArabic ? "text-right" : "text-left"} dir={isArabic ? "rtl" : "ltr"}>
             {intro && <p className="text-dark-3 mb-8 leading-relaxed max-w-[640px]">{intro}</p>}
@@ -60,7 +60,7 @@ const FaqView = () => {
                     <div key={i} className="bg-white rounded-xl shadow-1 overflow-hidden">
                       <button
                         onClick={() => setOpenIndex(open ? null : i)}
-                        className={`w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-4 sm:py-5 text-start font-medium text-dark hover:text-blue transition-colors ${isArabic ? "flex-row-reverse" : ""}`}
+                        className="w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-4 sm:py-5 text-start font-medium text-dark hover:text-blue transition-colors"
                       >
                         <span>{question}</span>
                         <ChevronIcon open={open} />

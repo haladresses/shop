@@ -24,16 +24,39 @@ export class PricingError extends Error {
 export const FREE_SHIPPING_THRESHOLD = 10;
 export const STANDARD_SHIPPING_COST = 1.5;
 
+/** Standard-delivery pricing, editable in Settings → Shipping. */
+export type ShippingRules = { freeShippingMin: number; standardCost: number };
+const DEFAULT_SHIPPING_RULES: ShippingRules = { freeShippingMin: FREE_SHIPPING_THRESHOLD, standardCost: STANDARD_SHIPPING_COST };
+
+/** Reads the store's free-delivery minimum and standard delivery fee from the settings. */
+export async function getShippingRules(): Promise<ShippingRules> {
+  const rows = await prisma.setting.findMany({
+    where: { key: { in: ["free_shipping_min", "default_shipping_cost"] } },
+    select: { key: true, value: true },
+  });
+  const read = (key: string, fallback: number) => {
+    const n = parseFloat(rows.find((r) => r.key === key)?.value ?? "");
+    return Number.isFinite(n) && n >= 0 ? n : fallback;
+  };
+  return {
+    freeShippingMin: read("free_shipping_min", DEFAULT_SHIPPING_RULES.freeShippingMin),
+    standardCost: read("default_shipping_cost", DEFAULT_SHIPPING_RULES.standardCost),
+  };
+}
+
 /** Delivery fee for an online order — always computed server-side. */
 export function onlineShippingCost(
   opts: { shippingMethod: string; branch: WaselleeBranch | null; deliveryType: string },
   subtotal: number,
+  rules: ShippingRules = DEFAULT_SHIPPING_RULES,
 ): number {
   if (opts.shippingMethod === "STORE_PICKUP") return 0; // collected in person
   if (opts.shippingMethod === "WASELLEE") {
     return opts.branch ? calculateWaselleeCost(opts.branch, opts.deliveryType as never) : 0;
   }
-  return subtotal >= FREE_SHIPPING_THRESHOLD || subtotal === 0 ? 0 : STANDARD_SHIPPING_COST;
+  // A free-delivery minimum of 0 means delivery is always charged.
+  const free = subtotal === 0 || (rules.freeShippingMin > 0 && subtotal >= rules.freeShippingMin);
+  return free ? 0 : r3(rules.standardCost);
 }
 
 export type PricedCart = {

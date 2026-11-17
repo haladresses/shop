@@ -106,7 +106,7 @@ export default function NewsletterAdminPage() {
       <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => setTab("content")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
             tab === "content" ? "bg-indigo-600 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -114,7 +114,7 @@ export default function NewsletterAdminPage() {
         </button>
         <button
           onClick={() => setTab("subscribers")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
             tab === "subscribers" ? "bg-indigo-600 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -156,13 +156,13 @@ export default function NewsletterAdminPage() {
                 Tip: the &ldquo;Already Subscribed&rdquo; message is shown when someone submits an email that is already an active subscriber, useful for reassuring them without revealing account details.
               </p>
 
-              <div className="flex items-center gap-3 sticky bottom-0 bg-slate-50 py-3">
+              <div className="admin-savebar">
                 <button onClick={save} disabled={saving} className="admin-btn admin-btn-primary px-8">
                   {saving ? "Saving..." : "Save Changes"}
                 </button>
                 {saved && (
                   <span className="text-green-600 text-sm font-medium flex items-center gap-1">
-                    <LuCheck size={16} /> Saved!
+                    <LuCheck size={16} /> Saved
                   </span>
                 )}
               </div>

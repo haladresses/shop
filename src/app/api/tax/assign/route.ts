@@ -5,6 +5,7 @@ import { ok, error, serverError } from "@/lib/api/response";
 import { guard } from "@/lib/api/guard";
 import { getDefaultTaxRate, resolveCategoryTaxRates, resolveProductTaxRates } from "@/lib/tax";
 import { productCodeConditions } from "@/lib/barcodes";
+import { productImageUrl } from "@/lib/productImage";
 
 /**
  * Which VAT rate applies where.
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
           sku: r.sku,
           price: Number(r.salePrice ?? r.basePrice),
           categoryName: r.category.nameEn,
-          imageUrl: r.images[0]?.url ?? null,
+          imageUrl: productImageUrl(r.images),
           taxRateId: r.taxRateId,
           effective: effective.get(r.id) ?? null,
         })),

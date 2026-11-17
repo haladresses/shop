@@ -42,55 +42,70 @@ export default function SellerAnalyticsPage() {
       });
   }, []);
 
-  if (loading) return <div className="flex justify-center py-16"><div className="w-7 h-7 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <div className="flex justify-center py-16"><div className="w-7 h-7 border-[3px] border-slate-200 border-t-indigo-600 rounded-full animate-spin" /></div>;
+
+  const th = "px-4 py-3 text-xs font-semibold text-slate-500 uppercase";
 
   return (
     <div className="space-y-6">
       <h2 className="text-lg font-semibold text-slate-800">Analytics</h2>
 
       {/* Revenue by Month */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="font-semibold text-slate-700 mb-4">Revenue by Month</h3>
-        {data?.revenueByMonth.length === 0 ? (
-          <p className="text-slate-400 text-sm">No data yet</p>
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <h3 className="font-semibold text-slate-700 px-5 py-4 border-b border-slate-100">Revenue by Month</h3>
+        {!data || data.revenueByMonth.length === 0 ? (
+          <p className="text-slate-400 text-sm px-5 py-6">No data yet</p>
         ) : (
-          <div className="space-y-3">
-            {data?.revenueByMonth.map((row) => (
-              <div key={row.month} className="flex items-center gap-4">
-                <div className="w-24 text-sm text-slate-600 font-medium">{row.month}</div>
-                <div className="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden">
-                  <div
-                    className="h-4 bg-sky-400 rounded-full"
-                    style={{ width: `${Math.min(100, (row.revenue / 1000) * 100)}%` }}
-                  />
-                </div>
-                <div className="text-sm font-medium text-slate-700 w-28 text-right">
-                  {row.revenue.toFixed(3)} OMR
-                </div>
-                <div className="text-xs text-slate-400 w-16">{row.orders} orders</div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className={`text-left ${th}`}>Month</th>
+                  <th className={`text-right ${th}`}>Orders</th>
+                  <th className={`text-right ${th}`}>Revenue (paid)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.revenueByMonth.map((row) => (
+                  <tr key={row.month} className="border-t border-slate-100">
+                    <td className="px-4 py-3 font-medium text-slate-700">{row.month}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-600">{row.orders}</td>
+                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-800">{row.revenue.toFixed(3)} OMR</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
       {/* Top Products */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5">
-        <h3 className="font-semibold text-slate-700 mb-4">Top Products by Revenue</h3>
-        {data?.topProducts.length === 0 ? (
-          <p className="text-slate-400 text-sm">No data yet</p>
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <h3 className="font-semibold text-slate-700 px-5 py-4 border-b border-slate-100">Top Products by Revenue</h3>
+        {!data || data.topProducts.length === 0 ? (
+          <p className="text-slate-400 text-sm px-5 py-6">No data yet</p>
         ) : (
-          <div className="space-y-3">
-            {data?.topProducts.map((p, i) => (
-              <div key={p.nameEn} className="flex items-center gap-4">
-                <div className="w-6 h-6 bg-sky-100 text-sky-600 rounded-full flex items-center justify-center text-xs font-bold">
-                  {i + 1}
-                </div>
-                <div className="flex-1 font-medium text-slate-700">{p.nameEn}</div>
-                <div className="text-sm text-slate-500">{p.quantity} sold</div>
-                <div className="text-sm font-bold text-slate-800">{p.revenue.toFixed(3)} OMR</div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className={`text-left w-12 ${th}`}>#</th>
+                  <th className={`text-left ${th}`}>Product</th>
+                  <th className={`text-right ${th}`}>Sold</th>
+                  <th className={`text-right ${th}`}>Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.topProducts.map((p, i) => (
+                  <tr key={p.nameEn} className="border-t border-slate-100">
+                    <td className="px-4 py-3 text-slate-400 tabular-nums">{i + 1}</td>
+                    <td className="px-4 py-3 font-medium text-slate-700">{p.nameEn}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-600">{p.quantity}</td>
+                    <td className="px-4 py-3 text-right tabular-nums font-medium text-slate-800">{p.revenue.toFixed(3)} OMR</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

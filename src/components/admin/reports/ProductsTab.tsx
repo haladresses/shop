@@ -189,7 +189,7 @@ export default function ProductsTab({
           { key: "profit", label: "Gross profit", labelAr: "الربح", kind: "money", value: (r) => r.profit, total: profit, className: "font-medium" },
           { key: "margin", label: "Margin", kind: "pct", value: (r) => r.margin, total: netExVat > 0 ? (profit / netExVat) * 100 : 0 },
           { key: "share", label: "Share", kind: "pct", value: (r) => r.share },
-          { key: "avg", label: "Avg price", kind: "money", value: (r) => r.avgPrice },
+          { key: "avg", label: "Average price", kind: "money", value: (r) => r.avgPrice },
           { key: "stock", label: "In stock", labelAr: "المخزون", kind: "int", value: (r) => r.stock },
         ]}
       />

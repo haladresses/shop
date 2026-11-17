@@ -276,7 +276,7 @@ export default function FooterSettings() {
         </button>
         {saved && (
           <span className="text-green-600 text-sm font-medium flex items-center gap-1">
-            <LuCheck size={16} /> Footer saved!
+            <LuCheck size={16} /> Footer saved
           </span>
         )}
       </div>

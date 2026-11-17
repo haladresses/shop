@@ -131,7 +131,7 @@ export default function ItemSearch({
       </form>
       {msg && <p className="text-xs text-amber-700 mt-1">{msg}</p>}
       {open && q.trim() && (
-        <ul className="absolute z-30 mt-1 w-full bg-white rounded-xl shadow-lg ring-1 ring-slate-200 max-h-80 overflow-y-auto admin-fade-in">
+        <ul className="absolute z-30 mt-1 w-full bg-white rounded-xl shadow-lg ring-1 ring-slate-200 max-h-80 overflow-y-auto">
           {!loading && rows.length === 0 && <li className="px-4 py-3 text-sm text-slate-400">No matching items</li>}
           {rows.map((r) => (
             <li key={r.key}>
@@ -152,7 +152,7 @@ export default function ItemSearch({
                 <span className="min-w-0 flex-1">
                   <span className="block font-medium text-slate-800 truncate">
                     {r.nameEn}
-                    {!r.isActive && <span className="ml-1.5 text-[10px] font-semibold text-slate-400 uppercase">inactive</span>}
+                    {!r.isActive && <span className="ml-1.5 text-xs text-slate-400">Inactive</span>}
                   </span>
                   <span className="block text-xs text-slate-500 truncate">
                     {[r.variantLabel || "Standard", r.barcode || r.sku].filter(Boolean).join(" · ")}

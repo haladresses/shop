@@ -71,6 +71,12 @@ export type ProductFormValue = {
   barcode: string;
   /** VAT rate override; "" = inherit from the category. */
   taxRateId: string;
+  /** Who the item is bought from; "" = not set. */
+  supplierId: string;
+  /** Store department; "" = not set. */
+  department: ProductDepartment | "";
+  /** Original imported record (read-only, never sent back). */
+  legacyData?: LegacyRecord | null;
   isActive: boolean;
   isFeatured: boolean;
   isNew: boolean;
@@ -84,9 +90,39 @@ export type ProductFormValue = {
 
 type Category = FlatCategory & { parentId: string | null; isActive: boolean; taxRateId?: string | null };
 
+export type ProductDepartment = "LADIES" | "GIRLS" | "BOYS" | "BABY" | "GIFTS";
+
+export const DEPARTMENT_OPTIONS: { value: ProductDepartment; label: string }[] = [
+  { value: "LADIES", label: "Ladies" },
+  { value: "GIRLS", label: "Girls" },
+  { value: "BOYS", label: "Boys" },
+  { value: "BABY", label: "Baby" },
+  { value: "GIFTS", label: "Gifts" },
+];
+
+/** A record kept from a data import: { source, importedAt, row: { column: value } }. */
+export type LegacyRecord = { source?: string; importedAt?: string; row?: Record<string, unknown> };
+
+// Column order of the old POS "Product List" export (the database doesn't keep key order).
+const LEGACY_COLUMNS = [
+  "Item Code", "Description", "Barcode", "Main Category", "Middle Category", "Sub Category",
+  "Item Type Name", "Style/Item Code", "Stock Units", "Description 2", "Beginning Qty", "POS Supplier",
+  "MSRP", "OutPrice", "Sales Tax", "Cost", "Cost Tax", "Parents Item Code", "Converted Qty", "Item Number",
+];
+
+/** The imported row as [column, display value] pairs, in the export's column order. */
+function legacyEntries(row: Record<string, unknown>): [string, string][] {
+  const rank = (k: string) => (LEGACY_COLUMNS.indexOf(k) + 1) || LEGACY_COLUMNS.length + 1;
+  return Object.entries(row)
+    .sort(([a], [b]) => rank(a) - rank(b))
+    // "..." is how the old system wrote an empty value.
+    .map(([k, v]) => [k, v === "" || v == null || v === "..." ? "-" : String(v)]);
+}
+
 export const emptyProductForm: ProductFormValue = {
   nameEn: "", nameAr: "", descriptionEn: "", descriptionAr: "",
   categoryId: "", basePrice: "", salePrice: "", costPrice: "", sku: "", barcode: "", taxRateId: "",
+  supplierId: "", department: "",
   isActive: true, isFeatured: false, isNew: true, isBestSeller: false,
   attributes: {}, customSpecs: [], images: [], variants: [],
 };
@@ -105,6 +141,8 @@ export function buildProductPayload(form: ProductFormValue) {
     sku: form.sku || undefined,
     barcode: form.barcode || undefined,
     taxRateId: form.taxRateId || null,
+    supplierId: form.supplierId || null,
+    department: form.department || null,
     isActive: form.isActive,
     isFeatured: form.isFeatured,
     isNew: form.isNew,
@@ -157,6 +195,9 @@ export type ApiProductForForm = {
   sku: string | null;
   barcode?: string | null;
   taxRateId?: string | null;
+  supplierId?: string | null;
+  department?: ProductDepartment | null;
+  legacyData?: unknown;
   isActive: boolean;
   isFeatured: boolean;
   isNew: boolean;
@@ -191,6 +232,9 @@ export function productToFormValue(p: ApiProductForForm): ProductFormValue {
     sku: p.sku ?? "",
     barcode: p.barcode ?? "",
     taxRateId: p.taxRateId ?? "",
+    supplierId: p.supplierId ?? "",
+    department: p.department ?? "",
+    legacyData: p.legacyData && typeof p.legacyData === "object" ? (p.legacyData as LegacyRecord) : null,
     isActive: p.isActive,
     isFeatured: p.isFeatured,
     isNew: p.isNew,
@@ -269,6 +313,16 @@ export default function ProductForm({
     fetch("/api/categories?tree=true", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => { if (d.success) setCategories(d.data); });
+  }, []);
+
+  // Suppliers for the "Supplier" field. Staff without access to suppliers
+  // simply don't get the list; a supplier already set is kept as it is.
+  const [suppliers, setSuppliers] = useState<{ id: string; code: string; nameEn: string }[] | null>(null);
+  useEffect(() => {
+    fetch("/api/suppliers?status=all&pageSize=500&sort=name", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setSuppliers(d.success ? d.data.items : []))
+      .catch(() => setSuppliers([]));
   }, []);
 
   const categoryOptions = useMemo(() => categorySelectOptions(categories), [categories]);
@@ -504,13 +558,13 @@ export default function ProductForm({
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={img.url} alt="product" className="w-full h-full object-cover" />
-                <div className="absolute inset-x-0 top-0 flex items-center justify-between p-1 bg-gradient-to-b from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between p-1 bg-black/50 opacity-0 group-hover:opacity-100">
                   <span className="text-white/80 cursor-grab"><LuGripVertical size={14} /></span>
                   <button type="button" onClick={() => removeImage(idx)} className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center" aria-label="Remove image">
                     <LuX size={12} />
                   </button>
                 </div>
-                <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-1 bg-gradient-to-t from-black/60 to-transparent">
+                <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-1 bg-black/55">
                   <button
                     type="button"
                     onClick={() => setPrimary(idx)}
@@ -569,6 +623,45 @@ export default function ProductForm({
             </select>
             <p className="text-xs text-slate-400 mt-1">The category decides which specification fields this product has.</p>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label>Department</Label>
+              <select className="admin-input admin-select" value={form.department} onChange={(e) => set("department", e.target.value as ProductDepartment | "")}>
+                <option value="">Not set</option>
+                {DEPARTMENT_OPTIONS.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <Label>Supplier</Label>
+              <select
+                className="admin-input admin-select"
+                value={form.supplierId}
+                onChange={(e) => set("supplierId", e.target.value)}
+                disabled={suppliers === null}
+              >
+                <option value="">Not set</option>
+                {form.supplierId && suppliers !== null && !suppliers.some((s) => s.id === form.supplierId) && (
+                  <option value={form.supplierId}>Current supplier</option>
+                )}
+                {(suppliers ?? []).map((s) => <option key={s.id} value={s.id}>{s.nameEn} ({s.code})</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label>Description (English)</Label>
+              <textarea className="admin-input" rows={3} value={form.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} />
+            </div>
+            <div>
+              <Label>Description (Arabic)</Label>
+              <textarea className="admin-input" rows={3} dir="rtl" value={form.descriptionAr} onChange={(e) => set("descriptionAr", e.target.value)} />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card title="Price">
+        <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label>Purchase Price (OMR)</Label>
@@ -591,6 +684,11 @@ export default function ProductForm({
             categories={categories}
             price={form.salePrice || form.basePrice}
           />
+        </div>
+      </Card>
+
+      <Card title="SKU & Barcode">
+        <div className="space-y-4">
           <div>
             <Label>SKU</Label>
             <input className="admin-input" value={form.sku} onChange={(e) => set("sku", e.target.value)} />
@@ -631,27 +729,20 @@ export default function ProductForm({
               </div>
             )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label>Description (English)</Label>
-              <textarea className="admin-input" rows={3} value={form.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} />
-            </div>
-            <div>
-              <Label>Description (Arabic)</Label>
-              <textarea className="admin-input" rows={3} dir="rtl" value={form.descriptionAr} onChange={(e) => set("descriptionAr", e.target.value)} />
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-4 pt-1">
-            {[
-              { key: "isActive", label: "Active" }, { key: "isFeatured", label: "Featured" },
-              { key: "isNew", label: "New Arrival" }, { key: "isBestSeller", label: "Best Seller" },
-            ].map(({ key, label }) => (
-              <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" checked={form[key as keyof ProductFormValue] as boolean} onChange={(e) => set(key as keyof ProductFormValue, e.target.checked as never)} className="rounded" />
-                {label}
-              </label>
-            ))}
-          </div>
+        </div>
+      </Card>
+
+      <Card title="Shop Visibility" desc="Active products are shown in the shop. The other options add the product to those sections.">
+        <div className="flex flex-wrap gap-x-6 gap-y-3">
+          {[
+            { key: "isActive", label: "Active" }, { key: "isFeatured", label: "Featured" },
+            { key: "isNew", label: "New Arrival" }, { key: "isBestSeller", label: "Best Seller" },
+          ].map(({ key, label }) => (
+            <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={form[key as keyof ProductFormValue] as boolean} onChange={(e) => set(key as keyof ProductFormValue, e.target.checked as never)} className="rounded" />
+              {label}
+            </label>
+          ))}
         </div>
       </Card>
 
@@ -865,7 +956,23 @@ export default function ProductForm({
         </div>
       </Card>
 
-      <div className="flex items-center gap-3 sticky bottom-0 bg-slate-50/80 backdrop-blur-sm py-3 -mx-1 px-1 rounded-xl">
+      {form.legacyData?.row && (
+        <Card
+          title="Original Record"
+          desc={`Imported from ${form.legacyData.source || "the old system"}${form.legacyData.importedAt ? ` on ${new Date(form.legacyData.importedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : ""}. Kept for reference; it is not changed when you edit the product.`}
+        >
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 text-sm">
+            {legacyEntries(form.legacyData.row).map(([key, value]) => (
+              <div key={key} className="flex items-baseline justify-between gap-4 py-2 border-b border-slate-100">
+                <dt className="text-slate-500">{key}</dt>
+                <dd className="font-medium text-slate-800 text-right break-all">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        </Card>
+      )}
+
+      <div className="admin-savebar">
         <button type="submit" disabled={saving || uploading} className="admin-btn admin-btn-primary px-8 disabled:opacity-60">
           {saving ? "Saving..." : submitLabel}
         </button>

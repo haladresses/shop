@@ -6,6 +6,7 @@ import type { Prisma } from "@prisma/client";
 import { resolveProductTaxRates } from "@/lib/tax";
 import { categoryAncestry } from "@/lib/promotions";
 import { NO_TAX, type RateInfo } from "@/lib/taxCalc";
+import { productImageUrl } from "@/lib/productImage";
 
 type PosLine = {
   productId: string;
@@ -45,7 +46,7 @@ type ProductWithLines = Prisma.ProductGetPayload<{ include: typeof PRODUCT_INCLU
 
 function toLines(product: ProductWithLines, pricing: Pricing): PosLine[] {
   const unitBase = Number(product.salePrice ?? product.basePrice);
-  const imageUrl = product.images[0]?.url ?? null;
+  const imageUrl = productImageUrl(product.images);
   const activeVariants = product.variants.filter((v) => v.isActive);
   const shared = {
     tax: pricing.rates.get(product.id) ?? NO_TAX,

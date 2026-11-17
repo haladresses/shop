@@ -2,7 +2,7 @@
 
 import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LuChevronLeft, LuImage, LuMessageSquare, LuTrash2, LuUpload, LuX } from "react-icons/lu";
+import { LuChevronLeft, LuImage, LuTrash2, LuUpload, LuX } from "react-icons/lu";
 
 type WhatsappReview = {
   id: string;
@@ -128,19 +128,11 @@ export default function ProductWhatsappReviewsPage({ params }: { params: Promise
         >
           <LuChevronLeft size={16} /> Back to product
         </Link>
-        <div className="flex items-start gap-3">
-          <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-green-50 text-green-600">
-            <LuMessageSquare size={20} />
-          </span>
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">WhatsApp Reviews</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Upload screenshots of customer reviews received on WhatsApp for{" "}
-              <span className="font-medium text-slate-700">{productName || "this product"}</span>. They appear in the WhatsApp
-              Reviews tab on the storefront product page.
-            </p>
-          </div>
-        </div>
+        <p className="text-sm text-slate-500">
+          Upload screenshots of customer reviews received on WhatsApp for{" "}
+          <span className="font-medium text-slate-700">{productName || "this product"}</span>. They appear in the WhatsApp
+          Reviews tab on the storefront product page.
+        </p>
       </section>
 
       {/* Uploader */}
@@ -150,7 +142,7 @@ export default function ProductWhatsappReviewsPage({ params }: { params: Promise
           {/* Drop / preview area */}
           <label
             htmlFor="wa-file"
-            className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-center transition-colors hover:border-slate-300"
+            className="flex aspect-[3/4] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 text-center hover:border-slate-300"
           >
             {preview ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -204,7 +196,7 @@ export default function ProductWhatsappReviewsPage({ params }: { params: Promise
                 type="button"
                 onClick={upload}
                 disabled={uploading || !file}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                className="admin-btn admin-btn-primary disabled:opacity-50"
               >
                 <LuUpload size={16} /> {uploading ? "Uploading..." : "Add screenshot"}
               </button>
@@ -249,7 +241,7 @@ export default function ProductWhatsappReviewsPage({ params }: { params: Promise
                     type="button"
                     onClick={() => remove(r.id)}
                     disabled={deletingId === r.id}
-                    className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-red-600 opacity-0 shadow transition-opacity hover:bg-white group-hover:opacity-100 disabled:opacity-50"
+                    className="absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-red-600 opacity-0 shadow hover:bg-white group-hover:opacity-100 disabled:opacity-50"
                     aria-label="Delete screenshot"
                     title="Delete"
                   >

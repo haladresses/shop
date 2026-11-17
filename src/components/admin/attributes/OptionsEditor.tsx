@@ -131,7 +131,7 @@ export default function OptionsEditor({
                 endDrag();
               }}
               onDragEnd={endDrag}
-              className={`group inline-flex items-center gap-1.5 rounded-full border bg-white py-1 pl-1.5 pr-1 text-xs transition ${
+              className={`group inline-flex items-center gap-1.5 rounded-full border bg-white py-1 pl-1.5 pr-1 text-xs ${
                 editing === o.uid ? "border-indigo-400 ring-2 ring-indigo-100" : over === i && drag !== i ? "border-indigo-400" : "border-slate-200"
               } ${drag === i ? "opacity-40" : ""}`}
             >
@@ -175,7 +175,7 @@ export default function OptionsEditor({
       )}
 
       {editingOption && (
-        <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/40 p-2 admin-fade-in">
+        <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/40 p-2">
           {isColor && (
             <input
               type="color"

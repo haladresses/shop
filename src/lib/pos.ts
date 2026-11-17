@@ -20,22 +20,45 @@ type PinCheckUser = {
   posPinLockedUntil: Date | null;
 };
 
+type CheckResult = { ok: boolean; error: string | null };
+
 /**
  * Verifies a PIN against the stored hash with attempt-count lockout — PINs
  * are only 10,000 combinations, so this must be rate-limited per user.
  */
-export async function verifyPin(
-  user: PinCheckUser,
-  pin: string
-): Promise<{ ok: boolean; error: string | null }> {
-  if (!user.posPinHash) return { ok: false, error: "This account has no POS PIN set." };
+export async function verifyPin(user: PinCheckUser, pin: string): Promise<CheckResult> {
+  const hash = user.posPinHash;
+  if (!hash) return { ok: false, error: "This account has no POS PIN set." };
+  return checkWithLockout(user, () => verifyPassword(pin, hash), "Incorrect PIN.");
+}
 
+/**
+ * Unlocks a locked POS screen: the POS PIN when the person has one, otherwise
+ * their account password (someone who opened the POS from the admin panel).
+ * Both share the same wrong-attempt lockout.
+ */
+export async function verifyUnlock(
+  user: PinCheckUser & { passwordHash: string },
+  secret: string
+): Promise<CheckResult> {
+  if (user.posPinHash) {
+    if (!isValidPin(secret)) return { ok: false, error: "Incorrect PIN." };
+    return verifyPin(user, secret);
+  }
+  return checkWithLockout(user, () => verifyPassword(secret, user.passwordHash), "Incorrect password.");
+}
+
+async function checkWithLockout(
+  user: PinCheckUser,
+  check: () => Promise<boolean>,
+  wrongMessage: string
+): Promise<CheckResult> {
   if (user.posPinLockedUntil && user.posPinLockedUntil > new Date()) {
     const minutes = Math.ceil((user.posPinLockedUntil.getTime() - Date.now()) / 60000);
     return { ok: false, error: `Too many attempts. Try again in ${minutes} minute(s).` };
   }
 
-  const valid = await verifyPassword(pin, user.posPinHash);
+  const valid = await check();
 
   if (!valid) {
     const attempts = user.posPinAttempts + 1;
@@ -53,7 +76,7 @@ export async function verifyPin(
       ok: false,
       error: lockedOut
         ? `Too many attempts. Try again in ${PIN_LOCKOUT_MINUTES} minute(s).`
-        : "Incorrect PIN.",
+        : wrongMessage,
     };
   }
 

@@ -122,12 +122,11 @@ export default function PaymentGatewaySettings() {
     <div className="admin-card border border-slate-200 p-6 space-y-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-            <LuCreditCard size={14} /> Thawani Gateway
-          </div>
-          <h3 className="mt-3 text-lg font-semibold text-slate-800">Payment Gateway Configuration</h3>
+          <h3 className="flex items-center gap-2 text-base font-semibold text-slate-800">
+            <LuCreditCard size={18} className="text-slate-400" /> Thawani Payment Gateway
+          </h3>
           <p className="mt-1 max-w-2xl text-sm text-slate-500">
-            Manage the live Thawani gateway connection from admin. These credentials are stored in the database and are no longer read from `.env`.
+            Connects the shop to Thawani so customers can pay online by card.
           </p>
         </div>
         <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${settings.enabled ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-50 text-slate-600"}`}>
@@ -153,16 +152,16 @@ export default function PaymentGatewaySettings() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Last Saved</div>
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <div className="text-xs text-slate-500">Last Saved</div>
           <div className="mt-2 text-sm font-semibold text-slate-800">{formatDateTime(settings.savedAt)}</div>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Last Test</div>
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <div className="text-xs text-slate-500">Last Test</div>
           <div className="mt-2 text-sm font-semibold text-slate-800">{formatDateTime(settings.lastTestedAt)}</div>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Last Test Result</div>
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <div className="text-xs text-slate-500">Last Test Result</div>
           <div className={`mt-2 text-sm font-semibold ${settings.lastTestOk === null ? "text-slate-500" : settings.lastTestOk ? "text-emerald-700" : "text-rose-700"}`}>
             {settings.lastTestOk === null ? "No test recorded" : settings.lastTestOk ? "Passed" : "Failed"}
           </div>
@@ -223,17 +222,17 @@ export default function PaymentGatewaySettings() {
 
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="font-medium text-slate-800">Validate the current gateway form before saving live checkout settings.</div>
-          <div className="mt-1 text-sm text-slate-500">Run a connection test first, then save once the configuration is confirmed.</div>
+          <div className="font-medium text-slate-800">Test the connection, then save.</div>
+          <div className="mt-1 text-sm text-slate-500">Saving changes how customers pay at checkout.</div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-            <span className={`h-2 w-2 rounded-full ${dirty ? "bg-amber-400" : "bg-emerald-400"}`} /> Changes {dirty ? "pending" : "ready"}
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-500">
+            <span className={`h-2 w-2 rounded-full ${dirty ? "bg-amber-400" : "bg-emerald-400"}`} /> {dirty ? "Unsaved changes" : "All saved"}
           </div>
-          <button onClick={testConnection} disabled={testing || saving} className="inline-flex min-w-40 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 transition-colors duration-200 hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400">
+          <button onClick={testConnection} disabled={testing || saving} className="admin-btn admin-btn-secondary disabled:opacity-50">
             {testing ? "Testing..." : <><LuPlugZap size={15} /> Test Connection</>}
           </button>
-          <button onClick={save} disabled={saving || testing} className="inline-flex min-w-36 items-center justify-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300">
+          <button onClick={save} disabled={saving || testing} className="admin-btn admin-btn-primary disabled:opacity-50">
             {saving ? "Saving..." : <><LuCheck size={15} /> Save Gateway</>}
           </button>
         </div>

@@ -44,7 +44,7 @@ export default function PaymentTab({ query }: { query: string }) {
     { key: "pos", label: "POS", ar: "المتجر", kind: "money", value: (r) => r.pos, total: t?.pos },
     { key: "online", label: "Online", ar: "الإلكتروني", kind: "money", value: (r) => r.online, total: t?.online },
     { key: "amount", label: "Received", ar: "المقبوض", kind: "money", value: (r) => r.amount, total: t ? t.amount + (data?.unrecorded ?? 0) : undefined, className: "font-medium" },
-    { key: "avg", label: "Avg transaction", ar: "متوسط العملية", kind: "money", value: (r) => r.avg },
+    { key: "avg", label: "Average transaction", ar: "متوسط العملية", kind: "money", value: (r) => r.avg },
     { key: "share", label: "Share", ar: "النسبة", kind: "pct", value: (r) => r.share, total: t?.amount ? 100 : undefined },
     { key: "refundCount", label: "Refunds #", ar: "عدد المرتجعات", kind: "int", value: (r) => r.refundCount, total: t?.refundCount },
     { key: "refunds", label: "Refunded", ar: "المسترد", kind: "money", value: (r) => r.refunds, total: t?.refunds },

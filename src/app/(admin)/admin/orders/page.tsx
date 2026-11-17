@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useRef, useState, useCallback, Suspense } from "react";
 import { ORDER_TODOS, isOrderTodo } from "@/lib/orderTodos";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
@@ -10,6 +10,7 @@ import {
   LuPrinter, LuRotateCcw, LuFileText,
 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
+import { orderStatusLabel, paymentStatusLabel } from "@/components/admin/labels";
 import ReturnModal from "@/components/pos/ReturnModal";
 import PrintArea from "@/components/print/PrintArea";
 import { SaleDocument } from "@/components/print/SaleDocument";
@@ -17,6 +18,7 @@ import { printArea } from "@/lib/print";
 import { orderToInvoice, refundToCreditNote, methodLabels, type StoreInfo } from "@/lib/invoice";
 import { DEFAULT_TAX_SETTINGS, type TaxSettings } from "@/lib/taxCalc";
 import { formatVariantLabel } from "@/lib/utils";
+import { productImageUrl } from "@/lib/productImage";
 
 type ShippingAddress = {
   nameEn?: string;
@@ -88,6 +90,11 @@ type Order = {
   whatsappNotifiedAt?: string | null;
   whatsappNotifyError?: string | null;
   waselleeManualWhatsAppLink?: string | null;
+  // Delivery tracking
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  trackingNumber?: string | null;
+  deliveryCost?: number | string | null;
   // VAT, promotions and returns
   invoiceNumber?: string | null;
   taxTotal?: number | string;
@@ -138,9 +145,11 @@ const payColors: Record<string, string> = {
   PAID: "badge-paid", UNPAID: "badge-unpaid", PARTIAL: "badge-partial", FAILED: "badge-failed", REFUNDED: "badge-refunded",
 };
 
+const statusLabel = orderStatusLabel;
+const payLabel = paymentStatusLabel;
+
 const ORDER_STATUSES = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED", "REFUNDED"];
 const PAYMENT_STATUSES = ["UNPAID", "PARTIAL", "PAID", "FAILED", "REFUNDED"];
-const FLOW = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED"];
 const DESTRUCTIVE = ["CANCELLED", "REFUNDED"];
 
 const omr = (v: number | string) => `${Number(v).toFixed(3)} OMR`;
@@ -164,6 +173,10 @@ function OrdersView() {
   const [selected, setSelected] = useState<Order | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
+  // Delivery details form (tracking number, courier cost) for the open order.
+  const [delivery, setDelivery] = useState({ tracking: "", cost: "" });
+  const [deliverySaving, setDeliverySaving] = useState(false);
+  const [deliveryMsg, setDeliveryMsg] = useState("");
   const [notesDraft, setNotesDraft] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
@@ -277,12 +290,47 @@ function OrdersView() {
         ...prev,
         status,
         ...(status === "DELIVERED" ? { paymentStatus: "PAID" } : {}),
+        shippedAt: data.data?.shippedAt ?? null,
+        deliveredAt: data.data?.deliveredAt ?? null,
       } : null);
       load();
       loadStats();
     }
     setUpdating(false);
     setConfirmStatus(null);
+  };
+
+  // Keep the form in step with the open order; the "Saved" note is only
+  // cleared when a different order is opened.
+  const deliveryFor = useRef<string | null>(null);
+  useEffect(() => {
+    setDelivery({
+      tracking: selected?.trackingNumber ?? "",
+      cost: selected?.deliveryCost == null ? "" : String(Number(selected.deliveryCost)),
+    });
+    if (deliveryFor.current !== (selected?.id ?? null)) {
+      deliveryFor.current = selected?.id ?? null;
+      setDeliveryMsg("");
+    }
+  }, [selected?.id, selected?.trackingNumber, selected?.deliveryCost]);
+
+  const saveDelivery = async () => {
+    if (!selected) return;
+    const cost = delivery.cost.trim() === "" ? null : Number(delivery.cost);
+    if (cost != null && (!Number.isFinite(cost) || cost < 0)) {
+      setDeliveryMsg("Enter a valid cost (0 or more).");
+      return;
+    }
+    setDeliverySaving(true);
+    setDeliveryMsg("");
+    const data = await patchOrder(selected.id, { trackingNumber: delivery.tracking.trim(), deliveryCost: cost });
+    setDeliverySaving(false);
+    if (data.success) {
+      setSelected((prev) => (prev ? { ...prev, trackingNumber: delivery.tracking.trim() || null, deliveryCost: cost } : null));
+      setDeliveryMsg("Saved");
+    } else {
+      setDeliveryMsg(data.error || "Could not save.");
+    }
   };
 
   const handleStatusClick = (status: string) => {
@@ -348,11 +396,11 @@ function OrdersView() {
   const totalPages = Math.ceil(total / 20);
 
   const statCards = [
-    { label: "Total Orders", value: stats?.totalOrders ?? 0, icon: LuShoppingBag, accent: "from-indigo-500 to-violet-500", ring: "ring-indigo-100" },
-    { label: "Pending", value: stats?.pending ?? 0, icon: LuClock, accent: "from-amber-400 to-orange-500", ring: "ring-amber-100" },
-    { label: "In Progress", value: stats?.processing ?? 0, icon: LuTruck, accent: "from-sky-400 to-blue-500", ring: "ring-sky-100" },
-    { label: "Delivered", value: stats?.delivered ?? 0, icon: LuCircleCheck, accent: "from-emerald-400 to-teal-500", ring: "ring-emerald-100" },
-    { label: "Revenue", value: stats ? omr(stats.revenue) : "...", icon: LuWallet, accent: "from-fuchsia-500 to-pink-500", ring: "ring-fuchsia-100" },
+    { label: "Total Orders", value: stats?.totalOrders ?? 0, icon: LuShoppingBag },
+    { label: "Pending", value: stats?.pending ?? 0, icon: LuClock },
+    { label: "In Progress", value: stats?.processing ?? 0, icon: LuTruck },
+    { label: "Delivered", value: stats?.delivered ?? 0, icon: LuCircleCheck },
+    { label: "Revenue", value: stats ? Number(stats.revenue).toFixed(3) : "-", unit: stats ? "OMR" : "", icon: LuWallet },
   ];
 
   return (
@@ -360,13 +408,17 @@ function OrdersView() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         {statCards.map((s) => (
-          <div key={s.label} className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 flex-shrink-0">
-              <s.icon size={22} />
+          <div key={s.label} className="bg-white rounded-2xl border border-slate-200/70 p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 flex-shrink-0">
+              <s.icon size={20} />
             </div>
             <div className="min-w-0">
-              <p className="text-lg sm:text-xl font-bold text-slate-800 leading-tight truncate">{s.value}</p>
-              <p className="text-xs sm:text-sm text-slate-500 truncate">{s.label}</p>
+              {/* Never cut a number short (no truncate); the unit wraps if space is tight. */}
+              <p className="text-lg font-bold text-slate-800 leading-tight tabular-nums">
+                {s.value}
+                {"unit" in s && s.unit && <span className="ml-1 text-xs font-medium text-slate-500">{s.unit}</span>}
+              </p>
+              <p className="text-xs sm:text-sm text-slate-500">{s.label}</p>
             </div>
           </div>
         ))}
@@ -391,8 +443,7 @@ function OrdersView() {
         <div className="relative min-w-0 flex-1">
           <LuSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
-            className="admin-input"
-            style={{ paddingLeft: "2.5rem" }}
+            className="admin-input !pl-10"
             placeholder="Search orders…"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -406,7 +457,7 @@ function OrdersView() {
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
           >
             <option value="">All Statuses</option>
-            {ORDER_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+            {ORDER_STATUSES.map((s) => <option key={s} value={s}>{statusLabel(s)}</option>)}
           </select>
         </div>
         <div className="w-28 flex-shrink-0 sm:w-44">
@@ -417,7 +468,7 @@ function OrdersView() {
             onChange={(e) => { setPayFilter(e.target.value); setPage(1); }}
           >
             <option value="">All Payments</option>
-            {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+            {PAYMENT_STATUSES.map((s) => <option key={s} value={s}>{payLabel(s)}</option>)}
           </select>
         </div>
         <div className="w-24 flex-shrink-0 sm:w-36">
@@ -461,8 +512,8 @@ function OrdersView() {
                     <span className="text-xs text-slate-400 flex-shrink-0">{fmtDate(o.createdAt)}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`badge ${statusColors[o.status] || "badge-pending"}`}>{o.status}</span>
-                    <span className={`badge ${payColors[o.paymentStatus] || "badge-unpaid"}`}>{o.paymentStatus}</span>
+                    <span className={`badge ${statusColors[o.status] || "badge-pending"}`}>{statusLabel(o.status)}</span>
+                    <span className={`badge ${payColors[o.paymentStatus] || "badge-unpaid"}`}>{payLabel(o.paymentStatus)}</span>
                     <span className="text-xs text-slate-400 ml-auto">{o.items.length} items</span>
                   </div>
                 </button>
@@ -499,8 +550,8 @@ function OrdersView() {
                       </td>
                       <td className="text-center text-slate-500">{o.items.length}</td>
                       <td className="text-right font-medium">{omr(o.total)}</td>
-                      <td><span className={`badge ${statusColors[o.status] || "badge-pending"}`}>{o.status}</span></td>
-                      <td><span className={`badge ${payColors[o.paymentStatus] || "badge-unpaid"}`}>{o.paymentStatus}</span></td>
+                      <td><span className={`badge ${statusColors[o.status] || "badge-pending"}`}>{statusLabel(o.status)}</span></td>
+                      <td><span className={`badge ${payColors[o.paymentStatus] || "badge-unpaid"}`}>{payLabel(o.paymentStatus)}</span></td>
                       <td className="text-slate-500 text-sm whitespace-nowrap">{fmtDate(o.createdAt)}</td>
                       <td>
                         <div className="flex justify-end">
@@ -519,7 +570,7 @@ function OrdersView() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
             <span className="text-sm text-slate-500">Total: {total}</span>
             <div className="flex items-center gap-2">
-              <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40"><LuChevronLeft size={14} /> Prev</button>
+              <button disabled={page === 1} onClick={() => setPage((p) => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40"><LuChevronLeft size={14} /> Previous</button>
               <span className="text-sm text-slate-600">Page {page} of {totalPages}</span>
               <button disabled={page === totalPages} onClick={() => setPage((p) => p + 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Next <LuChevronRight size={14} /></button>
             </div>
@@ -537,8 +588,8 @@ function OrdersView() {
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-mono">{selected.orderNumber}</span>
-                <span className={`badge ${statusColors[selected.status] || "badge-pending"}`}>{selected.status}</span>
-                <span className={`badge ${payColors[selected.paymentStatus] || "badge-unpaid"}`}>{selected.paymentStatus}</span>
+                <span className={`badge ${statusColors[selected.status] || "badge-pending"}`}>{statusLabel(selected.status)}</span>
+                <span className={`badge ${payColors[selected.paymentStatus] || "badge-unpaid"}`}>{payLabel(selected.paymentStatus)}</span>
               </div>
               <span className="text-xs font-normal text-slate-500">{fmtDate(selected.createdAt)}</span>
             </div>
@@ -595,28 +646,6 @@ function OrdersView() {
             )}
             {detailLoading && (
               <div className="flex justify-center py-6"><div className="spinner" /></div>
-            )}
-
-            {/* Status progress (hidden for cancelled/refunded) */}
-            {!DESTRUCTIVE.includes(selected.status) && (
-              <div className="flex items-center mb-6">
-                {FLOW.map((step, i) => {
-                  const reached = FLOW.indexOf(selected.status) >= i;
-                  return (
-                    <div key={step} className="flex items-center flex-1 last:flex-none">
-                      <div className="flex flex-col items-center">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${reached ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-400"}`}>
-                          {reached ? <LuCircleCheck size={15} /> : i + 1}
-                        </div>
-                        <span className={`text-[10px] mt-1 ${reached ? "text-indigo-600 font-medium" : "text-slate-400"}`}>{step}</span>
-                      </div>
-                      {i < FLOW.length - 1 && (
-                        <div className={`h-0.5 flex-1 mx-1 -mt-4 ${FLOW.indexOf(selected.status) > i ? "bg-indigo-600" : "bg-slate-200"}`} />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
             )}
 
             {/* Customer + Shipping */}
@@ -680,6 +709,49 @@ function OrdersView() {
                 <p className="text-slate-600">Customer will collect this order in person. No delivery required.</p>
               </div>
             )}
+
+            {/* Delivery: timeline (set from the status) and courier details */}
+            <div className="rounded-xl border border-slate-200 mb-5 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                <LuTruck size={15} className="text-slate-500" />
+                <p className="text-sm font-semibold text-slate-700">Delivery</p>
+                <span className="text-xs text-slate-400 ml-auto">Dates are recorded when the status changes</span>
+              </div>
+              <div className="p-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <p className="text-xs text-slate-500">Placed</p>
+                    <p className="font-medium text-slate-800">{fmtDate(selected.createdAt)}</p>
+                  </div>
+                  {selected.shippingMethod !== "STORE_PICKUP" && (
+                    <div>
+                      <p className="text-xs text-slate-500">Shipped</p>
+                      <p className="font-medium text-slate-800">{selected.shippedAt ? fmtDate(selected.shippedAt) : "-"}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-slate-500">{selected.shippingMethod === "STORE_PICKUP" ? "Collected" : "Delivered"}</p>
+                    <p className="font-medium text-slate-800">{selected.deliveredAt ? fmtDate(selected.deliveredAt) : "-"}</p>
+                  </div>
+                </div>
+                {selected.source !== "POS" && selected.shippingMethod !== "STORE_PICKUP" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_180px_auto] gap-3 items-end">
+                    <label className="block">
+                      <span className="block text-xs font-medium text-slate-500 mb-1">Tracking number</span>
+                      <input className="admin-input" value={delivery.tracking} maxLength={100} onChange={(e) => setDelivery((d) => ({ ...d, tracking: e.target.value }))} placeholder="Courier waybill or reference" dir="ltr" />
+                    </label>
+                    <label className="block">
+                      <span className="block text-xs font-medium text-slate-500 mb-1">Courier cost (OMR)</span>
+                      <input type="number" step="0.001" min="0" className="admin-input" value={delivery.cost} onChange={(e) => setDelivery((d) => ({ ...d, cost: e.target.value }))} placeholder="What you paid" />
+                    </label>
+                    <button type="button" onClick={saveDelivery} disabled={deliverySaving} className="admin-btn admin-btn-secondary">
+                      {deliverySaving ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                )}
+                {deliveryMsg && <p className={`text-xs ${deliveryMsg === "Saved" ? "text-emerald-700" : "text-rose-600"}`}>{deliveryMsg}</p>}
+              </div>
+            </div>
 
             {/* WhatsApp dispatch — prepared messages sent manually via WhatsApp Web */}
             <div className="rounded-xl border border-slate-200 mb-5 overflow-hidden">
@@ -762,7 +834,7 @@ function OrdersView() {
               <div className="space-y-2">
                 {selected.items.map((item, i) => {
                   const name = item.product?.nameEn || item.productSnapshot?.nameEn || "Product";
-                  const img = item.product?.images?.[0]?.url;
+                  const img = item.product ? productImageUrl(item.product.images) : undefined;
                   // Prefer the live variant; fall back to the order-time snapshot
                   // (e.g. the variant was later edited or removed from the product).
                   const variantLabel = formatVariantLabel({
@@ -852,11 +924,11 @@ function OrdersView() {
               <div className="bg-slate-50 rounded-xl p-4 mb-5">
                 <p className="text-xs font-semibold text-slate-500 uppercase mb-2 flex items-center gap-1.5"><LuWallet size={13} /> Payment</p>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-600">{selected.payments[0].method.replace(/_/g, " ")}</span>
-                  <span className={`badge ${payColors[selected.payments[0].status] || "badge-unpaid"}`}>{selected.payments[0].status}</span>
+                  <span className="text-slate-600">{methodLabels(selected.payments[0].method).en}</span>
+                  <span className={`badge ${payColors[selected.payments[0].status] || "badge-unpaid"}`}>{payLabel(selected.payments[0].status)}</span>
                 </div>
                 {selected.payments[0].transactionId && (
-                  <p className="text-xs text-slate-400 mt-1 font-mono">TXN: {selected.payments[0].transactionId}</p>
+                  <p className="text-xs text-slate-400 mt-1">Transaction ID: <span className="font-mono">{selected.payments[0].transactionId}</span></p>
                 )}
               </div>
             )}
@@ -870,7 +942,7 @@ function OrdersView() {
                     key={s}
                     disabled={updating || selected.status === s}
                     onClick={() => handleStatusClick(s)}
-                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed ${
                       selected.status === s
                         ? "bg-indigo-600 text-white"
                         : DESTRUCTIVE.includes(s)
@@ -878,7 +950,7 @@ function OrdersView() {
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                   >
-                    {s}
+                    {statusLabel(s)}
                   </button>
                 ))}
               </div>
@@ -893,11 +965,11 @@ function OrdersView() {
                     key={s}
                     disabled={updating || selected.paymentStatus === s}
                     onClick={() => applyPayment(s)}
-                    className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                    className={`text-xs px-3 py-1.5 rounded-lg font-medium disabled:opacity-40 disabled:cursor-not-allowed ${
                       selected.paymentStatus === s ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                   >
-                    {s}
+                    {payLabel(s)}
                   </button>
                 ))}
               </div>
@@ -950,7 +1022,7 @@ function OrdersView() {
               disabled={updating}
               className="admin-btn admin-btn-danger disabled:opacity-40"
             >
-              {updating ? <span className="spinner !w-4 !h-4 !border-2" /> : <LuBan size={15} />} Confirm {confirmStatus}
+              {updating ? <span className="spinner !w-4 !h-4 !border-2" /> : <LuBan size={15} />} Confirm: {confirmStatus ? statusLabel(confirmStatus) : ""}
             </button>
           </>
         }
@@ -961,7 +1033,7 @@ function OrdersView() {
           </div>
           <p className="text-sm text-slate-500">
             Order <span className="font-mono font-medium">{selected?.orderNumber}</span> will be marked as{" "}
-            <span className="font-medium">{confirmStatus}</span>. This notifies the customer.
+            <span className="font-medium">{confirmStatus ? statusLabel(confirmStatus) : ""}</span>. This notifies the customer.
           </p>
           {confirmStatus === "REFUNDED" && selected?.paymentStatus === "PAID" && (
             <p className="text-sm text-slate-600 mt-3 bg-slate-50 rounded-xl p-3">

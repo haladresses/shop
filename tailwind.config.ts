@@ -11,9 +11,10 @@ const config: Config = {
   darkMode: "class",
   theme: {
     fontFamily: {
-      sbc: ["Vazirmatn", "SBC", ...defaultTheme.fontFamily.sans],
+      sbc: ["Vazirmatn", "Inter", "SBC", ...defaultTheme.fontFamily.sans],
       "euclid-circular-a": [
         "Vazirmatn",
+        "Inter",
         "SBC",
         "Euclid Circular A",
         ...defaultTheme.fontFamily.sans,
@@ -275,7 +276,7 @@ const config: Config = {
           "0px 0px 1px 0px rgba(33, 37, 41, 0.08), 0px 2px 2px 0px rgba(33, 37, 41, 0.06)",
         filter: "0px 1px 0px 0px #E5E7EB",
         list: "1px 0px 0px 0px #E5E7EB",
-        input: "inset 0 0 0 2px #3C50E0",
+        input: "inset 0 0 0 2px #8C3B49",
       },
     },
   },

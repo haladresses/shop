@@ -163,7 +163,6 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
   const [mounted, setMounted] = useState(false);
 
   const t = ADMIN_HELP_UI[lang];
-  const isRtl = lang === "ar";
 
   useEffect(() => {
     setMounted(true);
@@ -302,7 +301,6 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
       {/* Hero */}
       <section className="admin-card overflow-hidden border border-slate-200">
         <div className="relative px-6 py-8">
-          <div className="pointer-events-none absolute -top-16 h-56 w-56 rounded-full bg-slate-100/70 blur-2xl ltr:-right-16 rtl:-left-16" />
           <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl space-y-3">
               <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{t.heroTitle}</h1>
@@ -325,14 +323,14 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
                 <button
                   type="button"
                   onClick={() => handleDownloadPdf("en")}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-300 hover:text-slate-900"
+                  className="admin-btn admin-btn-secondary !text-xs"
                 >
                   <LuDownload size={14} /> {t.downloadEnPdf}
                 </button>
                 <button
                   type="button"
                   onClick={() => handleDownloadPdf("ar")}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-slate-800"
+                  className="admin-btn admin-btn-secondary !text-xs"
                 >
                   <LuDownload size={14} /> {t.downloadArPdf}
                 </button>
@@ -380,7 +378,7 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
                 {accessible ? (
                   <Link
                     href={flow.href}
-                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 transition-colors duration-200 hover:text-slate-950"
+                    className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 hover:text-slate-950"
                   >
                     {t.goTo} {sectionLabel} <LuArrowRight size={13} className="rtl:rotate-180" />
                   </Link>
@@ -412,20 +410,19 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
       {/* Toolbar */}
       <section className="admin-card p-4 sm:p-5">
         <div className="flex items-center gap-2 sm:gap-3">
-          <label className="group relative block min-w-0 flex-1">
-            <LuSearch size={16} className="pointer-events-none absolute top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-focus-within:text-slate-700 ltr:left-5 rtl:right-5" />
+          <label className="relative block min-w-0 flex-1">
+            <LuSearch size={16} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              style={isRtl ? { paddingRight: "3rem", paddingLeft: query ? "2.25rem" : "0.875rem" } : { paddingLeft: "3rem", paddingRight: query ? "2.25rem" : "0.875rem" }}
-              className="admin-input !rounded-full border-slate-200 bg-white transition-colors duration-200 focus:border-slate-300"
+              className="admin-input !ps-9 !pe-9"
               placeholder={t.searchPlaceholder}
             />
             {query ? (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="absolute top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 ltr:right-2.5 rtl:left-2.5"
+                className="absolute end-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                 aria-label={t.clearSearch}
               >
                 <LuX size={14} />
@@ -437,7 +434,7 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
             <select
               value={level}
               onChange={(e) => setLevel(e.target.value as AdminHelpLevel | "all")}
-              className="admin-input admin-select w-full !rounded-full border-slate-200 bg-white transition-colors duration-200 focus:border-slate-300"
+              className="admin-input admin-select w-full"
             >
               <option value="all">{t.allLevels}</option>
               <option value="Core">{levelLabel("Core", lang)}</option>
@@ -450,7 +447,7 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
             <button
               type="button"
               onClick={resetFilters}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-900"
+              className="admin-btn admin-btn-secondary !px-2.5 shrink-0"
               aria-label={t.resetFilters}
               title={t.resetFilters}
             >
@@ -488,7 +485,7 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
             <button
               type="button"
               onClick={resetFilters}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:border-slate-300 hover:text-slate-900"
             >
               <LuX size={14} /> {t.clearFilters}
             </button>
@@ -544,20 +541,18 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
       </section>
 
       {/* Support footer */}
-      <section className="admin-card overflow-hidden border border-slate-200">
-        <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900 px-6 py-6 text-white">
+      <section className="admin-card">
+        <div className="flex flex-wrap items-center justify-between gap-4 px-6 py-5">
           <div className="flex items-start gap-3">
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
-              <LuLifeBuoy size={20} />
-            </span>
+            <LuLifeBuoy size={20} className="mt-0.5 shrink-0 text-slate-400" />
             <div>
-              <h2 className="text-lg font-semibold tracking-tight">{t.supportTitle}</h2>
-              <p className="mt-1 max-w-xl text-sm text-slate-300">{t.supportBody}</p>
+              <h2 className="text-base font-semibold text-slate-800">{t.supportTitle}</h2>
+              <p className="mt-1 max-w-xl text-sm text-slate-500">{t.supportBody}</p>
             </div>
           </div>
           <Link
             href="/admin/roles"
-            className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 transition-colors duration-200 hover:bg-slate-100"
+            className="admin-btn admin-btn-secondary"
           >
             <LuShieldCheck size={16} /> {t.manageRoles}
           </Link>
@@ -572,19 +567,14 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
               aria-modal="true"
               aria-label={preview.alt}
               onClick={() => setPreview(null)}
-              className="help-lightbox-backdrop fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-md sm:p-6"
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/85 p-4 sm:p-6"
             >
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="help-lightbox-panel flex max-h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl"
+                className="flex max-h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl"
               >
                 <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
                   <div className="flex min-w-0 items-center gap-3 text-white">
-                    <span className="hidden shrink-0 items-center gap-1.5 sm:flex">
-                      <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                    </span>
                     <div className="min-w-0">
                       <div className="truncate text-sm font-semibold">{preview.alt}</div>
                       <div className="truncate text-xs text-slate-400">{preview.href}</div>
@@ -593,15 +583,15 @@ export default function HelpCenterClient({ visibleTopics }: Props) {
                   <div className="flex shrink-0 items-center gap-2">
                     <Link
                       href={preview.href}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/20"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/20"
                     >
                       <LuArrowRight size={13} className="rtl:rotate-180" /> {t.openSection}
                     </Link>
                     <button
                       type="button"
                       onClick={() => setPreview(null)}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
-                      aria-label={t.clearSearch}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+                      aria-label={t.close}
                     >
                       <LuX size={18} />
                     </button>
@@ -625,7 +615,7 @@ function LangButton({ active, onClick, children }: { active: boolean; onClick: (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors duration-200 ${
+      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold ${
         active ? "bg-slate-900 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
       }`}
       aria-pressed={active}
@@ -650,7 +640,7 @@ function FilterPill({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors duration-200 ${
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium ${
         active
           ? "border-slate-900 bg-slate-900 text-white"
           : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
@@ -683,13 +673,13 @@ function TopicCard({
   const screenshot = screenshotForHref(topic.href);
 
   return (
-    <article className="admin-card group border border-slate-200 p-6 transition-colors duration-200 hover:border-slate-300">
+    <article className="admin-card group border border-slate-200 p-6 hover:border-slate-300">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             {TopicIcon ? (
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-50 transition-colors duration-200 group-hover:bg-white">
-                <TopicIcon size={19} className={navMeta?.color ?? "text-slate-500"} />
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-50 group-hover:bg-white">
+                <TopicIcon size={19} className="text-slate-500" />
               </span>
             ) : null}
             <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{categoryLabel(topic.category, lang)}</span>
@@ -703,7 +693,7 @@ function TopicCard({
           </div>
           <Link
             href={topic.href}
-            className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-800"
+            className="admin-btn admin-btn-primary"
           >
             {t.openSection} <LuArrowRight size={14} className="rtl:rotate-180" />
           </Link>
@@ -714,14 +704,11 @@ function TopicCard({
           <button
             type="button"
             onClick={() => onPreview({ src: screenshot, alt: `${topic.title}`, href: topic.href })}
-            className="group/preview relative w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 text-left shadow-sm transition-shadow duration-200 hover:shadow-md lg:w-[360px]"
+            className="group/preview relative w-full shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 text-left lg:w-[360px]"
             title={t.enlarge}
           >
             <div className="flex items-center gap-1.5 border-b border-slate-200 bg-slate-50 px-3 py-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-rose-300" />
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-300" />
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
-              <span className="ml-2 truncate text-[11px] text-slate-400">{topic.href}</span>
+              <span className="truncate text-[11px] text-slate-400">{topic.href}</span>
             </div>
             <div className="relative aspect-[16/10] overflow-hidden">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -732,7 +719,7 @@ function TopicCard({
                 onError={() => setImgOk(false)}
                 className="absolute inset-0 h-full w-full object-cover object-top"
               />
-              <div className="absolute inset-0 flex items-end justify-end bg-gradient-to-t from-slate-900/25 to-transparent p-2 opacity-0 transition-opacity duration-200 group-hover/preview:opacity-100">
+              <div className="absolute inset-0 flex items-end justify-end p-2 opacity-0 group-hover/preview:opacity-100">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-slate-700">
                   <LuMaximize2 size={12} /> {t.enlarge}
                 </span>
@@ -765,7 +752,7 @@ function TopicCard({
                 key={tabItem.id}
                 type="button"
                 onClick={() => setTab(tabItem.id)}
-                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors duration-200 ${
+                className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium ${
                   isActive ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
@@ -856,9 +843,9 @@ function TopicCard({
                   <Link
                     key={relatedHref}
                     href={relatedHref}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 transition-colors duration-200 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900"
                   >
-                    {RelatedIcon ? <RelatedIcon size={13} className={relatedMeta?.color ?? "text-slate-500"} /> : null}
+                    {RelatedIcon ? <RelatedIcon size={13} className="text-slate-500" /> : null}
                     {label}
                   </Link>
                 );
@@ -878,13 +865,13 @@ function FaqRow({ item, defaultOpen }: { item: { question: string; answer: strin
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-slate-50"
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left hover:bg-slate-50"
         aria-expanded={open}
       >
         <span className="text-sm font-semibold text-slate-800">{item.question}</span>
         <LuChevronDown
           size={18}
-          className={`shrink-0 text-slate-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`shrink-0 text-slate-400 ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open ? <div className="px-5 pb-5 text-sm leading-6 text-slate-600">{item.answer}</div> : null}
@@ -1004,10 +991,11 @@ function buildHelpPrintHtml(lang: AdminHelpLang, topics: AdminHelpTopic[]): stri
 <style>
   :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --soft:#f8fafc; --warn:#b45309; --warnbg:#fffbeb; --warnline:#fde68a; --accent:#0f172a; }
   @font-face { font-family: "Vazirmatn"; src: url("${typeof window !== "undefined" ? window.location.origin : ""}/fonts/vazirmatn/Vazirmatn-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0600-06FF, U+0750-077F, U+0870-089F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F; }
+  @font-face { font-family: "Inter"; src: url("${typeof window !== "undefined" ? window.location.origin : ""}/fonts/inter/Inter-Variable-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122, U+2212; }
   * { box-sizing: border-box; }
   html, body { margin:0; padding:0; }
   body {
-    font-family: ${isRtl ? '"Vazirmatn", "Segoe UI", "Tahoma", "Arial", sans-serif' : '"Vazirmatn", "Segoe UI", "Helvetica Neue", Arial, sans-serif'};
+    font-family: ${isRtl ? '"Vazirmatn", "Inter", "Segoe UI", "Tahoma", "Arial", sans-serif' : '"Vazirmatn", "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif'};
     color: var(--ink); background:#fff; line-height:1.6; font-size:13px;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }

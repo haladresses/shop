@@ -4,7 +4,7 @@ import MailSuccess from "@/components/MailSuccess";
 import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Thank You | Hala Dresses",
-  description: "Your Hala Dresses message has been received successfully.",
+  description: "Your Hala Dresses order has been received.",
   // other metadata
 };
 

@@ -4,7 +4,7 @@ import { getAuthFromRequest, userHasAnyPermission } from "@/lib/auth";
 import { ok, paginated, error, unauthorized, serverError } from "@/lib/api/response";
 import { createOrderSchema } from "@/lib/validations/order";
 import { generateOrderNumber } from "@/lib/utils";
-import { PricingError, onlineShippingCost, priceCart } from "@/lib/orderPricing";
+import { PricingError, getShippingRules, onlineShippingCost, priceCart } from "@/lib/orderPricing";
 import { nextDocumentNumber } from "@/lib/sequences";
 import { recordPromotionRedemptions } from "@/lib/promotions";
 import { orderItemCodeCondition } from "@/lib/barcodes";
@@ -108,10 +108,11 @@ export async function POST(req: NextRequest) {
     // Prices, promotions, delivery fee and VAT are all worked out server-side
     // (never trust client-submitted prices) by the same code that powers the
     // checkout summary, so the shopper is charged exactly what they saw.
+    const shippingRules = await getShippingRules();
     const { orderItemsData, orderMoney, pricing } = await priceCart(items, {
       channel: "ONLINE",
       shipping: (subtotal) =>
-        onlineShippingCost({ shippingMethod, branch: waselleeBranch, deliveryType: waselleeDeliveryType ?? "HOME_DELIVERY" }, subtotal),
+        onlineShippingCost({ shippingMethod, branch: waselleeBranch, deliveryType: waselleeDeliveryType ?? "HOME_DELIVERY" }, subtotal, shippingRules),
     });
 
     const order = await prisma.$transaction(async (tx) => {

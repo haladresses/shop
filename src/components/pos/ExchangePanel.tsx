@@ -279,7 +279,7 @@ export default function ExchangePanel({
                 key={m}
                 type="button"
                 onClick={() => setMethod(m)}
-                className={`rounded-xl py-2.5 text-sm font-medium transition ${method === m ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+                className={`rounded-xl py-2.5 text-sm font-medium ${method === m ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
               >
                 {name}
               </button>

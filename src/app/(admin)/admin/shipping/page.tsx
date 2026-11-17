@@ -87,7 +87,7 @@ export default function ShippingPage() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${
               tab === t ? "bg-indigo-600 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
           >
@@ -230,9 +230,9 @@ function BranchesTab() {
                       </span>
                     </td>
                     <td>
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => openEdit(b)} className="admin-btn admin-btn-secondary text-xs py-1"><LuPencil size={13} /></button>
-                        <button onClick={() => remove(b)} className="admin-btn admin-btn-secondary text-xs py-1 text-red-600 hover:bg-red-50"><LuTrash2 size={13} /></button>
+                      <div className="flex justify-end gap-1">
+                        <button onClick={() => openEdit(b)} className="admin-icon-btn" title="Edit" aria-label="Edit"><LuPencil size={15} /></button>
+                        <button onClick={() => remove(b)} className="admin-icon-btn admin-icon-btn-danger" title="Delete" aria-label="Delete"><LuTrash2 size={15} /></button>
                       </div>
                     </td>
                   </tr>
@@ -305,10 +305,10 @@ function BranchesTab() {
               <div className="flex items-end pb-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <div
-                    className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${form.isActive ? "bg-indigo-600" : "bg-slate-200"}`}
+                    className={`w-11 h-6 rounded-full cursor-pointer ${form.isActive ? "bg-indigo-600" : "bg-slate-200"}`}
                     onClick={() => setForm({ ...form, isActive: !form.isActive })}
                   >
-                    <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${form.isActive ? "translate-x-5" : "translate-x-0.5"}`} />
+                    <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 ${form.isActive ? "translate-x-5" : "translate-x-0.5"}`} />
                   </div>
                   <span className="text-sm text-slate-600">{form.isActive ? "Active" : "Inactive"}</span>
                 </label>
@@ -447,9 +447,9 @@ function RatesTab() {
                       </span>
                     </td>
                     <td>
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => openEdit(r)} className="admin-btn admin-btn-secondary text-xs py-1"><LuPencil size={13} /></button>
-                        <button onClick={() => remove(r)} className="admin-btn admin-btn-secondary text-xs py-1 text-red-600 hover:bg-red-50"><LuTrash2 size={13} /></button>
+                      <div className="flex justify-end gap-1">
+                        <button onClick={() => openEdit(r)} className="admin-icon-btn" title="Edit" aria-label="Edit"><LuPencil size={15} /></button>
+                        <button onClick={() => remove(r)} className="admin-icon-btn admin-icon-btn-danger" title="Delete" aria-label="Delete"><LuTrash2 size={15} /></button>
                       </div>
                     </td>
                   </tr>
@@ -511,10 +511,10 @@ function RatesTab() {
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-2 cursor-pointer">
                 <div
-                  className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${form.isActive ? "bg-indigo-600" : "bg-slate-200"}`}
+                  className={`w-11 h-6 rounded-full cursor-pointer ${form.isActive ? "bg-indigo-600" : "bg-slate-200"}`}
                   onClick={() => setForm({ ...form, isActive: !form.isActive })}
                 >
-                  <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${form.isActive ? "translate-x-5" : "translate-x-0.5"}`} />
+                  <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 ${form.isActive ? "translate-x-5" : "translate-x-0.5"}`} />
                 </div>
                 <span className="text-sm text-slate-600">{form.isActive ? "Active" : "Inactive"}</span>
               </label>
@@ -578,10 +578,10 @@ function WhatsAppTab() {
             <p className="text-sm text-slate-500">Send a message to the Bousher office on every Wasellee order.</p>
           </div>
           <div
-            className={`w-11 h-6 rounded-full transition-colors cursor-pointer flex-shrink-0 ${values.isNotifyEnabled ? "bg-indigo-600" : "bg-slate-200"}`}
+            className={`w-11 h-6 rounded-full cursor-pointer flex-shrink-0 ${values.isNotifyEnabled ? "bg-indigo-600" : "bg-slate-200"}`}
             onClick={() => set("isNotifyEnabled", !values.isNotifyEnabled)}
           >
-            <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${values.isNotifyEnabled ? "translate-x-5" : "translate-x-0.5"}`} />
+            <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 ${values.isNotifyEnabled ? "translate-x-5" : "translate-x-0.5"}`} />
           </div>
         </div>
 
@@ -643,7 +643,7 @@ function WhatsAppTab() {
         </button>
         {saved && (
           <span className="text-green-600 text-sm font-medium flex items-center gap-1">
-            <LuCheck size={16} /> Settings saved!
+            <LuCheck size={16} /> Settings saved
           </span>
         )}
       </div>

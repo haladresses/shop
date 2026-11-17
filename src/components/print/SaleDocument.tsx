@@ -9,7 +9,7 @@ import { rateLabel, type TaxSettings } from "@/lib/taxCalc";
 type TaxInfo = Pick<TaxSettings, "enabled" | "vatNumber" | "legalNameEn" | "legalNameAr" | "crNumber" | "invoiceFooterEn" | "invoiceFooterAr">;
 
 const f3 = (v: number) => (Math.round(v * 1000) / 1000).toFixed(3);
-const AR_FONT = 'Vazirmatn, SBC, Tahoma, "Segoe UI", Arial, sans-serif';
+const AR_FONT = 'Vazirmatn, Inter, SBC, Tahoma, "Segoe UI", Arial, sans-serif';
 
 function dateParts(iso: string) {
   const d = new Date(iso);

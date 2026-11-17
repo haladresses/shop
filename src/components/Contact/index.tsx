@@ -95,12 +95,12 @@ const Contact = () => {
         lastName: "اسم العائلة",
         lastNamePlaceholder: "اكتبي اسم العائلة",
         subject: "الموضوع",
-        subjectPlaceholder: "قسم النساء / قسم الأطفال / مساعدة في الطلب",
+        subjectPlaceholder: "مثال: فستان سهرة",
         phoneLabel: "الهاتف",
-        phonePlaceholder: "شاركي رقم الهاتف أو الواتساب",
+        phonePlaceholder: "رقم الهاتف أو الواتساب",
         message: "الرسالة",
-        messagePlaceholder: "أخبرينا ماذا تبحثين عنه ولمن سيكون",
-        submit: "إرسال إلى فريق المتجر",
+        messagePlaceholder: "كيف يمكننا مساعدتك؟",
+        submit: "إرسال الرسالة",
         sending: "جارٍ الإرسال...",
         successMsg: "تم استلام رسالتك، سيتواصل معك فريقنا قريباً.",
         errorMsg: "تعذر إرسال الرسالة، يرجى المحاولة مرة أخرى.",
@@ -124,12 +124,12 @@ const Contact = () => {
         lastName: "Last Name",
         lastNamePlaceholder: "Your last name",
         subject: "Subject",
-        subjectPlaceholder: "Women collection / kids collection / order help",
+        subjectPlaceholder: "e.g. Evening dress",
         phoneLabel: "Phone",
-        phonePlaceholder: "Share your phone or WhatsApp number",
+        phonePlaceholder: "Phone or WhatsApp number",
         message: "Message",
-        messagePlaceholder: "Tell us what you are shopping for and who it is for",
-        submit: "Send to Store Team",
+        messagePlaceholder: "How can we help?",
+        submit: "Send Message",
         sending: "Sending...",
         successMsg: "Thanks! Your message has reached our team. We'll be in touch soon.",
         errorMsg: "We couldn't send your message. Please try again.",
@@ -164,7 +164,7 @@ const Contact = () => {
 
   const iconWrap = "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full";
   const rowLink =
-    "group flex items-center gap-4 rounded-xl px-2.5 py-2.5 transition-colors duration-200 hover:bg-gray-1";
+    "group flex items-center gap-4 rounded-xl px-2.5 py-2.5 transition-colors duration-200 hover:bg-meta";
   const rowLabel = "text-xs text-dark-4";
   const rowValue = "font-medium text-dark";
   const rowArrow =
@@ -174,7 +174,7 @@ const Contact = () => {
     <>
       <Breadcrumb title={copy.breadcrumbTitle} pages={[copy.breadcrumbPage]} />
 
-      <section className="overflow-hidden py-20 bg-gray-2">
+      <section className="overflow-hidden py-14 sm:py-20 bg-meta">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
           <div className={`flex flex-col xl:flex-row gap-7.5 ${isArabic ? "text-right" : ""}`}>
             <div className="xl:max-w-[370px] w-full bg-white rounded-xl shadow-1">
@@ -263,13 +263,13 @@ const Contact = () => {
                       value={form.firstName}
                       onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                       placeholder={copy.firstNamePlaceholder}
-                      className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
+                      className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-blue focus:ring-2 focus:ring-blue/20"
                     />
                   </div>
 
                   <div className="w-full">
                     <label htmlFor="lastName" className="block mb-2.5">
-                      {copy.lastName} <span className="text-red">*</span>
+                      {copy.lastName}
                     </label>
 
                     <input
@@ -279,7 +279,7 @@ const Contact = () => {
                       value={form.lastName}
                       onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                       placeholder={copy.lastNamePlaceholder}
-                      className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
+                      className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-blue focus:ring-2 focus:ring-blue/20"
                     />
                   </div>
                 </div>
@@ -297,7 +297,7 @@ const Contact = () => {
                       value={form.subject}
                       onChange={(e) => setForm({ ...form, subject: e.target.value })}
                       placeholder={copy.subjectPlaceholder}
-                      className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
+                      className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-blue focus:ring-2 focus:ring-blue/20"
                     />
                   </div>
 
@@ -307,20 +307,20 @@ const Contact = () => {
                     </label>
 
                     <input
-                      type="text"
+                      type="tel"
                       name="phone"
                       id="phone"
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       placeholder={copy.phonePlaceholder}
-                      className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
+                      className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-blue focus:ring-2 focus:ring-blue/20"
                     />
                   </div>
                 </div>
 
                 <div className="mb-7.5">
                   <label htmlFor="message" className="block mb-2.5">
-                    {copy.message}
+                    {copy.message} <span className="text-red">*</span>
                   </label>
 
                   <textarea
@@ -330,7 +330,7 @@ const Contact = () => {
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
                     placeholder={copy.messagePlaceholder}
-                    className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full p-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20"
+                    className="rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full p-5 outline-none duration-200 focus:border-blue focus:ring-2 focus:ring-blue/20"
                   ></textarea>
                 </div>
 

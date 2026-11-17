@@ -32,7 +32,7 @@ export default function SettlementPicker({
             type="button"
             disabled={k === "REFUND" && !canRefund}
             onClick={() => onChange(k)}
-            className={`text-left rounded-xl px-3 py-2.5 ring-1 transition ${value === k ? "ring-indigo-400 bg-indigo-50/60" : "ring-slate-200 hover:ring-slate-300"} disabled:opacity-40`}
+            className={`text-left rounded-xl px-3 py-2.5 ring-1 ${value === k ? "ring-indigo-400 bg-indigo-50/60" : "ring-slate-200 hover:ring-slate-300"} disabled:opacity-40`}
             title={k === "REFUND" && !canRefund ? "Needs the Supplier Payments permission" : undefined}
           >
             <span className="block text-sm font-medium text-slate-800">{title}</span>
@@ -41,7 +41,7 @@ export default function SettlementPicker({
         ))}
       </div>
       {value === "REFUND" && (
-        <div className="grid sm:grid-cols-2 gap-3 admin-fade-in">
+        <div className="grid sm:grid-cols-2 gap-3">
           <Field label="Refunded by">
             <select className="admin-input admin-select" value={method} onChange={(e) => onMethod(e.target.value)}>
               {PAYMENT_METHOD_OPTIONS.map((m) => (

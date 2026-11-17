@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { LuKeyRound, LuLogOut, LuSave, LuUserRound } from "react-icons/lu";
+import { humanize } from "@/components/admin/labels";
 
 type Me = {
   nameEn: string | null;
@@ -94,13 +95,13 @@ export default function MyProfilePage() {
     return <div className="flex justify-center py-16"><span className="spinner" /></div>;
   }
 
-  const role = auth?.appRole?.nameEn ?? auth?.role?.replace("_", " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+  const role = auth?.appRole?.nameEn ?? (auth?.role ? humanize(auth.role) : undefined);
 
   return (
     <div className="max-w-3xl space-y-5">
       {/* Who you are */}
       <div className="admin-card p-5 flex items-center gap-4">
-        <span className="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xl font-semibold shrink-0">
+        <span className="w-14 h-14 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 text-xl font-semibold shrink-0">
           {(me.nameEn || me.email || me.phone || "?").charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0">

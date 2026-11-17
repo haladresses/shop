@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export default function SellerLoginPage() {
@@ -26,36 +27,36 @@ export default function SellerLoginPage() {
       }
       router.push("/seller");
     } catch {
-      setError("Something went wrong");
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-sky-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">🛍️</span>
+          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 p-2">
+            <Image src="/logo.svg" alt="Hala Dresses" width={44} height={44} />
           </div>
           <h1 className="text-2xl font-bold text-white">Seller Portal</h1>
           <p className="text-slate-400 mt-1">Hala Dresses</p>
         </div>
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h2 className="text-xl font-semibold text-slate-800 mb-6">Sign In to Seller Portal</h2>
+        <div className="bg-white rounded-2xl border border-slate-200 p-8">
+          <h2 className="text-xl font-semibold text-slate-800 mb-6">Sign in</h2>
           {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">{error}</div>}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
-              <input type="email" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+              <input type="email" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
-              <input type="password" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+              <input type="password" className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
             </div>
-            <button type="submit" disabled={loading} className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium py-2.5 px-4 rounded-lg transition-colors disabled:opacity-60 mt-2">
-              {loading ? "Signing in..." : "Sign In"}
+            <button type="submit" disabled={loading} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg disabled:opacity-60 mt-2">
+              {loading ? "Signing in…" : "Sign in"}
             </button>
           </form>
         </div>

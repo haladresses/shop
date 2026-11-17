@@ -221,12 +221,15 @@ model AppRole {
 }
 
 model Session {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  token     String   @unique
+  token     String    @unique
   expiresAt DateTime
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Set while the POS screen is locked: the session counts as signed out
+  // everywhere until the same person unlocks it with their PIN.
+  lockedAt  DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("sessions")
@@ -293,26 +296,26 @@ model CategoryAttribute {
 // ─────────────────────────────────────────────
 
 model Product {
-  id            String   @id @default(cuid())
+  id            String             @id @default(cuid())
   nameEn        String
   nameAr        String
-  descriptionEn String?  @db.Text
-  descriptionAr String?  @db.Text
-  slug          String   @unique
+  descriptionEn String?            @db.Text
+  descriptionAr String?            @db.Text
+  slug          String             @unique
   categoryId    String
-  basePrice     Decimal  @db.Decimal(10, 3)
-  salePrice     Decimal? @db.Decimal(10, 3)
+  basePrice     Decimal            @db.Decimal(10, 3)
+  salePrice     Decimal?           @db.Decimal(10, 3)
   // Purchase/landed cost per unit — feeds COGS, gross profit and stock
   // valuation in the finance & inventory reports. Optional.
-  costPrice     Decimal? @db.Decimal(10, 3)
-  sku           String?  @unique
+  costPrice     Decimal?           @db.Decimal(10, 3)
+  sku           String?            @unique
   // Barcode for the product itself — used when it has no variants (a variant's
   // own barcode takes precedence when one exists). Scanned at the POS.
-  barcode       String?  @unique
-  isActive      Boolean  @default(true)
-  isFeatured    Boolean  @default(false)
-  isNew         Boolean  @default(true)
-  isBestSeller  Boolean  @default(false)
+  barcode       String?            @unique
+  isActive      Boolean            @default(true)
+  isFeatured    Boolean            @default(false)
+  isNew         Boolean            @default(true)
+  isBestSeller  Boolean            @default(false)
   attributes    Json? // { [attributeKey]: value } keyed by CategoryAttribute.key
   // Extra specifications that belong to this product only (not defined on its
   // category): [{ labelEn, labelAr, valueEn, valueAr }]. Shown after the
@@ -322,12 +325,21 @@ model Product {
   // VAT rate override for this product. Null = inherit from its category
   // (then parent categories, then the store default rate).
   taxRateId     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  // The supplier this item is normally bought from.
+  supplierId    String?
+  // Store department (the old POS "Main Category"): who the item is for.
+  department    ProductDepartment?
+  // Original record from a data import (e.g. the old POS "Product List"
+  // export): { source, importedAt, row: { <column>: <value> } }. Read-only,
+  // kept so no imported information is lost.
+  legacyData    Json?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
   category         Category                @relation(fields: [categoryId], references: [id])
   seller           User?                   @relation("SellerProducts", fields: [sellerId], references: [id])
   taxRate          TaxRate?                @relation(fields: [taxRateId], references: [id], onDelete: SetNull)
+  supplier         Supplier?               @relation(fields: [supplierId], references: [id], onDelete: SetNull)
   images           ProductImage[]
   variants         ProductVariant[]
   orderItems       OrderItem[]
@@ -339,9 +351,19 @@ model Product {
 
   @@index([categoryId])
   @@index([sellerId])
+  @@index([supplierId])
   @@index([isActive, createdAt])
   @@index([basePrice])
   @@map("products")
+}
+
+// Store department (the old POS "Main Category").
+enum ProductDepartment {
+  LADIES
+  GIRLS
+  BOYS
+  BABY
+  GIFTS
 }
 
 model ProductWhatsappReview {
@@ -438,6 +460,17 @@ model Order {
   driverWhatsappSentAt   DateTime?
   waselleeWhatsappSentAt DateTime?
 
+  // ── Delivery tracking ──
+  // Set automatically from the status: when the order left the shop
+  // (Shipped) and when the customer received it (Delivered; for store
+  // pickups and POS sales, the hand-over time).
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  // Courier waybill / tracking number.
+  trackingNumber String?
+  // What the shop paid the driver/courier for this delivery (optional).
+  deliveryCost   Decimal?  @db.Decimal(10, 3)
+
   // In-store POS sales vs the online storefront; cashierId records which
   // staff member rang up a POS sale (see /pos).
   source         OrderSource @default(ONLINE)
@@ -491,6 +524,7 @@ model Order {
   @@index([paymentStatus, createdAt])
   @@index([source, createdAt])
   @@index([posShiftId])
+  @@index([shippingMethod, createdAt])
   @@map("orders")
 }
 
@@ -1014,6 +1048,9 @@ model Supplier {
   rating           Int?
   notes            String?  @db.Text
   isActive         Boolean  @default(true)
+  // Original record from a data import (e.g. the old POS "Supplier" export):
+  // { source, importedAt, row: { <column>: <value> } }. Read-only.
+  legacyData       Json?
   createdBy        String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -1022,6 +1059,7 @@ model Supplier {
   payments       SupplierPayment[]
   returns        PurchaseReturn[]
   tasks          SupplierTask[]
+  products       Product[]
 
   @@index([isActive])
   @@index([nameEn])

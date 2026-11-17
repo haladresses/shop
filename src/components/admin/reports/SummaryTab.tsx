@@ -165,7 +165,7 @@ export default function SummaryTab({ query, single }: { query: string; single: b
           { key: "gross", label: "Gross", kind: "money", value: (r) => r.gross, total: sellerTotals("gross") },
           { key: "refunds", label: "Refunds", kind: "money", value: (r) => r.refunds, total: sellerTotals("refunds") },
           { key: "net", label: "Net", kind: "money", value: (r) => r.net, total: sellerTotals("net") },
-          { key: "avg", label: "Avg sale", kind: "money", value: (r) => r.avgTicket },
+          { key: "avg", label: "Average sale", kind: "money", value: (r) => r.avgTicket },
           { key: "share", label: "Share", kind: "pct", value: (r) => r.share },
           { key: "first", label: "First sale", value: (r) => (r.firstSale ? fmtTime(r.firstSale) : null), muted: true },
           { key: "last", label: "Last sale", value: (r) => (r.lastSale ? fmtTime(r.lastSale) : null), muted: true },
@@ -198,7 +198,7 @@ export default function SummaryTab({ query, single }: { query: string; single: b
           rowKey={(r) => r.productId}
           columns={[
             { key: "name", label: "Product", value: (r) => r.nameEn },
-            { key: "qty", label: "Qty", kind: "int", value: (r) => r.qty },
+            { key: "qty", label: "Quantity", kind: "int", value: (r) => r.qty },
             { key: "shelf", label: "Shelf value", kind: "money", value: (r) => r.shelf, muted: true },
             { key: "paid", label: "Paid", kind: "money", value: (r) => r.paid },
           ]}
@@ -337,7 +337,7 @@ function SummaryA4({ data, title, titleAr }: { data: Summary; title: string; tit
   const t = data.totals;
   const sum = <T,>(rows: T[], f: (r: T) => number) => rows.reduce((s, r) => s + f(r), 0);
   return (
-    <div style={{ fontFamily: 'Vazirmatn, SBC, Tahoma, "Segoe UI", Arial, sans-serif', color: "#000", fontSize: 10 }}>
+    <div style={{ fontFamily: 'Vazirmatn, Inter, SBC, Tahoma, "Segoe UI", Arial, sans-serif', color: "#000", fontSize: 10 }}>
       <PrintHeader title={title} titleAr={titleAr} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <PSection title="Totals" titleAr="الإجماليات">
@@ -388,7 +388,7 @@ function SummaryA4({ data, title, titleAr }: { data: Summary; title: string; tit
           />
         </PSection>
         <PSection title="Top products" titleAr="أفضل المنتجات">
-          <PTable head={[{ label: "Product" }, { label: "Qty", right: true }, { label: "Paid", right: true }]} rows={data.topProducts.map((p) => [p.nameEn, int(p.qty), f3(p.paid)])} />
+          <PTable head={[{ label: "Product" }, { label: "Quantity", right: true }, { label: "Paid", right: true }]} rows={data.topProducts.map((p) => [p.nameEn, int(p.qty), f3(p.paid)])} />
         </PSection>
       </div>
       {data.refundsByMethod.length > 0 && (
@@ -431,7 +431,7 @@ function Summary80({ data, title, titleAr }: { data: Summary; title: string; tit
   );
   const Rule = () => <div style={{ borderTop: "1px dashed #000", margin: "4px 0" }} />;
   return (
-    <div style={{ width: "72mm", fontFamily: 'Vazirmatn, SBC, Tahoma, "Segoe UI", Arial, sans-serif', fontSize: 11, color: "#000", fontVariantNumeric: "tabular-nums" }}>
+    <div style={{ width: "72mm", fontFamily: 'Vazirmatn, Inter, SBC, Tahoma, "Segoe UI", Arial, sans-serif', fontSize: 11, color: "#000", fontVariantNumeric: "tabular-nums" }}>
       <div style={{ textAlign: "center" }}>
         <div style={{ fontWeight: 700, fontSize: 14 }}>{store.store_name_en || "Hala Dresses"}</div>
         {store.store_name_ar && <div dir="rtl" style={{ fontWeight: 700 }}>{store.store_name_ar}</div>}

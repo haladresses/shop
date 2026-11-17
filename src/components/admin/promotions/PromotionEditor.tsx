@@ -404,7 +404,7 @@ export default function PromotionEditor({
                   key={type}
                   type="button"
                   onClick={() => set("type", type)}
-                  className={`text-left rounded-2xl border p-3.5 transition-all ${
+                  className={`text-left rounded-2xl border p-3.5 ${
                     on ? "border-indigo-500 ring-2 ring-indigo-100 bg-indigo-50/40" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
@@ -673,7 +673,7 @@ export default function PromotionEditor({
                       key={d}
                       type="button"
                       onClick={() => set("daysOfWeek", on ? f.daysOfWeek.filter((x) => x !== i) : [...f.daysOfWeek, i].sort())}
-                      className={`w-12 h-9 rounded-xl text-sm font-medium transition-colors ${on ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                      className={`w-12 h-9 rounded-xl text-sm font-medium ${on ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
                     >
                       {d}
                     </button>
@@ -730,7 +730,7 @@ export default function PromotionEditor({
                   key={v}
                   type="button"
                   onClick={() => set("channel", v)}
-                  className={`flex items-center gap-3 rounded-2xl border p-3 text-left transition-all ${on ? "border-indigo-500 ring-2 ring-indigo-100 bg-indigo-50/40" : "border-slate-200 hover:bg-slate-50"}`}
+                  className={`flex items-center gap-3 rounded-2xl border p-3 text-left ${on ? "border-indigo-500 ring-2 ring-indigo-100 bg-indigo-50/40" : "border-slate-200 hover:bg-slate-50"}`}
                 >
                   <Icon size={20} className={on ? "text-indigo-600" : "text-slate-400"} />
                   <span>
@@ -978,7 +978,7 @@ function Field({ label, name, error, hint, children }: { label: string; name: st
 
 function ErrorText({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-xs text-rose-600 mt-1 flex items-center gap-1 admin-fade-in">
+    <p className="text-xs text-rose-600 mt-1 flex items-center gap-1">
       <LuCircleAlert size={13} /> {children}
     </p>
   );
@@ -1001,7 +1001,7 @@ function Segmented<T extends string>({ value, onChange, options }: { value: T; o
           key={v}
           type="button"
           onClick={() => onChange(v)}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${value === v ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
+          className={`px-3 py-1.5 rounded-lg text-sm font-medium ${value === v ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-800"}`}
         >
           {label}
         </button>
@@ -1017,9 +1017,9 @@ function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`relative w-10 h-6 rounded-full transition-colors ${checked ? "bg-emerald-500" : "bg-slate-300"}`}
+      className={`relative w-10 h-6 rounded-full ${checked ? "bg-emerald-500" : "bg-slate-300"}`}
     >
-      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : ""}`} />
+      <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow ${checked ? "translate-x-4" : ""}`} />
     </button>
   );
 }
@@ -1082,7 +1082,7 @@ function SelectedProducts({
       {products.length > 0 && (
         <div className="grid sm:grid-cols-2 gap-2">
           {shown.map((p) => (
-            <div key={p.id} className="flex items-center gap-2.5 rounded-xl border border-slate-200 p-2 admin-fade-in">
+            <div key={p.id} className="flex items-center gap-2.5 rounded-xl border border-slate-200 p-2">
               <span className="w-9 h-11 rounded-lg bg-slate-100 overflow-hidden shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {p.imageUrl && <img src={p.imageUrl} alt="" className="w-full h-full object-cover" />}

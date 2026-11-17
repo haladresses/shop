@@ -49,9 +49,18 @@ export const updateOrderSchema = z
       .enum(["UNPAID", "PAID", "PARTIAL", "REFUNDED", "FAILED"])
       .optional(),
     notes: z.string().max(2000).optional(),
+    // Courier waybill / tracking number ("" clears it).
+    trackingNumber: z.string().trim().max(100).optional(),
+    // What the shop paid the driver/courier (null clears it).
+    deliveryCost: z.number().min(0).max(100000).nullable().optional(),
   })
   .refine(
-    (d) => d.status !== undefined || d.paymentStatus !== undefined || d.notes !== undefined,
+    (d) =>
+      d.status !== undefined ||
+      d.paymentStatus !== undefined ||
+      d.notes !== undefined ||
+      d.trackingNumber !== undefined ||
+      d.deliveryCost !== undefined,
     { message: "No changes provided" }
   );
 

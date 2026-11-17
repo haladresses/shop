@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { LuPlus } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
 
 type Coupon = {
@@ -65,7 +66,7 @@ export default function CouponsPage() {
       <div className="flex items-center justify-between">
         <span className="text-sm text-slate-500">{total} coupons total</span>
         <button className="admin-btn admin-btn-primary" onClick={() => { setError(""); setShowModal(true); }}>
-          + Create Coupon
+          <LuPlus size={16} /> Create Coupon
         </button>
       </div>
 
@@ -88,22 +89,18 @@ export default function CouponsPage() {
                 {coupons.map((c) => (
                   <tr key={c.id}>
                     <td className="font-mono font-bold text-indigo-600">{c.code}</td>
-                    <td>
-                      <span className={`badge ${c.type === "PERCENTAGE" ? "badge-processing" : "badge-confirmed"}`}>
-                        {c.type}
-                      </span>
-                    </td>
+                    <td className="text-slate-600">{c.type === "PERCENTAGE" ? "Percentage" : "Fixed amount"}</td>
                     <td className="font-medium">
                       {c.type === "PERCENTAGE" ? `${c.value}%` : `${Number(c.value).toFixed(3)} OMR`}
                     </td>
                     <td>{c.minOrder ? `${Number(c.minOrder).toFixed(3)} OMR` : "-"}</td>
                     <td>{c.usedCount}{c.maxUses ? ` / ${c.maxUses}` : ""}</td>
                     <td className={isExpired(c.expiresAt) ? "text-red-500" : "text-slate-500"}>
-                      {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : "Never"}
+                      {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString("en-GB") : "Never"}
                     </td>
                     <td>
-                      <span className={`badge ${c.isActive && !isExpired(c.expiresAt) ? "badge-delivered" : "badge-cancelled"}`}>
-                        {c.isActive && !isExpired(c.expiresAt) ? "Active" : "Inactive"}
+                      <span className={`badge ${c.isActive && !isExpired(c.expiresAt) ? "badge-delivered" : "badge-refunded"}`}>
+                        {isExpired(c.expiresAt) ? "Expired" : c.isActive ? "Active" : "Inactive"}
                       </span>
                     </td>
                   </tr>
@@ -142,8 +139,8 @@ export default function CouponsPage() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
                   <select className="admin-input admin-select" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                    <option value="PERCENTAGE">Percentage %</option>
-                    <option value="FIXED">Fixed OMR</option>
+                    <option value="PERCENTAGE">Percentage (%)</option>
+                    <option value="FIXED">Fixed amount (OMR)</option>
                   </select>
                 </div>
                 <div>

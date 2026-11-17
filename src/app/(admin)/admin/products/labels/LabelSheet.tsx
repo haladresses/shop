@@ -33,7 +33,7 @@ export type LabelItem = {
   basePrice: number;
 };
 
-const FONT = 'Vazirmatn, SBC, Tahoma, "Segoe UI", Arial, sans-serif';
+const FONT = 'Vazirmatn, Inter, SBC, Tahoma, "Segoe UI", Arial, sans-serif';
 const clamp = (n: number, a: number, b: number) => Math.min(b, Math.max(a, n));
 
 const PT_MM = 25.4 / 72;

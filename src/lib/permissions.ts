@@ -43,6 +43,7 @@ export const ADMIN_NAV_ITEMS: NavPermissionItem[] = [
   { href: "/admin", label: "Dashboard", permission: "admin.dashboard.view", exact: true },
   { href: "/admin/orders", label: "Orders", permission: "admin.orders.view" },
   { href: "/admin/reports", label: "Sales Report", permission: "admin.reports.view" },
+  { href: "/admin/delivery-report", label: "Shipping Report", permission: "admin.reports.view" },
   { href: "/admin/finance", label: "Finance", permission: "admin.finance.view" },
   { href: "/admin/returns", label: "Returns", permission: "admin.orders.view" },
   { href: "/admin/products", label: "Products", permission: "admin.products.view" },

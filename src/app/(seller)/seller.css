@@ -1,7 +1,21 @@
-/* Seller Panel Styles */
+/* Seller Panel Styles (a sibling of the admin panel, see admin.css) */
+
+/* SBC brand font, the same font stack as the admin panel */
+@font-face {
+  font-family: "SBC";
+  src: url("/fonts/sbc.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  font-family: "Vazirmatn", "Inter", "SBC", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
 
 .seller-sidebar {
-  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  background: #0f172a; /* slate-900 */
   height: 100vh;
   overflow: hidden;
 }
@@ -9,23 +23,35 @@
 .seller-nav-link {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  padding: 0.625rem 1rem;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #94a3b8;
-  transition: all 0.15s ease;
+  color: #cbd5e1; /* slate-300 */
   text-decoration: none;
 }
 
 .seller-nav-link:hover,
 .seller-nav-link.active {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
+  background: #1e293b; /* slate-800 */
+  color: #ffffff;
 }
 
-.seller-nav-link.active {
-  background: rgba(14, 165, 233, 0.3);
-  color: #38bdf8;
+/* ───────── No motion ─────────
+   Like the admin, the seller portal is a calm working tool: nothing fades,
+   slides, pops or moves on hover. The only exception is the loading spinner,
+   so people can see the page is busy rather than frozen. */
+.seller-body *,
+.seller-body *::before,
+.seller-body *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+.seller-body .animate-spin {
+  animation: seller-spin 0.8s linear infinite !important;
+}
+@keyframes seller-spin {
+  to { transform: rotate(360deg); }
 }

@@ -53,6 +53,8 @@ export default function SiteDocument({
         {head}
         {/* Arabic typeface (Vazirmatn) — preloaded so Arabic text never flashes in a fallback font. */}
         <link rel="preload" href="/fonts/vazirmatn/Vazirmatn-Variable.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        {/* English typeface (Inter), Latin characters only. */}
+        <link rel="preload" href="/fonts/inter/Inter-Variable-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
         <meta name="generator" content="SBC (sbc.om)" />
         <script
           type="application/ld+json"

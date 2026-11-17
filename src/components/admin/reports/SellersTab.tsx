@@ -34,7 +34,7 @@ export default function SellersTab({ query, onOpenReceipts }: { query: string; o
           { key: "refunds", label: "Refunds", labelAr: "المرتجعات", kind: "money", value: (r) => r.refunds, total: t.refunds },
           { key: "net", label: "Net", labelAr: "الصافي", kind: "money", value: (r) => r.net, total: t.net, className: "font-semibold" },
           { key: "netExVat", label: "Net excl. VAT", kind: "money", value: (r) => r.netExVat, total: t.netExVat },
-          { key: "avg", label: "Avg sale", kind: "money", value: (r) => r.avgTicket, total: t.avgTicket },
+          { key: "avg", label: "Average sale", kind: "money", value: (r) => r.avgTicket, total: t.avgTicket },
           { key: "share", label: "Share", labelAr: "الحصة", kind: "pct", value: (r) => r.share, total: data.rows.length ? 100 : 0 },
           { key: "first", label: "First sale", value: (r) => (r.firstSale ? fmtDateTime(r.firstSale) : null), muted: true },
           { key: "last", label: "Last sale", value: (r) => (r.lastSale ? fmtDateTime(r.lastSale) : null), muted: true },

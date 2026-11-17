@@ -113,8 +113,8 @@ export default function WhatsAppSettings() {
 
 function Switch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className={`w-11 h-6 rounded-full transition-colors shrink-0 ${checked ? "bg-emerald-500" : "bg-slate-200"}`}>
-      <span className={`block w-5 h-5 bg-white rounded-full shadow transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
+    <button type="button" role="switch" aria-checked={checked} onClick={() => onChange(!checked)} className={`w-11 h-6 rounded-full shrink-0 ${checked ? "bg-emerald-500" : "bg-slate-200"}`}>
+      <span className={`block w-5 h-5 bg-white rounded-full shadow ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
     </button>
   );
 }

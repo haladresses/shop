@@ -227,7 +227,7 @@ export default function PurchaseOrderDetail({ id }: { id: string }) {
       </div>
 
       {lastReceipt && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-emerald-50 text-emerald-800 px-4 py-3 admin-fade-in">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-emerald-50 text-emerald-800 px-4 py-3">
           <p className="text-sm font-medium flex items-center gap-2"><LuCheck size={16} /> {lastReceipt.number} booked: stock is updated.</p>
           <div className="flex gap-2">
             {labelsLinkFor(lastReceipt.items) && (
@@ -788,7 +788,7 @@ export function SettlementPicker({
             type="button"
             disabled={k === "REFUND" && !canRefund}
             onClick={() => onChange(k)}
-            className={`text-left rounded-xl px-3 py-2.5 ring-1 transition ${value === k ? "ring-indigo-400 bg-indigo-50/60" : "ring-slate-200 hover:ring-slate-300"} disabled:opacity-40`}
+            className={`text-left rounded-xl px-3 py-2.5 ring-1 ${value === k ? "ring-indigo-400 bg-indigo-50/60" : "ring-slate-200 hover:ring-slate-300"} disabled:opacity-40`}
           >
             <span className="block text-sm font-medium text-slate-800">{title}</span>
             <span className="block text-xs text-slate-500">{hint}</span>
@@ -796,7 +796,7 @@ export function SettlementPicker({
         ))}
       </div>
       {value === "REFUND" && (
-        <div className="grid sm:grid-cols-2 gap-3 admin-fade-in">
+        <div className="grid sm:grid-cols-2 gap-3">
           <Field label="Refunded by">
             <select className="admin-input admin-select" value={method} onChange={(e) => onMethod(e.target.value)}>
               {PAYMENT_METHOD_OPTIONS.map((m) => (

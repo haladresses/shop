@@ -12,7 +12,7 @@ const DEFAULT_SETTINGS = [
   { key: "store_email", group: "general", labelEn: "Store Email", type: "string", defaultValue: "info@haladresses.com" },
   { key: "store_phone", group: "general", labelEn: "Store Phone", type: "string", defaultValue: "+968 9000 0000" },
   { key: "store_address", group: "general", labelEn: "Store Address", type: "string", defaultValue: "Muscat, Oman" },
-  { key: "free_shipping_min", group: "shipping", labelEn: "Free Shipping Min Order (OMR)", type: "string", defaultValue: "10" },
+  { key: "free_shipping_min", group: "shipping", labelEn: "Free Shipping Minimum Order (OMR)", type: "string", defaultValue: "10" },
   { key: "default_shipping_cost", group: "shipping", labelEn: "Default Shipping Cost (OMR)", type: "string", defaultValue: "1.500" },
   { key: "currency", group: "general", labelEn: "Currency Code", type: "string", defaultValue: "OMR" },
   { key: "tax_rate", group: "general", labelEn: "Tax Rate (%)", type: "string", defaultValue: "5" },
@@ -25,6 +25,17 @@ const DEFAULT_SETTINGS = [
 ];
 
 const groups = ["general", "shipping", "checkout", "payment gateway", "whatsapp", "notifications", "social", "footer", "backup"];
+const GROUP_LABELS: Record<string, string> = {
+  general: "General",
+  shipping: "Shipping",
+  checkout: "Checkout",
+  "payment gateway": "Payment Gateway",
+  whatsapp: "WhatsApp",
+  notifications: "Notifications",
+  social: "Social Media",
+  footer: "Footer",
+  backup: "Backup",
+};
 
 export default function SettingsPage() {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -86,11 +97,11 @@ export default function SettingsPage() {
           <button
             key={g}
             onClick={() => setActiveGroup(g)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-              activeGroup === g ? "bg-indigo-600 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+            className={`px-4 py-2 rounded-lg text-sm font-medium border ${
+              activeGroup === g ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
             }`}
           >
-            {g}
+            {GROUP_LABELS[g] ?? g}
           </button>
         ))}
       </div>
@@ -113,10 +124,10 @@ export default function SettingsPage() {
               {setting.type === "boolean" ? (
                 <label className="flex items-center gap-2 cursor-pointer">
                   <div
-                    className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${values[setting.key] === "true" ? "bg-indigo-600" : "bg-slate-200"}`}
+                    className={`w-11 h-6 rounded-full cursor-pointer ${values[setting.key] === "true" ? "bg-indigo-600" : "bg-slate-200"}`}
                     onClick={() => setValues({ ...values, [setting.key]: values[setting.key] === "true" ? "false" : "true" })}
                   >
-                    <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${values[setting.key] === "true" ? "translate-x-5" : "translate-x-0.5"}`} />
+                    <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 ${values[setting.key] === "true" ? "translate-x-5" : "translate-x-0.5"}`} />
                   </div>
                   <span className="text-sm text-slate-600">{values[setting.key] === "true" ? "Enabled" : "Disabled"}</span>
                 </label>
@@ -139,7 +150,7 @@ export default function SettingsPage() {
         </button>
         {saved && (
           <span className="text-green-600 text-sm font-medium flex items-center gap-1">
-            <LuCheck size={16} /> Settings saved!
+            <LuCheck size={16} /> Settings saved
           </span>
         )}
       </div>

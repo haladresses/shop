@@ -1,6 +1,7 @@
 import { Product } from "@/types/product";
+import { PRODUCT_PLACEHOLDER } from "@/lib/productImage";
 
-const PLACEHOLDER = "/images/products/p1.png";
+const PLACEHOLDER = PRODUCT_PLACEHOLDER;
 
 export type ApiProductImage = {
   url: string;
@@ -169,6 +170,8 @@ export async function fetchProducts(
     page: String(page),
     pageSize: String(pageSize),
     isActive: "true",
+    // Items with real photos are listed before ones showing the default picture.
+    photosFirst: "true",
   });
   if (search) query.set("search", search);
   if (categoryId) query.set("categoryId", categoryId);
@@ -197,7 +200,7 @@ export async function fetchProducts(
     totalPages: json.meta?.totalPages ?? 0,
     priceMin: json.meta?.priceMin ?? null,
     priceMax: json.meta?.priceMax ?? null,
-    sizes: json.meta?.sizes ?? [],
+    sizes: [...((json.meta?.sizes as string[] | undefined) ?? [])].sort(compareSizes),
     colors: json.meta?.colors ?? [],
   };
 }
@@ -214,7 +217,7 @@ export async function fetchProductBySlug(
   return json.success ? (json.data as ApiProduct) : null;
 }
 
-const CATEGORY_PLACEHOLDER = "/images/products/p1.png";
+const CATEGORY_PLACEHOLDER = PRODUCT_PLACEHOLDER;
 
 export type ApiCategory = {
   id: string;
@@ -264,4 +267,44 @@ export async function fetchCategories(
 
   if (!json.success) return [];
   return (json.data as ApiCategory[]).map((c) => mapApiCategory(c, language));
+}
+
+const ADULT_SIZES = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"];
+
+/**
+ * Sort key for a size label: newborn, months, years, adult letters, plain
+ * numbers, then Mom-* and Mini-* sets (each ordered by the size after the
+ * dash). Unknown labels go last.
+ */
+function sizeKey(raw: string): number[] {
+  const s = raw.trim().toUpperCase();
+  if (s === "NEWBORN" || s === "NB") return [0];
+  const set = s.match(/^(MOM|MINI)\s*[-\s]\s*(.+)$/);
+  if (set) return [set[1] === "MOM" ? 5 : 6, ...sizeKey(set[2])];
+  const age = s.match(/^(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*(M|MO|MONTHS?|Y|YRS?|YEARS?)$/);
+  if (age) {
+    const from = parseFloat(age[1]);
+    const to = age[2] ? parseFloat(age[2]) : from;
+    return [age[3].startsWith("M") ? 1 : 2, from, to];
+  }
+  const adult = ADULT_SIZES.indexOf(s === "XXXL" ? "3XL" : s === "2XL" ? "XXL" : s);
+  if (adult >= 0) return [3, adult];
+  if (/^\d+(\.\d+)?$/.test(s)) return [4, parseFloat(s)];
+  return [9];
+}
+
+/** Compare two size labels in a natural shopping order (see sizeKey). */
+export function compareSizes(a: string, b: string): number {
+  const ka = sizeKey(a);
+  const kb = sizeKey(b);
+  for (let i = 0; i < Math.max(ka.length, kb.length); i++) {
+    const diff = (ka[i] ?? -1) - (kb[i] ?? -1);
+    if (diff) return diff;
+  }
+  return a.localeCompare(b);
+}
+
+/** Trim a product list to whole rows of `perRow` so grids never end on a half row. */
+export function fullRows<T>(list: T[], perRow = 4): T[] {
+  return list.length > perRow ? list.slice(0, list.length - (list.length % perRow)) : list;
 }

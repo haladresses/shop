@@ -127,18 +127,18 @@ export default function PromoBannerAdminPage() {
           </div>
         ))}
 
-        <button onClick={addTile} className="flex items-center gap-2 w-full justify-center py-3 rounded-lg border-2 border-dashed border-slate-300 text-slate-500 hover:border-indigo-400 hover:text-indigo-500 transition-colors">
+        <button onClick={addTile} className="flex items-center gap-2 w-full justify-center py-3 rounded-lg border-2 border-dashed border-slate-300 text-slate-500 hover:border-indigo-400 hover:text-indigo-500">
           <LuPlus size={18} /> Add Tile
         </button>
       </div>
 
-      <div className="flex items-center gap-3 sticky bottom-0 bg-slate-50 py-3">
+      <div className="admin-savebar">
         <button onClick={save} disabled={saving} className="admin-btn admin-btn-primary px-8">
           {saving ? "Saving..." : "Save Changes"}
         </button>
         {saved && (
           <span className="text-green-600 text-sm font-medium flex items-center gap-1">
-            <LuCheck size={16} /> Saved!
+            <LuCheck size={16} /> Saved
           </span>
         )}
       </div>

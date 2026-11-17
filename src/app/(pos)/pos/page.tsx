@@ -9,6 +9,7 @@ import {
   LuLayoutDashboard,
   LuArrowUpFromLine,
   LuBanknote,
+  LuCheck,
   LuClock,
   LuCreditCard,
   LuDelete,
@@ -29,6 +30,7 @@ import {
   LuSearch,
   LuShoppingBag,
   LuSplit,
+  LuTag,
   LuTrash2,
   LuUser,
   LuUserCheck,
@@ -36,7 +38,8 @@ import {
   LuX,
 } from "react-icons/lu";
 import { formatVariantLabel } from "@/lib/utils";
-import { PosModal, Receipt, ReceiptData, StoreInfo, beep, methodLabel, omr } from "@/components/pos/PosUi";
+import { PadKey, PosModal, Receipt, ReceiptData, StoreInfo, beep, methodLabel, omr } from "@/components/pos/PosUi";
+import LockScreen, { type LockUser } from "@/components/pos/LockScreen";
 import PrintArea from "@/components/print/PrintArea";
 import { SaleDocument } from "@/components/print/SaleDocument";
 import { printArea } from "@/lib/print";
@@ -47,6 +50,9 @@ import { DEFAULT_TAX_SETTINGS, NO_TAX, type RateInfo, type TaxSettings } from "@
 import ReturnModal from "@/components/pos/ReturnModal";
 import CartItemModal from "@/components/pos/CartItemModal";
 import StockCheckModal from "@/components/pos/StockCheckModal";
+
+/** The till locks itself after this long without a tap, click or key press. */
+const POS_IDLE_LOCK_MS = 2 * 60 * 1000;
 
 // ───────────────────────── types ─────────────────────────
 
@@ -158,6 +164,8 @@ function groupLines(lines: PosLine[]): PosLine[][] {
   return Array.from(m.values());
 }
 const r3 = (n: number) => Math.round(n * 1000) / 1000;
+/** "1 sale", "2 sales". */
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 function readHeld(): HeldCart[] {
   try {
@@ -194,6 +202,9 @@ export default function PosPage() {
   const [cashierName, setCashierName] = useState("");
   // Staff who can also open the admin panel get a "Back to admin" button.
   const [canOpenAdmin, setCanOpenAdmin] = useState(false);
+  // Screen lock (Lock button, or POS_IDLE_LOCK_MS without use).
+  const [locked, setLocked] = useState(false);
+  const [lockUser, setLockUser] = useState<LockUser | null>(null);
   const [storeInfo, setStoreInfo] = useState<StoreInfo>({});
   const [taxSettings, setTaxSettings] = useState<TaxSettings>(DEFAULT_TAX_SETTINGS);
   const [promoRules, setPromoRules] = useState<PromotionRule[]>([]);
@@ -304,6 +315,14 @@ export default function PosPage() {
         if (d.success && d.data?.permissions?.includes("pos.access")) {
           setCashierName(d.data.nameEn || d.data.email);
           await enterTerminal();
+          return;
+        }
+        // Reloaded while locked: the session answers as signed out, but the
+        // till must come back to the lock screen, not the staff picker.
+        const l = await fetch("/api/pos/lock", { cache: "no-store" }).then((r) => r.json()).catch(() => null);
+        if (l?.data?.locked) {
+          setLockUser(l.data.user);
+          setLocked(true);
         } else loadStaff();
       })
       .catch(() => loadStaff())
@@ -347,8 +366,8 @@ export default function PosPage() {
   }, []);
 
   useEffect(() => {
-    if (screen === "terminal" && !payOpen) scanInputRef.current?.focus();
-  }, [screen, cart.length, payOpen]);
+    if (screen === "terminal" && !payOpen && !locked) scanInputRef.current?.focus();
+  }, [screen, cart.length, payOpen, locked]);
 
   // ── catalog (paged, infinite scroll) ──
   const fetchCatalog = useCallback(
@@ -549,7 +568,7 @@ export default function PosPage() {
   };
 
   // A scan (or Enter) FINDS the item and shows it; the cashier then adds it
-  // with a click — or Enter on the empty box. "Add on scan" skips that step.
+  // with a click — or Enter on the empty box. "Auto-add on scan" skips that step.
   const handleScanSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const value = scanValue.trim();
@@ -677,6 +696,55 @@ export default function PosPage() {
     writeHeld(next);
   };
 
+  // ── screen lock ──
+  const lockTill = useCallback(() => {
+    setLocked(true);
+    postJson<{ user: LockUser }>("/api/pos/lock", { action: "lock" })
+      .then((d) => d.success && d.data && setLockUser(d.data.user))
+      .catch(() => {});
+  }, []);
+
+  const handleUnlocked = async (user: LockUser) => {
+    setLockUser(user);
+    setCashierName(user.nameEn || user.nameAr);
+    // Reloaded while locked: the terminal behind the lock was never loaded.
+    if (screen === "picker" || screen === "pin") await enterTerminal();
+    setLocked(false);
+  };
+
+  // Someone else takes over: park the current sale under Held so it isn't lost.
+  const switchUserFromLock = () => {
+    if (cart.length > 0) holdCart();
+    setLocked(false);
+    setLockUser(null);
+    switchUser();
+  };
+
+  // Auto-lock after POS_IDLE_LOCK_MS without a tap, click, scroll or key.
+  // Time in another tab counts as idle, but the lock waits until the till is
+  // on screen again, so a POS tab in the background never signs the admin
+  // panel out from under you.
+  const signedIn = screen === "openShift" || screen === "terminal" || screen === "receipt" || screen === "zreport";
+  useEffect(() => {
+    if (!signedIn || locked) return;
+    let last = Date.now();
+    const bump = () => {
+      last = Date.now();
+    };
+    const check = () => {
+      if (document.visibilityState === "visible" && Date.now() - last >= POS_IDLE_LOCK_MS) lockTill();
+    };
+    const events = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"] as const;
+    events.forEach((e) => window.addEventListener(e, bump, { capture: true, passive: true }));
+    document.addEventListener("visibilitychange", check);
+    const timer = setInterval(check, 5000);
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, bump, { capture: true }));
+      document.removeEventListener("visibilitychange", check);
+      clearInterval(timer);
+    };
+  }, [signedIn, locked, lockTill]);
+
   // ── payment ──
   const openPay = (mode: PayMode = "CASH") => {
     if (cart.length === 0) return;
@@ -742,7 +810,7 @@ export default function PosPage() {
 
   // ── keyboard shortcuts on the terminal ──
   useEffect(() => {
-    if (screen !== "terminal") return;
+    if (screen !== "terminal" || locked) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "F2") {
         e.preventDefault();
@@ -778,10 +846,23 @@ export default function PosPage() {
     );
   }
 
+  const lockOverlay = locked ? (
+    <LockScreen user={lockUser} fallbackName={cashierName} onUnlocked={handleUnlocked} onSwitchUser={switchUserFromLock} />
+  ) : null;
+  // The screen stays mounted behind the lock (nothing is lost) but can't be reached.
+  const withLock = (node: React.ReactNode) => (
+    <>
+      <div inert={locked}>{node}</div>
+      {lockOverlay}
+    </>
+  );
+
+  if (lockOverlay && (screen === "picker" || screen === "pin")) return lockOverlay;
+
   if (screen === "picker") {
     return (
       <PosBackdrop>
-        <div className="w-16 h-16 rounded-2xl bg-white/80 shadow-lg flex items-center justify-center mb-4">
+        <div className="w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center mb-4">
           <LuScanBarcode size={30} className="text-rose-500" />
         </div>
         <h1 className="text-3xl font-semibold text-slate-800 mb-1">Hala Dresses POS</h1>
@@ -789,7 +870,7 @@ export default function PosPage() {
         {loadingStaff ? (
           <LuLoaderCircle size={24} className="animate-spin text-slate-400" />
         ) : staff.length === 0 ? (
-          <div className="w-full max-w-lg bg-white/95 backdrop-blur rounded-3xl shadow-xl p-7 sm:p-8">
+          <div className="w-full max-w-lg bg-white rounded-3xl border border-slate-200 shadow-sm p-7 sm:p-8">
             <div className="flex items-center gap-3 mb-5">
               <span className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center"><LuUsers size={24} /></span>
               <div>
@@ -813,9 +894,9 @@ export default function PosPage() {
               <button
                 key={s.id}
                 onClick={() => pickStaff(s)}
-                className="group flex flex-col items-center gap-3 bg-white/90 backdrop-blur rounded-3xl border border-white shadow-sm p-6 hover:shadow-xl hover:-translate-y-1 transition-all"
+                className="group flex flex-col items-center gap-3 bg-white rounded-3xl border border-slate-200 shadow-sm p-6 hover:border-rose-300"
               >
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-rose-100 to-amber-50 text-rose-500 flex items-center justify-center overflow-hidden ring-4 ring-white shadow">
+                <div className="w-20 h-20 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center overflow-hidden">
                   {s.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={s.avatar} alt={s.nameEn} className="w-full h-full object-cover" />
@@ -835,15 +916,15 @@ export default function PosPage() {
   if (screen === "pin" && selectedStaff) {
     return (
       <PosBackdrop>
-        <div className="bg-white/90 backdrop-blur rounded-3xl shadow-xl p-8 w-full max-w-[360px] flex flex-col items-center">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 w-full max-w-[360px] flex flex-col items-center">
           <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-3">
             <LuLock size={24} />
           </div>
           <h2 className="text-xl font-semibold text-slate-800 mb-1">{selectedStaff.nameEn || selectedStaff.nameAr}</h2>
           <p className="text-slate-500 mb-6">Enter your 4-digit PIN</p>
-          <div className={`flex gap-3 mb-4 ${pinError ? "pos-shake" : ""}`}>
+          <div className="flex gap-3 mb-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <span key={i} className={`w-4 h-4 rounded-full border-2 transition-all ${i < pin.length ? "bg-rose-500 border-rose-500 scale-110" : "border-slate-300"}`} />
+              <span key={i} className={`w-4 h-4 rounded-full border-2 ${i < pin.length ? "bg-rose-500 border-rose-500" : "border-slate-300"}`} />
             ))}
           </div>
           <div className="h-6 mb-2 text-sm">
@@ -867,9 +948,9 @@ export default function PosPage() {
   }
 
   if (screen === "openShift") {
-    return (
+    return withLock(
       <PosBackdrop>
-        <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl p-8 w-full max-w-md">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 w-full max-w-md">
           <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
             <LuWallet size={26} />
           </div>
@@ -908,10 +989,10 @@ export default function PosPage() {
   }
 
   if (screen === "receipt" && receipt) {
-    return (
+    return withLock(
       <div className="min-h-screen p-6 flex flex-col items-center justify-center bg-slate-100">
         <div className="print:hidden mb-5 flex flex-col items-center text-center">
-          <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3 pos-pop-in">
+          <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3">
             <LuReceipt size={30} />
           </div>
           <h2 className="text-2xl font-semibold text-slate-800">Sale complete</h2>
@@ -940,12 +1021,12 @@ export default function PosPage() {
   if (screen === "zreport" && zReport) {
     const diff = zReport.difference ?? 0;
     const balanced = Math.abs(diff) < 0.0005;
-    return (
+    return withLock(
       <PosBackdrop>
         <div className="w-full max-w-4xl grid md:grid-cols-[1fr_auto] gap-6 items-start">
-          <div className="bg-white/95 backdrop-blur rounded-3xl shadow-xl p-7 sm:p-8 print:hidden">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-7 sm:p-8 print:hidden">
             <div className="flex items-center gap-3 mb-6">
-              <span className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center pos-pop-in"><LuCircleCheck size={26} /></span>
+              <span className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center"><LuCircleCheck size={26} /></span>
               <div>
                 <h2 className="text-2xl font-semibold text-slate-800">Shift closed</h2>
                 <p className="text-slate-500 text-sm">
@@ -965,7 +1046,7 @@ export default function PosPage() {
                 <p className="font-medium">{balanced ? "Drawer balanced" : diff > 0 ? "Drawer over" : "Drawer short"}</p>
                 <p className="text-xs opacity-80">Expected {zReport.expectedCash.toFixed(3)} · counted {(zReport.closingCash ?? 0).toFixed(3)}</p>
               </div>
-              <span className="text-2xl font-bold tabular-nums">{balanced ? "✓" : `${diff > 0 ? "+" : "−"}${Math.abs(diff).toFixed(3)}`}</span>
+              <span className="text-2xl font-bold tabular-nums">{balanced ? <LuCheck size={26} /> : `${diff > 0 ? "+" : "−"}${Math.abs(diff).toFixed(3)}`}</span>
             </div>
             <div className="grid sm:grid-cols-2 gap-2.5 mt-6">
               {canOpenAdmin && (
@@ -1018,48 +1099,68 @@ export default function PosPage() {
     />
   );
 
-  return (
+  return withLock(
     <div className="h-[100dvh] flex flex-col bg-slate-100 overflow-hidden">
       {/* Header */}
-      <header className="flex items-center gap-2 bg-white border-b border-slate-200 px-3 sm:px-5 h-14 shrink-0 print:hidden">
-        <div className="flex items-center gap-2 font-semibold text-slate-800 min-w-0">
+      <header className="flex items-center gap-1 bg-white border-b border-slate-200 px-3 sm:px-4 h-14 shrink-0 print:hidden">
+        <div className="flex items-center gap-2 font-semibold text-slate-800 min-w-0 mr-1">
           <span className="w-8 h-8 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0">
             <LuScanBarcode size={18} />
           </span>
-          <span className="hidden md:inline truncate">Hala POS</span>
+          <span className="hidden xl:inline truncate">Hala POS</span>
         </div>
+        {/* Shift: its figures, cash in / cash out and closing the shift all live behind this one button. */}
         {shift && (
-          <button onClick={() => setCloseOpen(true)} className="hidden sm:inline-flex items-center gap-1.5 ml-2 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 px-3 py-1.5 hover:bg-emerald-100" title="Shift details / close shift">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Shift · {shift.salesCount} sales · {omr(shift.salesTotal)}
+          <button
+            onClick={() => setCloseOpen(true)}
+            className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-slate-200 px-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            title="Shift: cash in, cash out and close shift"
+            aria-label="Shift: cash in, cash out and close shift"
+          >
+            <LuWallet size={17} className="text-slate-500" />
+            <span className="hidden lg:inline">Shift</span>
+            <span className="hidden xl:inline font-normal text-slate-500">
+              · {plural(shift.salesCount, "sale")} · {omr(shift.salesTotal)}
+            </span>
           </button>
         )}
         <div className="flex-1" />
-        <HeaderBtn icon={LuPause} label="Held" badge={held.length} onClick={() => setHeldOpen(true)} />
-        <HeaderBtn icon={LuHistory} label="Sales" onClick={() => setSalesOpen(true)} />
-        <HeaderBtn icon={LuPackageOpen} label="Stock" onClick={() => setStockOpen(true)} />
-        <HeaderBtn icon={LuRotateCcw} label="Return" onClick={() => setReturnOpen(true)} />
-        <HeaderBtn icon={LuArrowDownToLine} label="Cash in" onClick={() => setCashOpen("IN")} className="hidden lg:inline-flex" />
-        <HeaderBtn icon={LuArrowUpFromLine} label="Cash out" onClick={() => setCashOpen("OUT")} className="hidden lg:inline-flex" />
-        <HeaderBtn icon={LuLock} label="Close shift" onClick={() => setCloseOpen(true)} />
-        <HeaderBtn icon={LuMaximize} label="Fullscreen" onClick={toggleFullscreen} className="hidden md:inline-flex" />
-        <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-500 px-2">
-          <LuClock size={14} /> {now?.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+        <HeaderBtn icon={LuPause} label="Held" title="Held sales (F4 holds the current sale)" badge={held.length} onClick={() => setHeldOpen(true)} />
+        <HeaderBtn icon={LuHistory} label="Sales" title="Recent sales and reprints" onClick={() => setSalesOpen(true)} />
+        <HeaderBtn icon={LuPackageOpen} label="Stock" title="Check stock" onClick={() => setStockOpen(true)} />
+        <HeaderBtn icon={LuRotateCcw} label="Return" title="Return or exchange" onClick={() => setReturnOpen(true)} />
+        <HeaderBtn icon={LuLock} label="Lock" title="Lock the screen" onClick={lockTill} />
+        <span className="hidden md:block w-px h-6 bg-slate-200 mx-1" />
+        <div className="hidden xl:flex items-center gap-1.5 text-sm text-slate-500 px-1.5 tabular-nums">
+          <LuClock size={15} /> {now?.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
         </div>
+        <button
+          onClick={toggleFullscreen}
+          className="hidden md:inline-flex items-center justify-center h-9 w-9 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+          title="Full screen"
+          aria-label="Full screen"
+        >
+          <LuMaximize size={17} />
+        </button>
         {canOpenAdmin && (
           <a
             href="/admin"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-white bg-slate-800 hover:bg-slate-900 rounded-xl px-3 py-2 ml-1"
+            className="inline-flex items-center gap-1.5 h-9 text-sm font-medium text-white bg-slate-800 hover:bg-slate-900 rounded-lg px-3 ml-1"
             title="Back to admin panel (you stay signed in)"
           >
             <LuLayoutDashboard size={16} />
             <span className="hidden sm:inline">Admin</span>
           </a>
         )}
-        <button onClick={switchUser} className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-rose-600 pl-2 border-l border-slate-200 ml-1" title="Switch cashier (signs out)">
+        <button
+          onClick={switchUser}
+          className="inline-flex items-center gap-1.5 h-9 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg px-2.5 ml-1"
+          title="Switch cashier (signs out)"
+          aria-label="Switch cashier (signs out)"
+        >
           <LuUser size={16} />
           <span className="hidden sm:inline max-w-[120px] truncate">{cashierName}</span>
-          <LuLogOut size={15} />
+          <LuLogOut size={15} className="text-slate-400" />
         </button>
       </header>
 
@@ -1073,7 +1174,7 @@ export default function PosPage() {
                 ref={scanInputRef}
                 value={scanValue}
                 onChange={(e) => setScanValue(e.target.value)}
-                placeholder="Scan barcode or search name / SKU…  (F2)"
+                placeholder="Scan a barcode or search by name or SKU (F2)"
                 className="w-full pl-11 pr-10 py-3.5 rounded-2xl border border-slate-200 bg-white text-base focus:outline-none focus:ring-2 focus:ring-rose-300 shadow-sm"
                 autoComplete="off"
               />
@@ -1087,7 +1188,7 @@ export default function PosPage() {
               <LuSearch size={20} />
             </button>
           </form>
-          {scanError && <p className="text-rose-600 text-sm -mt-1 pos-shake">{scanError}</p>}
+          {scanError && <p className="text-rose-600 text-sm -mt-1">{scanError}</p>}
           {scanned && (
             <ScannedCard
               code={scanned.code}
@@ -1108,32 +1209,42 @@ export default function PosPage() {
             ))}
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1 shrink-0">
-            <button
-              onClick={() => setInStockOnly((v) => !v)}
-              className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border ${inStockOnly ? "border-emerald-400 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-500"}`}
-            >
+          {/* Filters. Each one hands focus back to the scan box, so the next scan isn't typed into it. */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <label className="inline-flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={inStockOnly}
+                onChange={() => { setInStockOnly((v) => !v); scanInputRef.current?.focus(); }}
+                className="w-4 h-4 accent-rose-500"
+              />
               In stock only
-            </button>
-            <button
-              onClick={toggleAutoAdd}
-              title={autoAddOnScan ? "Scanned items go straight into the sale" : "Scanned items are shown first. Click (or press Enter) to add"}
-              className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border ${autoAddOnScan ? "border-rose-400 bg-rose-50 text-rose-700" : "border-slate-200 bg-white text-slate-500"}`}
-            >
-              Add on scan: {autoAddOnScan ? "on" : "off"}
-            </button>
-            {colorFacets.length > 0 && <span className="w-px h-5 bg-slate-200 mx-1 shrink-0" />}
-            {colorFacets.map((c) => (
-              <button
-                key={c.value}
-                onClick={() => setColorFilter(c.value === colorFilter ? "" : c.value)}
-                title={c.value}
-                aria-label={c.value}
-                className={`w-7 h-7 rounded-full border-2 shrink-0 transition-transform ${colorFilter === c.value ? "border-rose-500 scale-110" : "border-transparent"}`}
+            </label>
+            {colorFacets.length > 0 && (
+              <select
+                value={colorFilter}
+                onChange={(e) => { setColorFilter(e.target.value); scanInputRef.current?.focus(); }}
+                aria-label="Colour"
+                className={`h-9 rounded-lg border px-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-rose-200 ${colorFilter ? "border-rose-300 text-slate-800" : "border-slate-200 text-slate-700"}`}
               >
-                <span className="block w-full h-full rounded-full border border-slate-200" style={{ background: c.hex || "#ccc" }} />
-              </button>
-            ))}
+                <option value="">All colours</option>
+                {colorFacets.map((c) => (
+                  <option key={c.value} value={c.value}>{c.value}</option>
+                ))}
+              </select>
+            )}
+            <label
+              className="inline-flex items-center gap-2 h-9 px-3 rounded-lg border border-slate-200 bg-white text-sm text-slate-700 cursor-pointer select-none"
+              title="On: a scanned item goes straight into the sale. Off: it is shown first, then you add it (click, or press Enter)."
+            >
+              <input
+                type="checkbox"
+                checked={autoAddOnScan}
+                onChange={() => { toggleAutoAdd(); scanInputRef.current?.focus(); }}
+                className="w-4 h-4 accent-rose-500"
+              />
+              Auto-add on scan
+            </label>
           </div>
 
           <div ref={catalogScrollRef} className="flex-1 overflow-y-auto rounded-2xl pb-24 lg:pb-2">
@@ -1165,8 +1276,8 @@ export default function PosPage() {
                       onClick={() => !blocked && (g.length === 1 ? addLine(r) : setPicker(g))}
                       disabled={blocked}
                       aria-disabled={blocked}
-                      className={`relative text-left rounded-2xl bg-white overflow-hidden shadow-sm ring-1 ring-slate-200/70 transition-all ${
-                        blocked ? "cursor-not-allowed" : "hover:ring-rose-300 hover:shadow-md active:scale-[0.98]"
+                      className={`relative text-left rounded-2xl bg-white overflow-hidden shadow-sm ring-1 ring-slate-200/70 ${
+                        blocked ? "cursor-not-allowed" : "hover:ring-rose-300"
                       }`}
                     >
                       <div className={`relative aspect-[4/5] bg-slate-50 flex items-center justify-center overflow-hidden ${blocked ? "grayscale opacity-50" : ""}`}>
@@ -1236,18 +1347,18 @@ export default function PosPage() {
       <div className="lg:hidden fixed inset-x-0 bottom-0 p-3 print:hidden z-30">
         <button
           onClick={() => setCartOpen(true)}
-          className="w-full flex items-center justify-between rounded-2xl bg-slate-900 text-white px-5 py-4 shadow-2xl"
+          className="w-full flex items-center justify-between rounded-2xl bg-slate-900 text-white px-5 py-4 shadow-lg"
         >
           <span className="flex items-center gap-2 font-medium">
-            <LuShoppingBag size={20} /> {itemCount} item{itemCount === 1 ? "" : "s"}
+            <LuShoppingBag size={20} /> {plural(itemCount, "item")}
           </span>
           <span className="font-semibold text-lg">{omr(total)}</span>
         </button>
       </div>
       {cartOpen && (
         <div className="lg:hidden fixed inset-0 z-40 print:hidden">
-          <div className="absolute inset-0 bg-slate-900/50 pos-fade-in" onClick={() => setCartOpen(false)} />
-          <div className="absolute inset-x-0 bottom-0 h-[88dvh] bg-white rounded-t-3xl flex flex-col pos-slide-up overflow-hidden">
+          <div className="absolute inset-0 bg-slate-900/50" onClick={() => setCartOpen(false)} />
+          <div className="absolute inset-x-0 bottom-0 h-[88dvh] bg-white rounded-t-3xl flex flex-col overflow-hidden">
             <div className="relative flex items-center justify-between px-5 pt-5 pb-1">
               <span className="w-10 h-1.5 rounded-full bg-slate-200 absolute left-1/2 -translate-x-1/2 top-2" />
               <h3 className="font-semibold text-slate-800">Current sale</h3>
@@ -1276,7 +1387,7 @@ export default function PosPage() {
             <button
               key={m}
               onClick={() => { setPayMode(m); setTendered(""); }}
-              className={`flex flex-col items-center gap-1.5 py-4 rounded-2xl border-2 font-medium transition-all ${
+              className={`flex flex-col items-center gap-1.5 py-4 rounded-2xl border-2 font-medium ${
                 payMode === m ? "border-rose-500 bg-rose-50 text-rose-700" : "border-slate-200 text-slate-600 hover:border-slate-300"
               }`}
             >
@@ -1378,7 +1489,7 @@ export default function PosPage() {
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-slate-800 truncate">{h.label}</p>
                   <p className="text-xs text-slate-500">
-                    {h.cart.reduce((s, l) => s + l.quantity, 0)} items · {omr(h.cart.reduce((s, l) => s + l.unitPrice * l.quantity, 0))} ·{" "}
+                    {plural(h.cart.reduce((s, l) => s + l.quantity, 0), "item")} · {omr(h.cart.reduce((s, l) => s + l.unitPrice * l.quantity, 0))} ·{" "}
                     {new Date(h.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
                   </p>
                 </div>
@@ -1396,6 +1507,7 @@ export default function PosPage() {
       <CloseShiftModal
         open={closeOpen}
         onClose={() => setCloseOpen(false)}
+        onCash={(t) => { setCloseOpen(false); setCashOpen(t); }}
         shift={shift}
         refresh={loadShift}
         onClosed={(s) => { setCloseOpen(false); setZReport(s); setShift(null); setScreen("zreport"); }}
@@ -1411,14 +1523,6 @@ function PosBackdrop({ children }: { children: React.ReactNode }) {
     <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-[#F7F2EE]">
       <div className="flex flex-col items-center w-full">{children}</div>
     </div>
-  );
-}
-
-function PadKey({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
-  return (
-    <button onClick={onClick} disabled={disabled} className="h-16 rounded-2xl bg-white border border-slate-200 text-2xl font-medium text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-95 transition disabled:opacity-40">
-      {children}
-    </button>
   );
 }
 
@@ -1448,7 +1552,7 @@ function ScannedCard({
   const min = Math.min(...prices);
   const max = Math.max(...prices);
   return (
-    <div className="pos-pop-in flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-2 ring-rose-300">
+    <div className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-2 ring-rose-300">
       <div className="w-16 h-20 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
         {p.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -1492,7 +1596,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   return (
     <button
       onClick={onClick}
-      className={`shrink-0 text-sm font-medium px-4 py-2 rounded-full border transition-colors ${
+      className={`shrink-0 text-sm font-medium px-4 py-2 rounded-full border ${
         active ? "bg-slate-800 border-slate-800 text-white" : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
       }`}
     >
@@ -1501,25 +1605,31 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
+/** A top-bar button: icon plus a short label (the label hides on narrow screens; the tooltip stays). */
 function HeaderBtn({
   icon: Icon,
   label,
+  title,
   onClick,
   badge,
-  className = "",
 }: {
   icon: React.ElementType;
   label: string;
+  title?: string;
   onClick: () => void;
   badge?: number;
-  className?: string;
 }) {
   return (
-    <button onClick={onClick} title={label} className={`relative inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl px-2.5 py-2 ${className}`}>
-      <Icon size={17} />
-      <span className="hidden 2xl:inline">{label}</span>
+    <button
+      onClick={onClick}
+      title={title ?? label}
+      aria-label={badge ? `${label} (${badge})` : label}
+      className="inline-flex items-center gap-1.5 h-9 rounded-lg px-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+    >
+      <Icon size={17} className="text-slate-500" />
+      <span className="hidden lg:inline">{label}</span>
       {!!badge && (
-        <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">{badge}</span>
+        <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">{badge}</span>
       )}
     </button>
   );
@@ -1616,7 +1726,7 @@ function CartPanel(p: {
           <div className="flex items-center gap-2 text-sm rounded-xl bg-emerald-50 text-emerald-800 px-3 py-2">
             <LuUserCheck size={16} />
             <span className="font-medium truncate">{p.customer.nameEn || p.customer.nameAr}</span>
-            <span className="ml-auto text-xs text-emerald-700/80 shrink-0">{p.customer.orders} orders · {omr(p.customer.totalSpent)}</span>
+            <span className="ml-auto text-xs text-emerald-700/80 shrink-0">{plural(p.customer.orders, "order")} · {omr(p.customer.totalSpent)}</span>
           </div>
         )}
       </div>
@@ -1635,7 +1745,7 @@ function CartPanel(p: {
               const key = lineKey(l);
               const saved = p.pricing.lines[idx]?.promotionDiscount ?? 0;
               return (
-                <li key={key} className={`flex items-center gap-3 px-4 py-3 transition-colors ${p.lastAddedKey === key ? "bg-rose-50" : ""}`}>
+                <li key={key} className={`flex items-center gap-3 px-4 py-3 ${p.lastAddedKey === key ? "bg-rose-50" : ""}`}>
                   <button
                     type="button"
                     onClick={() => p.onOpenLine(key)}
@@ -1695,12 +1805,12 @@ function CartPanel(p: {
       {/* Totals */}
       <div className="border-t border-slate-200 px-4 py-3 space-y-2 bg-slate-50/60">
         <div className="flex justify-between text-sm text-slate-600">
-          <span>Subtotal · {p.itemCount} item{p.itemCount === 1 ? "" : "s"}</span>
+          <span>Subtotal · {plural(p.itemCount, "item")}</span>
           <span>{p.subtotal.toFixed(3)}</span>
         </div>
         {p.pricing.appliedPromotions.map((a) => (
           <div key={a.id} className="flex justify-between text-sm text-emerald-700">
-            <span className="truncate pr-2">🏷 {a.nameEn}</span>
+            <span className="truncate pr-2 flex items-center gap-1.5"><LuTag size={13} className="shrink-0" /> {a.nameEn}</span>
             <span className="shrink-0">−{a.discount.toFixed(3)}</span>
           </div>
         ))}
@@ -1805,7 +1915,7 @@ function SalesModal({ open, onClose, store, tax }: { open: boolean; onClose: () 
                 </button>
               ))}
             </div>
-            <span className="text-sm text-slate-500">{sales.length} sales · <strong className="text-slate-800">{omr(sum)}</strong></span>
+            <span className="text-sm text-slate-500">{plural(sales.length, "sale")} · <strong className="text-slate-800">{omr(sum)}</strong></span>
           </div>
           {loading ? (
             <div className="flex justify-center py-10"><LuLoaderCircle className="animate-spin text-slate-400" /></div>
@@ -1819,7 +1929,7 @@ function SalesModal({ open, onClose, store, tax }: { open: boolean; onClose: () 
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-slate-800">{s.orderNumber}</p>
                       <p className="text-xs text-slate-500 truncate">
-                        {new Date(s.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} · {s.items.reduce((n, i) => n + i.quantity, 0)} items ·{" "}
+                        {new Date(s.createdAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })} · {plural(s.items.reduce((n, i) => n + i.quantity, 0), "item")} ·{" "}
                         {s.payments.map((p) => methodLabel(p.method)).join(" + ")} {s.customerName && `· ${s.customerName}`}
                       </p>
                     </div>
@@ -1878,12 +1988,15 @@ function CashMovementModal({ type, onClose, onDone }: { type: null | "IN" | "OUT
 function CloseShiftModal({
   open,
   onClose,
+  onCash,
   shift,
   refresh,
   onClosed,
 }: {
   open: boolean;
   onClose: () => void;
+  /** Opens the cash in / cash out dialog. */
+  onCash: (type: "IN" | "OUT") => void;
   shift: ShiftSummary | null;
   refresh: () => Promise<ShiftSummary | null>;
   onClosed: (s: ShiftSummary) => void;
@@ -1916,18 +2029,18 @@ function CloseShiftModal({
     <PosModal
       open={open}
       onClose={onClose}
-      title="Shift summary"
+      title="Shift"
       size="md"
       footer={
         <>
-          <button onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium">Keep selling</button>
-          <button onClick={submit} disabled={busy || counted === ""} className="px-5 py-2.5 rounded-xl bg-rose-500 text-white font-medium disabled:opacity-40">
-            {busy ? "Closing…" : "Close shift & print Z-report"}
+          <button onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-medium hover:bg-slate-200">Keep selling</button>
+          <button onClick={submit} disabled={busy || counted === ""} className="px-5 py-2.5 rounded-xl bg-rose-500 text-white font-medium hover:bg-rose-600 disabled:opacity-40">
+            {busy ? "Closing…" : "Close shift"}
           </button>
         </>
       }
     >
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-2 gap-3 mb-3">
         <Stat label="Sales" value={`${shift.salesCount}`} />
         <Stat label="Sales total" value={omr(shift.salesTotal)} />
         <Stat label="Cash taken" value={omr(shift.byMethod.CASH ?? 0)} />
@@ -1935,6 +2048,15 @@ function CloseShiftModal({
         <Stat label="Refunds" value={omr(shift.refunds)} />
         <Stat label="Pay-ins / outs" value={`+${shift.payIns.toFixed(3)} / −${shift.payOuts.toFixed(3)}`} />
       </div>
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <button onClick={() => onCash("IN")} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+          <LuArrowDownToLine size={16} className="text-slate-500" /> Cash in
+        </button>
+        <button onClick={() => onCash("OUT")} className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+          <LuArrowUpFromLine size={16} className="text-slate-500" /> Cash out
+        </button>
+      </div>
+      <p className="border-t border-slate-100 pt-4 mb-3 text-sm font-semibold text-slate-800">Close the shift</p>
       <div className="rounded-2xl bg-slate-800 text-white p-4 flex items-center justify-between gap-3 mb-4">
         <div>
           <p className="text-sm text-slate-300">Expected cash in drawer</p>
@@ -1946,7 +2068,7 @@ function CloseShiftModal({
       <MoneyInput value={counted} onChange={setCounted} />
       {diff !== null && (
         <p className={`mt-2 text-sm font-medium ${Math.abs(diff) < 0.0005 ? "text-emerald-600" : diff > 0 ? "text-amber-600" : "text-rose-600"}`}>
-          {Math.abs(diff) < 0.0005 ? "Drawer balances ✓" : diff > 0 ? `Over by ${omr(diff)}` : `Short by ${omr(-diff)}`}
+          {Math.abs(diff) < 0.0005 ? "Drawer balances" : diff > 0 ? `Over by ${omr(diff)}` : `Short by ${omr(-diff)}`}
         </p>
       )}
       <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Notes (optional)" rows={2} className="mt-3 w-full border border-slate-200 rounded-xl px-3 py-2 text-sm" />
@@ -2055,7 +2177,7 @@ function OptionPicker({
                   key={c || "none"}
                   onClick={() => { setColor(c); setSelected(lines.filter((l) => (l.color ?? "") === c).find((l) => left(l) > 0) ?? null); setQty(1); }}
                   disabled={!any}
-                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium ${
                     !any ? "bg-slate-50 text-slate-300 line-through cursor-not-allowed" : color === c ? "bg-rose-50 text-rose-700 ring-1 ring-rose-300" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                   }`}
                 >
@@ -2079,7 +2201,7 @@ function OptionPicker({
                   key={lineKey(l)}
                   onClick={() => { setSelected(l); setQty(1); }}
                   disabled={n <= 0}
-                  className={`relative h-14 rounded-xl text-sm font-semibold transition flex flex-col items-center justify-center ${
+                  className={`relative h-14 rounded-xl text-sm font-semibold flex flex-col items-center justify-center ${
                     n <= 0 ? "bg-slate-50 text-slate-300 line-through cursor-not-allowed" : on ? "bg-rose-500 text-white" : "bg-slate-100 text-slate-800 hover:bg-slate-200"
                   }`}
                 >

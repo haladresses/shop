@@ -45,7 +45,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose, permissions 
       )}
 
       <aside
-        className={`admin-sidebar flex flex-col transition-all duration-300
+        className={`admin-sidebar flex flex-col
           fixed inset-y-0 left-0 z-50 lg:static lg:z-auto lg:translate-x-0
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
           ${collapsed ? "lg:w-16 w-64" : "w-64"}`}
@@ -66,7 +66,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose, permissions 
           {/* Collapse toggle (desktop only) */}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden lg:inline-flex text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+            className="hidden lg:inline-flex text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800"
             title={collapsed ? "Expand" : "Collapse"}
           >
             {collapsed ? <LuChevronRight size={18} /> : <LuChevronLeft size={18} />}
@@ -74,7 +74,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose, permissions 
           {/* Close button (mobile only) */}
           <button
             onClick={onClose}
-            className="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+            className="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800"
             title="Close"
           >
             <LuX size={20} />
@@ -104,7 +104,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose, permissions 
                       className={`admin-nav-link ${active ? "active" : ""} ${collapsed ? "lg:justify-center" : ""}`}
                       title={collapsed ? item.label : undefined}
                     >
-                      <Icon size={19} className={`flex-shrink-0 ${item.color}`} />
+                      <Icon size={19} className="admin-nav-icon flex-shrink-0" />
                       <span className={collapsed ? "lg:hidden" : ""}>{item.label}</span>
                     </Link>
                   );
@@ -122,14 +122,15 @@ export default function AdminSidebar({ mobileOpen = false, onClose, permissions 
             target="_blank"
             title={collapsed ? "View Store" : undefined}
           >
-            <LuStore size={19} className="flex-shrink-0 text-teal-400" />
+            <LuStore size={19} className="admin-nav-icon flex-shrink-0" />
             <span className={collapsed ? "lg:hidden" : ""}>View Store</span>
-          </Link>          <button
+          </Link>
+          <button
             onClick={handleLogout}
             className={`admin-nav-link w-full text-left ${collapsed ? "lg:justify-center" : ""}`}
             title={collapsed ? "Logout" : undefined}
           >
-            <LuLogOut size={19} className="flex-shrink-0 text-red-400" />
+            <LuLogOut size={19} className="admin-nav-icon flex-shrink-0" />
             <span className={collapsed ? "lg:hidden" : ""}>Logout</span>
           </button>
         </div>

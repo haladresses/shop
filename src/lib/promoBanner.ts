@@ -59,9 +59,13 @@ function normalizeTile(raw: unknown): PromoTile {
   };
 }
 
-/** Coerce an unknown value (from the settings store) into a typed promo tile array. */
+/**
+ * Coerce an unknown value (from the settings store) into a typed promo tile array.
+ * Nothing saved yet → the starter tiles. A saved empty list means the owner
+ * removed them all, so it stays empty and the section is hidden.
+ */
 export function normalizePromoTiles(raw: unknown): PromoTile[] {
-  if (!Array.isArray(raw) || raw.length === 0) return DEFAULT_PROMO_TILES;
+  if (!Array.isArray(raw)) return DEFAULT_PROMO_TILES;
   return raw
     .map(normalizeTile)
     .filter((t) => t.titleEn || t.titleAr || t.image);

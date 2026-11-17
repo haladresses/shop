@@ -1,0 +1,648 @@
+# Curated mapping for the old POS "Product List.xls" export.
+# One line per item:  ItemCode|category-slug|English name|Arabic name
+# or, for an item that already exists on the website:  ItemCode|MATCH|product-slug
+# Matched items keep their website name, photos and price; the import only
+# fills in what they are missing (barcode, SKU, cost, stock, supplier,
+# department and the original record).
+
+# ── Matched to existing website products (high-confidence only) ──
+00000016|MATCH|small-mesh-shyla-length-33-inches-width-17-inches
+00000023|MATCH|chiffon-cap
+00000018|MATCH|full-mesh-cap
+00000017|MATCH|large-mesh-shayla-length-68-inches-width-17-inches
+00000020|MATCH|hair-cap-for-securing-the-hijab
+00000369|MATCH|thumbhole-arm-sleeves
+00000009|MATCH|mesh-arm-sleeves
+00000014|MATCH|driving-gloves
+00000011|MATCH|button-cuff-arm-sleeves
+00000007|MATCH|feather-arm-sleeves
+00000008|MATCH|silk-cuff-arm-sleeves
+00000439|MATCH|lace-arm-sleeves
+00000013|MATCH|plain-arm-sleeves
+00000010|MATCH|soft-lace-arm-sleeves
+00000455|MATCH|short-round-neck-chest-cover-adults-kids
+00000388|MATCH|high-neck-chest-cover-round
+00000387|MATCH|high-neck-chest-cover-square-with-elastic
+00000454|MATCH|turtleneck-chest-cover
+00000453|MATCH|chest-cover-with-sleeves
+00000384|MATCH|kids-skirt-extenders
+00000002|MATCH|adult-skirt-extenders
+00000386|MATCH|adult-double-layer-skirt-extenders
+00000466|MATCH|dotted-lace-fabric-with-lace-detailing-along-the-edges
+
+# ── No department in the old POS ──
+00000468|boys-wear|Amama with Lace|عمامة بالدانتيل
+00000517|boys-wear|Amama, Plain|عمامة سادة
+00000469|boys-wear|Amama VIP|عمامة VIP
+00000550|baby-collection|Baby Set|طقم مواليد
+00000600|accessories|Bag 10×10|حقيبة 10×10
+00000714|accessories|Bag 12.5×11, Painting Design|حقيبة 12.5×11 بتصميم لوحة
+00000712|accessories|Bag 14×18, Perfume Design|حقيبة 14×18 بتصميم عطر
+00000713|accessories|Bag 16×13, Mukawar|حقيبة 16×13 مكور
+00000476|accessories|Bag 18×16|حقيبة 18×16
+00000707|accessories|Bag 8×8|حقيبة 8×8
+00000708|accessories|Bag 8×8, Khanjar Design|حقيبة 8×8 بتصميم الخنجر
+00000718|accessories|Bag 14×18, Jacket Design|حقيبة 14×18 بتصميم جاكيت
+00000710|accessories|Bags 18×16|حقائب 18×16
+00000711|accessories|Bags 18×16, Embroidered|حقائب 18×16 مطرزة
+00000716|accessories|Bags, Boys' Fabrics|حقائب بأقمشة أولادية
+00000715|accessories|Bags, Boys' Sets|حقائب أطقم أولادية
+00000706|accessories|Bags, Embroidered|حقائب مطرزة
+00000717|accessories|Bags, Khanjar Design|حقائب بتصميم الخنجر
+00000709|accessories|Bags, Fabric|حقائب قماش
+00000705|accessories|Bags, Plain|حقائب سادة
+00000704|accessories|Bags Set (8)|طقم حقائب (8)
+00000703|accessories|Bags Set (9)|طقم حقائب (9)
+00000699|gifts|Bakhour Plate|صحن بخور
+00000487|accessories|Bangle|إسوارة
+00000486|accessories|Bangle with Ring|إسوارة مع خاتم
+00000459|girls-dresses|Bukhnuq|بخنق
+00000551|boys-accessories|Belt with Bullets|حزام بالرصاص
+00000568|boys-accessories|Belt with Pocket|حزام بجيب
+00000665|girls-dresses|Bahraini Dress 30-40|ثوب بحريني 30-40
+00000496|hijab-essentials|Black Cotton Cap|كاب قطن أسود
+00000541|complementary-clothin|Black Net Cover, Closed|غطاء شبك أسود مغلق
+00000495|complementary-clothin|Black Net Cover, Open|غطاء شبك أسود مفتوح
+00000675|baby-collection|Black Overall|أوفرول أسود
+00000676|baby-collection|Black Overall with Flannel|أوفرول أسود مع فانيلة
+00000625|hijabs|Black Round Shayla|شيلة سوداء دائرية
+00000610|accessories|Bling Bangles|أساور لامعة
+00000702|gifts|Books, Bisht & Dishdasha|كتب البشت والدشداشة
+00000471|accessories|Bottle Bag|حقيبة قارورة
+00000552|footwear|Boys' Sandals|صنادل أولادية
+00000566|boys-accessories|Boys' Ring|خاتم أولادي
+00000635|footwear|Boys' Sandals 26|صنادل أولادية 26
+00000514|national-day|Boy & Girl Brooch with Flag|بروش للأولاد والبنات بالعلم
+00000723|accessories|Khanjar Magnet Brooch|بروش مغناطيس بالخنجر
+00000581|accessories|Magnet Brooch|بروش مغناطيس
+00000722|accessories|Square Brooch|بروش مربع
+00000480|accessories|Traditional Brooch|بروش تقليدي
+00000479|accessories|Traditional Brooch with Bling|بروش تقليدي لامع
+00000482|accessories|Name Brooch|بروش بالاسم
+00000436|hijabs|CC Malmal Shayla, Plain|شيلة ململ CC سادة
+00000683|hijabs|Chiffon Crystal Shayla, Plain|شيلة شيفون كريستال سادة
+00000686|hijabs|Chiffon Shayla, Omani Colours|شيلة شيفون بألوان عمانية
+00000684|hijabs|Stretch Chiffon Shayla, Lace & Crystal|شيلة شيفون مطاط بالدانتيل والكريستال
+00000660|hijabs|Stretch Chiffon Shayla, Plain|شيلة شيفون مطاط سادة
+00000603|womens-dresses|Code 2026|كود 2026
+00000682|hijabs|Crepe Chapsa Shayla|شيلة كريب شابسا
+00000663|hijabs|Crepe Square Shayla|شيلة كريب مربعة
+00000662|hijabs|Crepe Shayla, Plain|شيلة كريب سادة
+00000467|hijabs|D Djalil Shayla, Flower Stones|شيلة D جليل بفصوص الورد
+00000506|girls-dresses|D Teens Collection|تشكيلة D للمراهقات
+00000452|hijabs|Lace Shayla, 3 Layers|شيلة دانتيل 3 طبقات
+00000650|girls-dresses|Dhofari Dress|ثوب ظفاري
+00000522|boys-wear|Dishdasha, Maroon & Green|دشداشة عنابي وأخضر
+00000572|boys-wear|Dishdasha, Muharram|دشداشة محرم
+00000582|hijabs|Djalil Shayla, Wave Design|شيلة جليل بتصميم الموج
+00000508|gifts|Door Key Holder|حامل مفاتيح على شكل باب
+00000546|accessories|Double Ring|خاتم مزدوج
+00000561|girls-dresses|Lantern Dress 2025|فستان الفانوس 2025
+00000607|womens-dresses|Off-Shoulder Letter Dress 26|فستان الحروف بأكتاف مكشوفة 26
+00000542|womens-dresses|Tartan Dress|فستان كاروهات
+00000560|womens-dresses|Dress with Net 2025|فستان بالشبك 2025
+00000664|girls-dresses|Dresses, Full Stone Work|فساتين مشغولة بالفصوص بالكامل
+00000463|girls-dresses|Stone Dresses|فساتين بالفصوص
+00000485|accessories|Eyeglasses Chain|سلسلة نظارات
+00000588|baby-collection|Fendi Overall|أوفرول فندي
+00000490|accessories|Forehead Accessory|إكسسوار جبين
+00000537|womens-dresses|Full Set 2025|طقم كامل 2025
+00000612|womens-dresses|Full Set 26|طقم كامل 26
+00000636|womens-dresses|Full Set with Long Jacket|طقم كامل مع جاكيت طويل
+00000623|innerwear|Full Stockings 26|جوارب طويلة كاملة 26
+00000543|girls-dresses|Girls' Letter Dress 25|فستان الحروف للبنات 25
+00000634|girls-dresses|Girls' Letter Dress 26|فستان الحروف للبنات 26
+00000564|footwear|Girls' Slippers|نعال بناتي
+00000371|arm-sleeves|Arm Sleeves, Cotton Lace|سواعد قطن بالدانتيل
+00000370|arm-sleeves|Arm Sleeves, Plain Cotton|سواعد قطن سادة
+00000595|gifts|Glue Puzzle|بازل لاصق
+00000596|gifts|Glue Puzzle, Small|بازل لاصق صغير
+00000719|accessories|Golden Brooch|بروش ذهبي
+00000732|accessories|Golden Pin|دبوس ذهبي
+00000565|accessories|Long Hair Chain|سلسلة شعر طويلة
+00000491|accessories|Hair Clip|مشبك شعر
+00000492|accessories|Hair Clip, Small|مشبك شعر صغير
+00000431|hijab-essentials|Hard Cap|كاب صلب
+00000488|accessories|Head Accessory, Large|إكسسوار رأس كبير
+00000591|accessories|Head Accessory, Light|إكسسوار رأس خفيف
+00000525|accessories|Head Accessory, Medium|إكسسوار رأس متوسط
+00000489|accessories|Head Accessory, Small|إكسسوار رأس صغير
+00000602|hijab-essentials|Headband Cap|كاب بطوق
+00000654|accessories|Black Headband|طوق رأس أسود
+00000688|hijab-essentials|Headband Cap, Basic|كاب بطوق عادي
+00000700|girls-dresses|IB Dresses 22-28|فساتين IB مقاس 22-28
+00000701|girls-dresses|IB Dresses 30-38|فساتين IB مقاس 30-38
+00000613|womens-dresses|Jacket 26|جاكيت 26
+00000721|national-day|National Day Jacket|جاكيت العيد الوطني
+00000538|womens-dresses|Jackets 25|جاكيتات 25
+00000528|girls-dresses|Girls' Jalabiya|جلابية بناتي
+00000652|accessories|Kids' Sunglasses|نظارات شمسية للأطفال
+00000556|boys-wear|Knitted Caps|طواقي محبوكة
+00000574|boys-wear|Kumma|كمة
+00000573|boys-wear|Kuwaiti Dishdasha 18-38|دشداشة كويتية 18-38
+00000527|womens-dresses|Kuwaiti Dresses 25|فساتين كويتية 25
+00000626|womens-dresses|Ladies' Letter Dress 26|فستان الحروف النسائي 26
+00000544|womens-dresses|Ladies' Letter Dress 25|فستان الحروف النسائي 25
+00000430|hijabs|Larissa Scarf|شيلة لاريسا
+00000651|boys-accessories|Leather Khanjar|خنجر جلد
+00000593|accessories|Leather Watch|ساعة جلد
+00000720|abayas-scarves|Leso|لسو
+00000659|hijabs|Linen Kashmiri Shayla, Plain|شيلة كتان كشميري سادة
+00000657|hijabs|Linen Shawl, Light|شال كتان خفيف
+00000661|hijabs|Linen Shawl, Thai|شال كتان تايلندي
+00000549|accessories|Long Chain|سلسلة طويلة
+00000462|womens-dresses|Long Dress|فستان طويل
+00000449|hijabs|Pearl Crystal Shayla|شيلة لؤلؤ كريستال
+00000451|hijabs|Pearl Lace Shayla|شيلة لؤلؤ بالدانتيل
+00000685|hijabs|Pearl Shayla, Plain|شيلة لؤلؤ سادة
+00000405|womens-dresses|M Dresses|فساتين M
+00000448|hijabs|Velvet Lace Shayla|شيلة مخمل بالدانتيل
+00000630|accessories|Mala Necklace|قلادة مالا
+00000422|hijabs|Malmal Chapsa Lace Shayla|شيلة ململ شابسا بالدانتيل
+00000456|hijabs|Malmal Rapta Shayla|شيلة ململ رابتا
+00000691|school-uniforms|Maroon Uniform|زي مدرسي عنابي
+00000557|accessories|Mask with Stones|قناع بالفصوص
+00000507|gifts|Mirror Key Holder|حامل مفاتيح بمرآة
+00000632|accessories|Mixed Necklace|قلادة متنوعة
+00000609|accessories|Moon Hairpins 26|دبابيس شعر القمر 26
+00000677|accessories|Muharram Band|سوار محرم
+00000633|girls-dresses|Mukawar Teens|مكور للمراهقات
+00000563|boys-wear|Musar VIP 55|مصر VIP 55
+00000589|national-day|National Day Dresses|فساتين العيد الوطني
+00000511|national-day|National Day Kumma|كمة العيد الوطني
+00000446|national-day|National Day Naqsha Amama|عمامة نقشة العيد الوطني
+00000512|national-day|National Day Stick, Sayde|عصا صيدي للعيد الوطني
+00000513|national-day|National Day Stick, Steel|عصا ستيل للعيد الوطني
+00000631|accessories|Necklace, Two Shapes|قلادة بشكلين
+00000521|accessories|Necklace, Large|قلادة كبيرة
+00000629|accessories|Necklace, Round|قلادة دائرية
+00000520|accessories|Necklace, Small|قلادة صغيرة
+00000567|accessories|Necklace with Earrings|قلادة مع أقراط
+00000584|national-day|Oman Brooch, Arabic|بروش عُمان بالعربي
+00000586|national-day|Oman Cap|كاب عُمان
+00000516|national-day|Oman Flag|علم عُمان
+00000585|national-day|Oman T-Shirt|تيشيرت عُمان
+00000587|girls-dresses|Omani Traditional Dress, 2 Pieces|ثوب عُماني تقليدي قطعتين
+00000499|accessories|Omani Tote Bag|حقيبة توت عُمانية
+00000510|boys-wear|Open Musar, Plain|مصر مفتوح سادة
+00000540|sleepwear|Sleeping Overall|أوفرول نوم
+00000545|accessories|Pair of Bangles|زوج أساور
+00000497|accessories|Palestine Bag|حقيبة فلسطين
+00000504|accessories|Palestine Chain & Brooch|سلسلة وبروش فلسطين
+00000503|hijabs|Palestine Embroidered Shawl|شال فلسطين مطرز
+00000434|abayas-scarves|Palestinian Keffiyeh|كوفية فلسطينية
+00000502|hijabs|Palestine Shawl|شال فلسطين
+00000483|accessories|Pen, Large Head|قلم برأس كبير
+00000484|accessories|Pen, Small Head|قلم برأس صغير
+00000643|womens-dresses|Plain Dress|فستان سادة
+00000637|womens-dresses|Plain Jalabiya|جلابية سادة
+00000639|accessories|Pot Bag|حقيبة بوت
+00000678|accessories|Embroidered Pouch|حافظة مطرزة
+00000698|accessories|Omani Zari Pouch|حافظة زري عُمانية
+00000523|gifts|Puzzle|بازل
+00000500|accessories|Qur'an Chain|سلسلة قرآن
+00000687|hijabs|Rapta Tulle Shayla|شيلة رابتا تول
+00000535|accessories|Red Cap|قبعة حمراء
+00000501|accessories|Resin Chain|سلسلة ريزن
+00000656|accessories|Rolex Watch|ساعة رولكس
+00000628|accessories|Round Pair of Bangles|زوج أساور دائرية
+00000590|girls-dresses|Salalah 2|صلالة 2
+00000553|accessories|Salalah Accessories|إكسسوارات صلالة
+00000519|boys-accessories|Sayde Stick|عصا صيدي
+00000583|hijab-essentials|Scarf Magnet Clip|مشبك مغناطيس للشيلة
+00000680|school-uniforms|School Dress 30-40|مريول مدرسي 30-40
+00000681|school-uniforms|School Dress 42-52|مريول مدرسي 42-52
+00000679|school-uniforms|School Long-Sleeve Top|بلوزة مدرسية بأكمام طويلة
+00000693|school-uniforms|School Long-Sleeve Top 2XL-3XL|بلوزة مدرسية بأكمام طويلة 2XL-3XL
+00000433|national-day|National Day Shawl, Large|شال العيد الوطني كبير
+00000724|national-day|Shawl, Map & Khanjar|شال الخريطة والخنجر
+00000432|national-day|National Day Shawl, Small|شال العيد الوطني صغير
+00000363|hijabs|Shayla SHE 15, Cotton with 2 Side Lines|شيلة SHE 15 قطن بخطين جانبيين
+00000364|hijabs|Shayla SHE 16, Cotton with 2 Net Lines|شيلة SHE 16 قطن بخطين شبك
+00000365|hijabs|Shayla SHE 17, Square Chiffon|شيلة SHE 17 شيفون مربعة
+00000366|hijabs|Shayla SHE 18, Chiffon with Stones|شيلة SHE 18 شيفون بالفصوص
+00000367|hijabs|Shayla SHE 19, Soft Cotton|شيلة SHE 19 قطن ناعم
+00000368|hijabs|Shayla SHE 20, Cool Cotton|شيلة SHE 20 قطن بارد
+00000547|accessories|Single Ring|خاتم مفرد
+00000614|sleepwear|Sleeping Dishdasha 26|دشداشة نوم 26
+00000647|sleepwear|Sleeping Dishdasha, Plain|دشداشة نوم سادة
+00000668|sleepwear|Sleepwear, Round Neck|ملابس نوم برقبة دائرية
+00000615|sleepwear|Sleepwear with Trousers 26|ملابس نوم مع بنطلون 26
+00000611|accessories|Sling Mirror Bag 26|حقيبة كتف بمرآة 26
+00000622|girls-dresses|Small Dresses 26|فساتين صغيرة 26
+00000608|accessories|Star Headband 26|طوق النجمة 26
+00000569|girls-dresses|Stone Dress, Full Sleeves|فستان بالفصوص بأكمام كاملة
+00000579|girls-dresses|Stone Dress, Long Sleeves|فستان بالفصوص بأكمام طويلة
+00000493|girls-dresses|Suri Dress 18-28|ثوب صوري 18-28
+00000494|girls-dresses|Suri Dress 30-40|ثوب صوري 30-40
+00000518|girls-dresses|Suri Dress, Large|ثوب صوري كبير
+00000666|girls-dresses|Suri Dress with Stones 18-28|ثوب صوري بالفصوص 18-28
+00000667|girls-dresses|Suri Dress with Stones 30-40|ثوب صوري بالفصوص 30-40
+00000435|hijabs|Tabaqui Shayla, Turkish|شيلة طبقي تركية
+00000653|accessories|Tasbih|مسبحة
+00000627|accessories|Teempy Bangle|إسوارة تيمبي
+00000620|girls-dresses|Teens Dresses 44-46 (26)|فساتين مراهقات 44-46 (26)
+00000621|girls-dresses|Teens Dresses 48-50 (26)|فساتين مراهقات 48-50 (26)
+00000606|womens-dresses|Tulle Dress (Net) 26|فستان تول (شبك) 26
+00000592|accessories|Zari Tote Bag|حقيبة توت زري
+00000481|accessories|Traditional Pen|قلم تقليدي
+00000601|accessories|Traditional Purse|محفظة تقليدية
+00000694|hijabs|Triangle Shayla|شيلة مثلثة
+00000571|complementary-clothin|Black T-Shirt|تيشيرت أسود
+00000689|complementary-clothin|Long-Sleeve T-Shirt|تيشيرت بأكمام طويلة
+00000690|hijab-essentials|Turban with Rope|توربان بالحبل
+00000450|hijabs|Turkish Crystal Shayla|شيلة تركية كريستال
+00000447|hijabs|Turkish Pearl Shayla|شيلة تركية لؤلؤ
+00000658|hijabs|Turkish Velvet Shayla, Plain|شيلة تركية مخمل سادة
+00000524|hijabs|Turkish Shayla, Plain|شيلة تركية سادة
+00000429|womens-dresses|Turkish Jeans Blouse|بلوزة جينز تركية
+00000428|girls-dresses|Turkish Teens 2023|تشكيلة تركية للمراهقات 2023
+00000638|womens-dresses|Um Zamas Dress|فستان أم زماس
+00000464|boys-accessories|VIP Belt with Khanjar|حزام VIP بالخنجر
+00000617|girls-dresses|VIP Flower Stone Design|تصميم VIP بفصوص الورد
+00000470|footwear|VIP Slippers|نعال VIP
+00000616|girls-dresses|VIP Stone Line Design|تصميم VIP بخط الفصوص
+00000555|accessories|Watch|ساعة
+00000624|national-day|White & Red Fabric|قماش أبيض وأحمر
+00000536|accessories|White Cap|قبعة بيضاء
+00000644|girls-dresses|White Embroidered Dress 20-30|فستان أبيض مطرز 20-30
+00000645|girls-dresses|White Embroidered Dress 32-38|فستان أبيض مطرز 32-38
+00000646|girls-dresses|White Embroidered Dress 40-50|فستان أبيض مطرز 40-50
+00000692|school-uniforms|White Trousers|بنطلون أبيض
+00000655|boys-accessories|Wide Khanjar, Large|خنجر عريض كبير
+00000580|national-day|National Day Sash|وشاح العيد الوطني
+00000548|boys-wear|Wizar 10-14|وزار 10-14
+00000640|boys-wear|Wizar 16-18|وزار 16-18
+00000641|boys-wear|Wizar 20-24|وزار 20-24
+00000642|boys-wear|Wizar 26-28|وزار 26-28
+00000505|gifts|Wood Painting|لوحة خشبية
+00000597|accessories|Zari & Camel Pouch|حافظة زري بالجمل
+00000648|girls-dresses|ZUB Dresses 40-46|فساتين ZUB مقاس 40-46
+00000649|girls-dresses|ZUB Dresses 48-52|فساتين ZUB مقاس 48-52
+
+# ── Baby ──
+00000150|baby-collection|Baby Bottles (2022)|رضاعات أطفال (2022)
+00000161|baby-collection|Baby Bib|مريلة أطفال
+00000160|baby-collection|Baby Bisht|بشت مواليد
+00000359|baby-collection|Baby Bisht, Closed|بشت مواليد مغلق
+00000696|baby-collection|Baby Gift Set|طقم هدية للمواليد
+00000162|baby-collection|Baby Plain Cap|طاقية مواليد سادة
+00000157|baby-collection|Big Branded Box (Adidas, Armani)|صندوق كبير ماركات (أديداس، أرماني)
+00000156|baby-collection|Big Box Set, 15 Pieces|طقم صندوق كبير 15 قطعة
+00000232|baby-collection|Bisht Mattress|فرشة بشت
+00000151|baby-collection|Branded Boxes, Old Stock|صناديق ماركات (مخزون قديم)
+00000152|baby-collection|Caprice Boxes (Boys & Girls)|صناديق كابريس (أولاد وبنات)
+00000153|baby-collection|Girl Set Boxes (Big Box)|صناديق طقم بناتي (صندوق كبير)
+00000155|baby-collection|Hareem Sultan Boxes|صناديق حريم السلطان
+00000154|baby-collection|Boys' Boxes with Bow|صناديق أولادية بفيونكة
+00000172|baby-collection|Long Brooches (China)|بروشات طويلة (صيني)
+00000174|baby-collection|Brooches, Old Stock Boxes (Mashallah)|بروشات مخزون قديم بعلب (ما شاء الله)
+00000175|baby-collection|Brooches, Old Stock Mickey|بروشات ميكي (مخزون قديم)
+00000173|baby-collection|Round Brooches (China)|بروشات دائرية (صيني)
+00000165|baby-collection|Burberry Shoes|حذاء بربري
+00000168|baby-collection|Cap & Shoes|طاقية وحذاء
+00000159|baby-collection|Hareem Sultan (Size 1-3)|حريم السلطان (مقاس 1-3)
+00000158|baby-collection|Hareem Sultan (Small 0-3)|حريم السلطان (صغير 0-3)
+00000163|baby-collection|Headband|طوق رأس
+00000171|baby-collection|Hello Kitty Pacifier|لهاية هالو كيتي
+00000177|baby-collection|Mickey Dress|فستان ميكي
+00000176|baby-collection|Mickey Mattress|فرشة ميكي
+00000268|national-day|National Day Baby Blanket|بطانية مواليد للعيد الوطني
+00000178|baby-collection|Boy Suit, Old Stock|بدلة أولادية (مخزون قديم)
+00000181|baby-collection|Gucci Green with Shorts, Old Stock|طقم غوتشي أخضر مع شورت (مخزون قديم)
+00000179|baby-collection|Cartoon Overall|أوفرول كرتون
+00000292|baby-collection|Mixed Overall (N)|أوفرول متنوع (N)
+00000170|baby-collection|Branded Pacifier|لهاية ماركة
+00000169|baby-collection|Letter Pacifier|لهاية بالحروف
+00000293|baby-collection|Flannel|فانيلة
+00000164|baby-collection|Small Box, 3 Pieces|صندوق صغير 3 قطع
+00000167|baby-collection|Stone Shoes|حذاء بالفصوص
+00000166|baby-collection|White Feather Shoes Set|طقم حذاء أبيض بالريش
+
+# ── Boys ──
+00000108|boys-accessories|3-Colour Belt with Khanjar|حزام 3 ألوان بالخنجر
+00000412|boys-wear|Amama, Regular|عمامة عادية
+00000415|boys-accessories|Army Belt with Khanjar|حزام عسكري بالخنجر
+00000144|boys-wear|Father & Son Set (Musar)|طقم الأب والابن (مصر)
+00000349|boys-accessories|3-Colour Belt with Bullets|حزام 3 ألوان بالرصاص
+00000105|boys-accessories|Plain Belt|حزام سادة
+00000102|boys-accessories|Belt with Khanjar (Black & Silver)|حزام بالخنجر (أسود وفضي)
+00000103|boys-accessories|Belt with Pistol|حزام بالمسدس
+00000104|boys-accessories|Cross-Shoulder Belt|حزام كتف متقاطع
+00000118|boys-wear|Bisht 100|بشت 100
+00000119|boys-wear|Bisht 110|بشت 110
+00000120|boys-wear|Bisht 120|بشت 120
+00000121|boys-wear|Bisht 130|بشت 130
+00000122|boys-wear|Bisht 140|بشت 140
+00000123|boys-wear|Bisht 150|بشت 150
+00000114|boys-wear|Bisht 40-60 cm|بشت 40-60 سم
+00000115|boys-wear|Bisht 70 cm|بشت 70 سم
+00000116|boys-wear|Bisht 80|بشت 80
+00000117|boys-wear|Bisht 90|بشت 90
+00000145|boys-wear|Boy 2-Piece Set (Musar)|طقم أولادي قطعتين (مصر)
+00000146|boys-wear|Boy Sabaiya (Musar)|سباعية أولادية (مصر)
+00000351|national-day|Boy & Girl National Day Brooch|بروش العيد الوطني للأولاد والبنات
+00000101|boys-wear|Boys' Full Suit (2022)|بدلة أولادية كاملة (2022)
+00000099|boys-wear|Boys' Turkish Branded (2022)|ملابس أولادية تركية ماركات (2022)
+00000100|boys-wear|Boys' Turkish Tommy Life (2022)|ملابس أولادية تركية تومي لايف (2022)
+00000098|boys-wear|China Boys|ملابس أولادية صينية
+00000533|boys-wear|Embroidered Dishdasha|دشداشة مطرزة
+00000148|boys-wear|Full Set Offer|عرض الطقم الكامل
+00000605|boys-wear|Musar Jacket 26|جاكيت مصر 26
+00000213|boys-wear|Jacket Offer|عرض الجاكيت
+00000539|boys-wear|Jacket with Trousers 26|جاكيت مع بنطلون 26
+00000137|boys-accessories|Khanjar, Large|خنجر كبير
+00000354|national-day|National Day Khanjar, Large|خنجر العيد الوطني كبير
+00000355|national-day|National Day Khanjar (M&S)|خنجر العيد الوطني (M&S)
+00000132|boys-accessories|Khanjar, Silver & Gold|خنجر فضي وذهبي
+00000135|boys-accessories|Khanjar, Small Red Line|خنجر صغير بخط أحمر
+00000134|boys-accessories|Khanjar, Wood|خنجر خشب
+00000457|footwear|Kids' Slippers|نعال أطفال
+00000401|boys-wear|Kuwaiti Dishdasha 40-50|دشداشة كويتية 40-50
+00000142|boys-wear|Kuwaiti Dishdasha, Plain (Oman)|دشداشة كويتية سادة (عُمان)
+00000096|boys-wear|Mickey with Bag, 3 Pieces (Boy)|ميكي مع حقيبة 3 قطع (ولد)
+00000147|boys-wear|Musar in Boxes|مصر في علب
+00000140|national-day|National Day Amama, Mixed|عمامة العيد الوطني متنوعة
+00000141|national-day|National Day Belt|حزام العيد الوطني
+00000341|national-day|National Day Bisht 60-70 cm|بشت العيد الوطني 60-70 سم
+00000139|national-day|National Day Bisht 70-80|بشت العيد الوطني 70-80
+00000336|national-day|National Day Bisht 90-110 cm|بشت العيد الوطني 90-110 سم
+00000345|national-day|National Day Dishdasha 16-28|دشداشة العيد الوطني 16-28
+00000346|national-day|National Day Dishdasha 30-38|دشداشة العيد الوطني 30-38
+00000347|national-day|National Day Dishdasha 40-50|دشداشة العيد الوطني 40-50
+00000419|national-day|National Day Sabaiya|سباعية العيد الوطني
+00000420|national-day|National Day Cross Belt|حزام متقاطع للعيد الوطني
+00000554|boys-wear|Dishdasha, New Style|دشداشة موديل جديد
+00000109|boys-wear|Regular Dishdasha, Sizes 16-28|دشداشة عادية مقاسات 16-28
+00000110|boys-wear|Regular Dishdasha, Sizes 30-38|دشداشة عادية مقاسات 30-38
+00000111|boys-wear|Regular Dishdasha, Sizes 40-48|دشداشة عادية مقاسات 40-48
+00000112|boys-wear|Regular Dishdasha 50-52|دشداشة عادية 50-52
+00000375|boys-wear|Open Musar 42-48|مصر مفتوح 42-48
+00000414|boys-wear|Omani Dishdasha Overall|أوفرول دشداشة عُمانية
+00000674|boys-wear|Black Polo Shirt|قميص بولو أسود
+00000697|footwear|Boys' Sandals (S)|صنادل أولادية (S)
+00000731|boys-wear|Saudi Cap|طاقية سعودية
+00000727|boys-wear|Saudi Full Set|طقم سعودي كامل
+00000728|boys-wear|Saudi Jacket & Dishdasha|جاكيت ودشداشة سعودي
+00000725|sleepwear|Saudi Sleepwear|ملابس نوم سعودية
+00000378|boys-accessories|Sticks 60/70 cm|عصي 60/70 سم
+00000377|boys-accessories|Sticks 85 cm|عصي 85 سم
+00000376|boys-accessories|Sticks 90/95 cm|عصي 90/95 سم
+00000127|boys-accessories|Sticks 90 cm|عصي 90 سم
+00000353|national-day|National Day Sword|سيف العيد الوطني
+00000291|boys-accessories|Sword, Non-Opening|سيف غير قابل للفتح
+00000124|boys-accessories|Sword, Opening|سيف قابل للفتح
+00000210|boys-wear|Mid-Ramadan (Garangao) Outfit V|ملابس القرنقشوه V
+00000426|boys-accessories|VIP Stick, Medium|عصا VIP متوسطة
+00000425|boys-accessories|VIP Stick, Small|عصا VIP صغيرة
+00000418|boys-accessories|VIP Sticks|عصي VIP
+00000379|boys-accessories|Wide Belt with Khanjar|حزام عريض بالخنجر
+00000380|boys-accessories|Wide Belt with Pistol|حزام عريض بالمسدس
+
+# ── Gifts ──
+00000695|gifts|Large Traditional Pen|قلم تقليدي كبير
+00000195|gifts|Books, Bisht|كتب البشت
+00000194|gifts|Books, Boy|كتب الولد
+00000192|gifts|Books, Girl|كتب البنت
+00000186|gifts|Decorative Doors, Large|أبواب زينة كبيرة
+00000187|gifts|Decorative Doors, Small|أبواب زينة صغيرة
+00000735|accessories|Dress Chain|سلسلة فستان
+00000344|national-day|Flag Brooch|بروش العلم
+00000515|national-day|National Day Hair Clips|مشابك شعر العيد الوطني
+00000733|national-day|Oman Map Chain|سلسلة خريطة عُمان
+00000734|accessories|Mask Chain|سلسلة كمامة
+00000343|national-day|National Day Assorted Brooches|بروشات العيد الوطني متنوعة
+00000338|national-day|National Day Balloons|بالونات العيد الوطني
+00000337|national-day|National Day Bracelet|سوار العيد الوطني
+00000339|national-day|National Day Cap (Boy & Girl)|كاب العيد الوطني (أولاد وبنات)
+00000342|national-day|National Day Headband|طوق العيد الوطني
+00000340|national-day|National Day Pens|أقلام العيد الوطني
+00000190|gifts|Velvet Bag with Embroidery (Dozen)|كيس مخمل مشغول (درزن)
+
+# ── Girls ──
+00000252|girls-dresses|Two-Layer Dress|فستان بطبقتين
+00000240|girls-dresses|Beb Design Dress|فستان بتصميم بيب
+00000242|girls-dresses|Bahraini Dress|ثوب بحريني
+00000671|girls-dresses|Black Blouse|بلوزة سوداء
+00000672|girls-dresses|Black Trousers|بنطلون أسود
+00000206|girls-dresses|Black & White Triangle 15|المثلث الأسود والأبيض 15
+00000207|girls-dresses|Black & White Triangle 16|المثلث الأسود والأبيض 16
+00000082|girls-dresses|Blouse & Skirt (Mickey)|بلوزة وتنورة (ميكي)
+00000090|girls-dresses|Branded Turkish Dresses, Old Stock (Mixed)|فساتين تركية ماركات مخزون قديم (متنوعة)
+00000736|accessories|Omani Brooch|بروش عُماني
+00000248|national-day|Butterfly National Day Dress|فستان الفراشة للعيد الوطني
+00000427|hijabs|Djalil Shayla (Girls)|شيلة جليل للبنات
+00000084|girls-dresses|Donald Duck, Orange|دونالد داك برتقالي
+00000250|girls-dresses|Double Square Dress|فستان المربع المزدوج
+00000079|girls-dresses|Small Dress with Hat|فستان صغير مع قبعة
+00000092|girls-dresses|Dresses 18-28|فساتين 18-28
+00000093|girls-dresses|Dresses Offer|عرض الفساتين
+00000080|girls-dresses|Small Dresses without Hat|فساتين صغيرة بدون قبعة
+00000088|girls-dresses|Full Sleeve & Skirt (Gucci, Adidas)|أكمام كاملة وتنورة (غوتشي، أديداس)
+00000235|girls-dresses|Full Omani Dress|ثوب عُماني كامل
+00000244|girls-dresses|Full Sleeve Oval Dress|فستان بيضاوي بأكمام كاملة
+00000320|abayas-scarves|Girls' Abaya|عباية بناتي
+00000089|girls-dresses|Girls' China Dresses (Gucci)|فساتين بناتي صينية (غوتشي)
+00000562|accessories|Short Hair Chain|سلسلة شعر قصيرة
+00000247|girls-dresses|Half-Layer Dress|فستان بنصف طبقة
+00000236|girls-dresses|Half Plain & Zari Dress|فستان نصف سادة ونصف زري
+00000403|accessories|Head Accessories|إكسسوارات رأس
+00000307|girls-dresses|High-Class Side Layer Dress|فستان فاخر بطبقة جانبية
+00000251|girls-dresses|Indian Design Dress|فستان بتصميم هندي
+00000085|girls-dresses|Jacket for Boys & Girls (Mickey)|جاكيت أولاد وبنات (ميكي)
+00000575|girls-dresses|Jacket, Cotton Rose|جاكيت كوتون روز
+00000086|girls-dresses|White Jacket with Sleeves|جاكيت أبيض بأكمام
+00000237|girls-dresses|Jumper|جمبر
+00000673|girls-dresses|Jumper, Basic|جمبر عادي
+00000212|girls-dresses|Kuwaiti Puff Blazer|بليزر كويتي منفوخ
+00000669|girls-dresses|Soft Leggings|ليقنز ناعم
+00000670|girls-dresses|Leggings with Pocket|ليقنز بجيب
+00000245|girls-dresses|Long & Short Dress|فستان طويل وقصير
+00000306|girls-dresses|Long Paisley Dress|فستان طويل بنقشة الكاجو
+00000241|girls-dresses|Long Square Dress|فستان المربع الطويل
+00000411|accessories|Mask|قناع
+00000362|girls-dresses|Mickey Jumpsuit|جمبسوت ميكي
+00000204|girls-dresses|Mid-Ramadan (Garangao) Dress 13|فستان القرنقشوه 13
+00000205|girls-dresses|Mid-Ramadan (Garangao) Dress 15|فستان القرنقشوه 15
+00000308|national-day|National Day Bow Dress|فستان الفيونكة للعيد الوطني
+00000404|accessories|Neck Choker|طوق رقبة
+00000410|accessories|Long Necklace|قلادة طويلة
+00000409|accessories|Short Necklace|قلادة قصيرة
+00000310|national-day|Omani National Day Dress|فستان العيد الوطني العُماني
+00000243|girls-dresses|Omani Zari Dress|ثوب زري عُماني
+00000249|girls-dresses|One-Shoulder Dress|فستان بكتف واحد
+00000239|girls-dresses|Pink Heart Dress|فستان القلب الوردي
+00000397|prayer-wear|Girls' Prayer Abaya 25-35|عباية صلاة للبنات 25-35
+00000398|prayer-wear|Girls' Prayer Abaya 40-50|عباية صلاة للبنات 40-50
+00000312|girls-dresses|Purple Half-Layer Dress|فستان بنفسجي بنصف طبقة
+00000091|girls-dresses|Red Off-Shoulder Dress|فستان أحمر بأكتاف مكشوفة
+00000730|girls-dresses|Saudi Coloured Dresses|فساتين سعودية ملونة
+00000729|girls-dresses|Saudi Girls' Dress, White|فستان سعودي للبنات أبيض
+00000238|girls-dresses|Side Layers Dress|فستان بطبقات جانبية
+00000253|girls-dresses|Stars Dress|فستان النجوم
+00000385|hijabs|Kids' Tabaqui Shayla|شيلة طبقي للأطفال
+00000740|national-day|Triangle Scarf with Khanjar|شيلة مثلثة بالخنجر
+00000078|girls-dresses|Turkish Dresses with Doll & Bag|فساتين تركية مع دمية وحقيبة
+00000087|girls-dresses|Turkish Dresses, Old Stock|فساتين تركية (مخزون قديم)
+00000246|girls-dresses|Velvet Dress|فستان مخمل
+00000361|girls-dresses|Winter Branded Sets|أطقم شتوية ماركات
+00000360|girls-dresses|Winter Fur Jacket|جاكيت فرو شتوي
+
+# ── Ladies ──
+00000328|hijabs|2-Metre Shayla with Stones|شيلة 2 متر بالفصوص
+00000277|hijabs|4-Layer Kashmiri & Lace Shayla|شيلة كشميري ودانتيل 4 طبقات
+00000070|womens-dresses|Black Traditional Khamis (Turkish)|قميص تقليدي أسود (تركي)
+00000231|womens-dresses|Blazer|بليزر
+00000440|hijabs|Brasa Crystal Shayla|شيلة براسا كريستال
+00000066|accessories|Brooches for Ladies|بروشات نسائية
+00000022|hijab-essentials|Cotton Cap with Rope|كاب قطن بالحبل
+00000021|hijab-essentials|Triangle Cotton Cap|كاب قطن مثلث
+00000416|hijab-essentials|Closed-Neck Cap with Rope|كاب برقبة مغلقة بالحبل
+00000323|hijabs|Cotton Shayla, Shiny Line|شيلة قطن بخط لامع
+00000043|hijabs|Cotton Shayla, Two Colours|شيلة قطن بلونين
+00000390|hijabs|Cotton Chapsa Lace Shayla|شيلة قطن شابسا بالدانتيل
+00000287|hijabs|Cotton Lace Line Shayla with Stones|شيلة قطن بخط دانتيل وفصوص
+00000302|hijabs|Cotton Shayla, Flower Design|شيلة قطن بتصميم الورد
+00000220|hijabs|Cotton Shayla, Line Design|شيلة قطن بتصميم الخطوط
+00000445|hijabs|Cotton Malmal Crystal Shayla|شيلة قطن ململ كريستال
+00000048|hijabs|Cotton Shayla, Plain|شيلة قطن سادة
+00000281|hijabs|Cotton Shayla, Stone Embroidery|شيلة قطن مطرزة بالفصوص
+00000296|hijabs|Cotton Shayla, Thin Lace Line|شيلة قطن بخط دانتيل رفيع
+00000279|hijabs|Cotton Shayla with Stones|شيلة قطن بالفصوص
+00000318|hijabs|Cotton Shayla, Lines & Stones|شيلة قطن بالخطوط والفصوص
+00000283|hijabs|Cotton & Net Shayla with Stones|شيلة قطن وشبك بالفصوص
+00000299|hijabs|Cotton & Chiffon Shayla with Stones|شيلة قطن وشيفون بالفصوص
+00000298|hijabs|Cotton, Chiffon & Net Line Shayla|شيلة قطن وشيفون بخط شبك
+00000282|hijabs|Cotton & Stretch Shayla with Stones|شيلة قطن ومطاط بالفصوص
+00000389|hijabs|Crinkle Lace Shayla|شيلة كريش بالدانتيل
+00000396|hijabs|Crinkle Shining Lace Shayla|شيلة كريش لامعة بالدانتيل
+00000395|hijabs|Crinkle Shining DMC Shayla|شيلة كريش لامعة DMC
+00000399|hijabs|D DMC No. 8 Shayla|شيلة D DMC رقم 8
+00000400|hijabs|D Chiffon Full DMC No. 19 Shayla|شيلة D شيفون DMC كامل رقم 19
+00000423|hijabs|Djalel Crystal Stone Shayla|شيلة جليل بفصوص الكريستال
+00000218|hijabs|Dotted Lace Shayla|شيلة دانتيل منقط
+00000217|hijabs|Dotted Lace Shayla with Stones|شيلة دانتيل منقط بالفصوص
+00000216|hijabs|Dotted Shayla with Stones|شيلة منقطة بالفصوص
+00000219|hijabs|Dotted Wave Shayla with Stones|شيلة منقطة بالموج والفصوص
+00000619|womens-dresses|Dresses 18-28 (26)|فساتين 18-28 (26)
+00000618|womens-dresses|Dresses 30-40 (26)|فساتين 30-40 (26)
+00000530|gifts|Envelope|ظرف
+00000531|gifts|Envelope (1)|ظرف (1)
+00000024|hijab-essentials|Face Cover|غطاء الوجه
+00000012|arm-sleeves|Arm Sleeves, Cotton|سواعد قطن
+00000438|arm-sleeves|Arm Sleeves with Ring, Plain|سواعد بخاتم سادة
+00000726|arm-sleeves|Sharqiya Arm Sleeves|سواعد شرقية
+00000071|womens-dresses|Gucci Dress|فستان غوتشي
+00000327|hijabs|Half Cotton, Half Lace Shayla with Stones|شيلة نصف قطن ونصف دانتيل بالفصوص
+00000288|hijabs|Half Cotton Lace Shayla with Stones|شيلة نصف قطن بالدانتيل والفصوص
+00000297|hijabs|Half Cotton, Half Net Shayla|شيلة نصف قطن ونصف شبك
+00000039|hijabs|Half Cotton, Half Chiffon Shayla|شيلة نصف قطن ونصف شيفون
+00000417|womens-dresses|Hareem Sultan, Large|حريم السلطان كبير
+00000529|womens-dresses|Embroidered Jacket|جاكيت مطرز
+00000067|womens-dresses|Jalabiya, Bisht Style|جلابية بتصميم البشت
+00000068|womens-dresses|Jalabiya, Regular|جلابية عادية
+00000074|womens-dresses|Jellie, Brown|جيلي بني
+00000333|hijabs|Kashmiri Shayla, Two Colours with Stones|شيلة كشميري بلونين بالفصوص
+00000270|hijabs|Kashmiri Shayla, Checkered|شيلة كشميري مربعات
+00000274|hijabs|Kashmiri Shayla, Dotted|شيلة كشميري منقطة
+00000269|hijabs|Kashmiri Shayla, Plain Glitter|شيلة كشميري سادة لامعة
+00000272|hijabs|Kashmiri Shayla, Half Lace|شيلة كشميري نصف دانتيل
+00000275|hijabs|Kashmiri Shayla, Lace Line|شيلة كشميري بخط دانتيل
+00000271|hijabs|Kashmiri Shayla, Lines & Stones|شيلة كشميري بالخطوط والفصوص
+00000046|hijabs|Kashmiri Shayla, Plain|شيلة كشميري سادة
+00000332|hijabs|Kashmiri Shayla, Shiny Line|شيلة كشميري بخط لامع
+00000300|hijabs|Kashmiri-Style Shayla|شيلة نوع كشميري
+00000073|womens-dresses|Khamis with Trousers, Old Stock|قميص مع بنطلون (مخزون قديم)
+00000576|womens-dresses|Ladies' 2022 (11R)|نسائي 2022 (11R)
+00000077|innerwear|Ladies' Socks Set|طقم جوارب نسائية
+00000061|womens-dresses|Ladies' Turkish (2022)|ملابس نسائية تركية (2022)
+00000062|womens-dresses|Ladies' Turkish (2022) 10R|ملابس نسائية تركية (2022) 10R
+00000064|womens-dresses|Ladies' Turkish (2022) 12R|ملابس نسائية تركية (2022) 12R
+00000285|hijabs|Layered Net & Lace Shayla|شيلة طبقات شبك ودانتيل
+00000286|hijabs|Layered Stretch & Lace Shayla|شيلة طبقات مطاط ودانتيل
+00000738|abayas-scarves|Leso, Coloured|لسو ملون
+00000739|abayas-scarves|Leso, One Colour|لسو لون واحد
+00000324|hijabs|Lulu Lace Shayla|شيلة لولو بالدانتيل
+00000391|hijabs|Full Crystal Pearl Shayla|شيلة لؤلؤ بالكريستال الكامل
+00000443|hijabs|Scattered Pearl Shayla|شيلة لؤلؤ منثور
+00000441|hijabs|Velvet Chiffon Shayla|شيلة مخمل شيفون
+00000444|hijabs|Malmal Rivoli Crystal Shayla|شيلة ململ ريفولي كريستال
+00000301|hijabs|Marble Design Shayla|شيلة بتصميم الرخام
+00000442|hijabs|Miami Chiffon Crystal Shayla|شيلة ميامي شيفون كريستال
+00000329|hijabs|Mixed Lace Shayla|شيلة دانتيل متنوعة
+00000331|hijabs|Mixed Fabric Shayla, Plain|شيلة أقمشة متنوعة سادة
+00000330|hijabs|Mixed Fabric Shayla with Stones|شيلة أقمشة متنوعة بالفصوص
+00000273|hijabs|Net Wave Shayla|شيلة شبك بالموج
+00000069|womens-dresses|Turkish Trousers|بنطلون تركي
+00000015|prayer-wear|Prayer Abaya|عباية صلاة
+00000532|accessories|Rope Headband|طوق بالحبل
+00000019|hijab-essentials|Rope Net Cap|كاب شبك بالحبل
+00000004|chest-covers|Chest Cover with Collar|غطاء الصدر بالياقة
+00000233|chest-covers|Chest Cover with Elastic|غطاء الصدر بالمطاط
+00000003|chest-covers|Long High-Neck Chest Cover|غطاء الصدر الطويل برقبة عالية
+00000392|chest-covers|Tabaqui Chest Cover|غطاء الصدر طبقي
+00000437|hijab-essentials|Satin Square Cap|كاب ساتان مربع
+00000001|hijabs|Shawls in Boxes (Turkey)|شالات في علب (تركيا)
+00000254|hijabs|Shayla SHE 1, Stitch|شيلة SHE 1 ستيتش
+00000263|hijabs|Shayla SHE 10, Cotton with Side Lace|شيلة SHE 10 قطن بدانتيل جانبي
+00000264|hijabs|Shayla SHE 11, Chiffon with Side Lace|شيلة SHE 11 شيفون بدانتيل جانبي
+00000265|hijabs|Shayla SHE 12, Branded|شيلة SHE 12 ماركة
+00000266|hijabs|Shayla SHE 13, Turkish|شيلة SHE 13 تركية
+00000267|hijabs|Shayla SHE 14, Chiffon with Stones|شيلة SHE 14 شيفون بالفصوص
+00000255|hijabs|Shayla SHE 2, Cotton Lace|شيلة SHE 2 قطن بالدانتيل
+00000257|hijabs|Shayla SHE 4, Cotton Kashmiri|شيلة SHE 4 قطن كشميري
+00000258|hijabs|Shayla SHE 5, Cotton New 1|شيلة SHE 5 قطن جديد 1
+00000259|hijabs|Shayla SHE 6, Cotton New 2|شيلة SHE 6 قطن جديد 2
+00000260|hijabs|Shayla SHE 7, DMC|شيلة SHE 7 DMC
+00000261|hijabs|Shayla SHE 8, Two-Colour Lace|شيلة SHE 8 دانتيل بلونين
+00000262|hijabs|Shayla SHE 9, Cotton with Two Laces|شيلة SHE 9 قطن بدانتيلين
+00000317|hijabs|Shayla SHE, Branded Lace|شيلة SHE دانتيل ماركة
+00000383|hijabs|Shayla 78/27|شيلة 78/27
+00000382|hijabs|Shayla 78/28|شيلة 78/28
+00000381|hijabs|Shayla 78/44|شيلة 78/44
+00000038|hijabs|Cotton Embroidered Shayla|شيلة قطن مطرزة
+00000201|hijabs|Fish Lace Shayla|شيلة دانتيل السمكة
+00000202|hijabs|Long Leaves Shayla|شيلة الأوراق الطويلة
+00000203|hijabs|Mixed Shayla, March 2022|شيلة متنوعة مارس 2022
+00000284|hijabs|Mixed Shayla with Pearls|شيلة متنوعة باللؤلؤ
+00000334|hijabs|Tartan Shayla|شيلة كاروهات
+00000027|hijabs|Shayla with Cap, Large (Chiffon)|شيلة مع كاب كبيرة (شيفون)
+00000028|hijabs|Shayla with Cap, Lace (Chiffon)|شيلة مع كاب بالدانتيل (شيفون)
+00000026|hijabs|Shayla with Cap (Chiffon)|شيلة مع كاب (شيفون)
+00000226|hijabs|Chiffon Shayla, Two Colours, Plain|شيلة شيفون بلونين سادة
+00000225|hijabs|Chiffon Shayla, Two Colours with Stones|شيلة شيفون بلونين بالفصوص
+00000227|hijabs|Chiffon Shayla, Embroidered|شيلة شيفون مطرزة
+00000215|hijabs|Chiffon Shayla, Line|شيلة شيفون بخط
+00000278|hijabs|Chiffon Shayla, Lace Line (O)|شيلة شيفون بخط دانتيل (O)
+00000224|hijabs|Chiffon Shayla, Snake Pattern|شيلة شيفون بنقشة الثعبان
+00000222|hijabs|Chiffon Shayla, Spread Stones|شيلة شيفون بفصوص منثورة
+00000221|hijabs|Chiffon Shayla, Stone Line|شيلة شيفون بخط فصوص
+00000223|hijabs|Chiffon Shayla, Stone Wave|شيلة شيفون بموجة فصوص
+00000315|hijabs|Chiffon Shayla with Long Cap|شيلة شيفون مع كاب طويل
+00000303|hijabs|Stretch Shayla, Two Colours|شيلة مطاط بلونين
+00000280|hijabs|Stretch Fabric Shayla with Stones|شيلة قماش مطاط بالفصوص
+00000348|accessories|Sun Cap|قبعة شمس
+00000030|hijabs|Tabaqui Lace Shayla|شيلة طبقي بالدانتيل
+00000031|hijabs|Tabaqui Lace Shayla with Stones|شيلة طبقي بالدانتيل والفصوص
+00000036|hijabs|Tabaqui Elastic Shayla|شيلة طبقي بالمطاط
+00000321|hijabs|Tabaqui Elastic Line Shayla|شيلة طبقي بخط مطاط
+00000032|hijabs|Tabaqui Line Shayla|شيلة طبقي بخط
+00000033|hijabs|Tabaqui Plain Shayla|شيلة طبقي سادة
+00000034|hijabs|Tabaqui Plain Stretch Shayla|شيلة طبقي سادة مطاط
+00000035|hijabs|Tabaqui Stone Shayla|شيلة طبقي بالفصوص
+00000394|skirts|Cotton Skirt Extender|تنورة تطويل قطنية
+00000737|accessories|Tasbih with Khanjar|مسبحة بالخنجر
+00000393|hijabs|Turkish Chapsa Lace Shayla with Stones|شيلة تركية شابسا بالدانتيل والفصوص
+00000326|hijabs|Turkish Two-Colour Shayla with Stones|شيلة تركية بلونين بالفصوص
+00000065|hijabs|Turkish Branded Shawl (2022)|شال تركي ماركة (2022)
+00000029|hijabs|Turkish Stitch Shayla|شيلة تركية ستيتش
+00000052|innerwear|Underwear No. 12|ملابس داخلية رقم 12
+00000056|innerwear|Underwear No. 15|ملابس داخلية رقم 15
+00000051|innerwear|Underwear No. 19|ملابس داخلية رقم 19
+00000054|innerwear|Underwear No. 22|ملابس داخلية رقم 22
+00000053|innerwear|Underwear No. 23|ملابس داخلية رقم 23
+00000055|innerwear|Underwear No. 25|ملابس داخلية رقم 25
+00000050|innerwear|Underwear No. 3|ملابس داخلية رقم 3
+00000049|innerwear|Underwear No. 4|ملابس داخلية رقم 4
+00000072|womens-dresses|Versace Dress|فستان فيرساتشي
+00000319|abayas-scarves|Wisha 2|وشاح 2

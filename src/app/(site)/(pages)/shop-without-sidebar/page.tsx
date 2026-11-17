@@ -1,19 +1,6 @@
-import React from "react";
-import ShopWithoutSidebar from "@/components/ShopWithoutSidebar";
+import { redirect } from "next/navigation";
 
-import { Metadata } from "next";
-export const metadata: Metadata = {
-  title: "Occasionwear | Hala Dresses",
-  description: "Explore Hala Dresses occasionwear through a clean, curated shopping experience.",
-  // other metadata
-};
-
-const ShopWithoutSidebarPage = () => {
-  return (
-    <main>
-      <ShopWithoutSidebar />
-    </main>
-  );
-};
-
-export default ShopWithoutSidebarPage;
+// Template leftover: the one product listing is /shop.
+export default function ShopWithoutSidebarPage() {
+  redirect("/shop");
+}

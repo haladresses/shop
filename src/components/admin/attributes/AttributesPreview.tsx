@@ -42,7 +42,7 @@ export default function AttributesPreview({ fields }: { fields: CategoryAttribut
     .filter((r) => r.value !== "");
 
   const seg = (active: boolean) =>
-    `px-3 py-1 rounded-md text-xs font-medium transition-colors ${active ? "bg-white text-slate-800 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700"}`;
+    `px-3 py-1 rounded-md text-xs font-medium ${active ? "bg-white text-slate-800 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700"}`;
 
   return (
     <aside className="admin-card lg:sticky lg:top-4">

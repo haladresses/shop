@@ -86,8 +86,8 @@ const CartSidebarModal = () => {
                   ? `أضيفي ${toFree.toFixed(3)} ر.ع. للحصول على شحن مجاني`
                   : `Add ${toFree.toFixed(3)} OMR more for free shipping`
                 : isArabic
-                  ? "🎉 حصلتِ على شحن مجاني"
-                  : "🎉 You've unlocked free shipping"}
+                  ? "حصلتِ على شحن مجاني"
+                  : "You've unlocked free shipping"}
             </p>
             <div className="h-1.5 rounded-full bg-gray-2 overflow-hidden">
               <div className="h-full rounded-full bg-blue transition-[width] duration-500" style={{ width: `${Math.min(100, (totalPrice / FREE_SHIPPING_FROM) * 100)}%` }} />

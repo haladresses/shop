@@ -1,11 +1,15 @@
 "use client";
 import React from "react";
-import Breadcrumb from "../Common/Breadcrumb";
-import { useAppSelector } from "@/redux/store";
+import Link from "next/link";
+import { useDispatch } from "react-redux";
+import { AppDispatch, useAppSelector } from "@/redux/store";
+import { removeAllItemsFromWishlist } from "@/redux/features/wishlist-slice";
 import { useLanguage } from "@/app/context/LanguageContext";
+import Breadcrumb from "../Common/Breadcrumb";
 import SingleItem from "./SingleItem";
 
 export const Wishlist = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const { isArabic } = useLanguage();
   const wishlistItems = useAppSelector((state) => state.wishlistReducer.items);
 
@@ -13,62 +17,58 @@ export const Wishlist = () => {
     ? {
         breadcrumb: "المفضلة",
         title: "قائمة المفضلة",
-        clear: "مسح قائمة المفضلة",
-        product: "المنتج",
-        unitPrice: "سعر القطعة",
-        stockStatus: "حالة التوفر",
-        action: "الإجراء",
+        clear: "مسح الكل",
+        emptyTitle: "قائمة المفضلة فارغة",
+        emptyText: "اضغطي على القلب في أي منتج لحفظه هنا.",
+        shop: "تابعي التسوق",
       }
     : {
         breadcrumb: "Wishlist",
         title: "Your Wishlist",
-        clear: "Clear Wishlist Cart",
-        product: "Product",
-        unitPrice: "Unit Price",
-        stockStatus: "Stock Status",
-        action: "Action",
+        clear: "Clear All",
+        emptyTitle: "Your wishlist is empty",
+        emptyText: "Tap the heart on any piece to save it here.",
+        shop: "Continue shopping",
       };
 
   return (
     <>
       <Breadcrumb title={copy.breadcrumb} pages={[copy.breadcrumb]} />
-      <section dir={isArabic ? "rtl" : "ltr"} className="overflow-hidden py-20 bg-gray-2">
+      <section className="overflow-hidden py-14 sm:py-20 bg-meta">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
-          <div className="flex flex-wrap items-center justify-between gap-5 mb-7.5">
-            <h2 className="font-medium text-dark text-2xl">{copy.title}</h2>
-            <button className="text-blue">{copy.clear}</button>
-          </div>
+          {wishlistItems.length === 0 ? (
+            <div className="max-w-[560px] mx-auto bg-white rounded-xl shadow-1 px-4 py-12 sm:py-16 text-center">
+              <p className="font-medium text-dark">{copy.emptyTitle}</p>
+              <p className="pt-1 pb-6 text-sm text-dark-4">{copy.emptyText}</p>
+              <Link
+                href="/shop"
+                className="inline-flex justify-center font-medium text-white bg-dark py-3 px-7 rounded-full ease-out duration-200 hover:bg-blue"
+              >
+                {copy.shop}
+              </Link>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-1 p-4 sm:p-7.5">
+              <div className="flex items-center justify-between gap-4 mb-2">
+                <h2 className="font-semibold text-dark text-xl">
+                  {copy.title} <span className="font-normal text-base text-dark-4">({wishlistItems.length})</span>
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => dispatch(removeAllItemsFromWishlist())}
+                  className="text-custom-sm text-dark-4 ease-out duration-200 hover:text-red"
+                >
+                  {copy.clear}
+                </button>
+              </div>
 
-          <div className="bg-white rounded-[10px] shadow-1">
-            <div className="w-full overflow-x-auto">
-              <div className="min-w-[1170px]">
-                {/* <!-- table header --> */}
-                <div className="flex items-center py-5.5 px-10">
-                  <div className="min-w-[83px]"></div>
-                  <div className="min-w-[387px]">
-                    <p className="text-dark">{copy.product}</p>
-                  </div>
-
-                  <div className="min-w-[205px]">
-                    <p className="text-dark">{copy.unitPrice}</p>
-                  </div>
-
-                  <div className="min-w-[265px]">
-                    <p className="text-dark">{copy.stockStatus}</p>
-                  </div>
-
-                  <div className="min-w-[150px]">
-                    <p className="text-dark text-right">{copy.action}</p>
-                  </div>
-                </div>
-
-                {/* <!-- wish item --> */}
-                {wishlistItems.map((item, key) => (
-                  <SingleItem item={item} key={key} />
+              <div className="divide-y divide-gray-3">
+                {wishlistItems.map((item) => (
+                  <SingleItem item={item} key={item.id} />
                 ))}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </section>
     </>

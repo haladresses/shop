@@ -411,7 +411,7 @@ export default function CategoryAttributesEditor({
                     dropOn(f.uid);
                   }}
                   onDragEnd={endDrag}
-                  className={`relative transition-opacity ${dragUid === f.uid ? "opacity-40" : ""} ${
+                  className={`relative ${dragUid === f.uid ? "opacity-40" : ""} ${
                     overUid === f.uid && dragUid !== f.uid ? "shadow-[inset_0_2px_0_0_#6366f1]" : ""
                   } ${errors[f.uid] ? "bg-rose-50/40" : ""}`}
                 >
@@ -467,7 +467,7 @@ export default function CategoryAttributesEditor({
                         </p>
                       )}
                     </div>
-                    <LuChevronDown size={18} className={`text-slate-400 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+                    <LuChevronDown size={18} className={`text-slate-400 flex-shrink-0 ${open ? "rotate-180" : ""}`} />
                   </div>
 
                   {open && (
@@ -495,7 +495,7 @@ export default function CategoryAttributesEditor({
       </div>
 
       {canManage && (dirty || saving) && (
-        <div className="sticky bottom-0 z-10 pb-1 admin-slide-up">
+        <div className="sticky bottom-0 z-10 pb-1">
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-lg shadow-slate-900/5">
             <span className="flex items-center gap-2 text-sm text-slate-600 flex-1 min-w-[160px]">
               <span className="w-2 h-2 rounded-full bg-amber-400" /> You have unsaved changes
@@ -575,7 +575,7 @@ function FieldEditor({
   }, [autoFocus]);
 
   return (
-    <div ref={ref} className="px-3 sm:px-4 pb-4 admin-fade-in">
+    <div ref={ref} className="px-3 sm:px-4 pb-4">
       <fieldset disabled={!canManage} className="space-y-5 rounded-xl border border-slate-200 bg-slate-50/50 p-4 sm:p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -600,7 +600,7 @@ function FieldEditor({
                   key={t.value}
                   aria-pressed={active}
                   onClick={() => onPatch({ type: t.value })}
-                  className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm transition ${
+                  className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm ${
                     active ? "border-indigo-500 bg-white text-indigo-700 ring-2 ring-indigo-100" : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
                   }`}
                 >
@@ -677,10 +677,10 @@ function FieldEditor({
             aria-expanded={advanced}
           >
             <LuSettings2 size={13} /> Advanced
-            <LuChevronDown size={13} className={`transition-transform ${advanced ? "rotate-180" : ""}`} />
+            <LuChevronDown size={13} className={advanced ? "rotate-180" : ""} />
           </button>
           {advanced && (
-            <div className="mt-3 admin-fade-in">
+            <div className="mt-3">
               <FieldLabel>Key (internal name)</FieldLabel>
               <input
                 className="admin-input font-mono text-sm"
@@ -723,7 +723,7 @@ function FieldEditor({
       )}
 
       {confirmingDelete && (
-        <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800 admin-fade-in">
+        <div className="mt-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
           <p>
             <strong>{plural(used, "product")}</strong> have an answer for this field. Deleting it hides those answers. They
             are kept, and come back if you add a field with the key <code className="font-mono">{f.originalKey ?? f.key}</code> again.
@@ -810,7 +810,7 @@ function CopyFromMenu({ currentId, onCopy }: { currentId: string; onCopy: (id: s
         <LuCopy size={15} /> Copy from…
       </button>
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-72 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 admin-fade-in">
+        <div className="absolute right-0 z-20 mt-2 w-72 rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10">
           <p className="px-4 pt-3 pb-2 text-xs text-slate-500">Copy another category&apos;s fields into this one. Fields that already exist here are skipped.</p>
           <div className="max-h-72 overflow-y-auto pb-2">
             {cats === null ? (

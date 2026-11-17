@@ -49,7 +49,7 @@ export default function DaysTab({ query }: { query: string }) {
           { key: "refunds", label: "Refunds", labelAr: "المرتجعات", kind: "money", value: (r) => r.refunds, total: t.refunds },
           { key: "net", label: "Net", labelAr: "الصافي", kind: "money", value: (r) => r.net, total: t.net, className: "font-semibold" },
           { key: "netExVat", label: "Net excl. VAT", labelAr: "قبل الضريبة", kind: "money", value: (r) => r.netExVat, total: t.netExVat },
-          { key: "avg", label: "Avg sale", labelAr: "المتوسط", kind: "money", value: (r) => r.avgTicket, total: t.avgTicket },
+          { key: "avg", label: "Average sale", labelAr: "المتوسط", kind: "money", value: (r) => r.avgTicket, total: t.avgTicket },
         ]}
       />
     </div>

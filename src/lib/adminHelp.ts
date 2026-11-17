@@ -1399,7 +1399,7 @@ export const ADMIN_HELP_UI = {
     langName: "English",
     switchTo: "العربية",
     documentTitle: "Admin Help Center",
-    heroTitle: "A precise, role-aware guide to running the store",
+    heroTitle: "How to use the admin panel",
     heroSubtitle:
       "Every guide explains the purpose of a section, the actions it supports, the exact steps to complete common tasks, and the cautions that prevent costly mistakes. Content is filtered by permission, so you only ever see guidance for the screens you can actually use.",
     downloadPdf: "Download PDF",
@@ -1415,6 +1415,7 @@ export const ADMIN_HELP_UI = {
     permissionNoteSuffix: "screen to expand or narrow what each team can see and do.",
     searchPlaceholder: "Search guides",
     clearSearch: "Clear search",
+    close: "Close",
     resetFilters: "Reset filters",
     allLevels: "All levels",
     allCategories: "All categories",
@@ -1444,7 +1445,7 @@ export const ADMIN_HELP_UI = {
     langName: "العربية",
     switchTo: "English",
     documentTitle: "مركز مساعدة الإدارة",
-    heroTitle: "دليل دقيق وواعٍ بالصلاحيات لإدارة المتجر",
+    heroTitle: "دليل استخدام لوحة الإدارة",
     heroSubtitle:
       "يشرح كل دليل الغرض من القسم والإجراءات التي يدعمها والخطوات الدقيقة لإنجاز المهام الشائعة والتحذيرات التي تمنع الأخطاء المكلفة. يُصفّى المحتوى حسب الصلاحية، لذا لن ترى إلا إرشادات الشاشات التي يمكنك استخدامها فعلاً.",
     downloadPdf: "تنزيل PDF",
@@ -1460,6 +1461,7 @@ export const ADMIN_HELP_UI = {
     permissionNoteSuffix: "لتوسيع أو تضييق ما يمكن لكل فريق رؤيته وتنفيذه.",
     searchPlaceholder: "ابحث في الأدلة",
     clearSearch: "مسح البحث",
+    close: "إغلاق",
     resetFilters: "إعادة ضبط الفلاتر",
     allLevels: "كل المستويات",
     allCategories: "كل الفئات",

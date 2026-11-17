@@ -12,6 +12,7 @@ import {
   LuHardDriveDownload,
 } from "react-icons/lu";
 import AdminModal from "./AdminModal";
+import { humanize } from "@/components/admin/labels";
 
 type Backup = {
   id: string;
@@ -64,7 +65,6 @@ const TYPE_BADGE: Record<Backup["type"], string> = {
 };
 
 export default function BackupSettings() {
-  const [role, setRole] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<string[]>([]);
   const [backups, setBackups] = useState<Backup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,7 +100,6 @@ export default function BackupSettings() {
       fetch("/api/admin/backup/schedule").then((r) => r.json()),
     ]);
     if (meRes.success) {
-      setRole(meRes.data.role);
       setPermissions(meRes.data.permissions || []);
     }
     if (backupsRes.success) setBackups(backupsRes.data);
@@ -269,7 +268,7 @@ export default function BackupSettings() {
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Status</label>
             <label className="flex items-center gap-2 cursor-pointer">
               <div
-                className={`w-11 h-6 rounded-full transition-colors cursor-pointer ${
+                className={`w-11 h-6 rounded-full cursor-pointer ${
                   schedule.backup_schedule_enabled === "true" ? "bg-indigo-600" : "bg-slate-200"
                 }`}
                 onClick={() =>
@@ -280,7 +279,7 @@ export default function BackupSettings() {
                 }
               >
                 <div
-                  className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${
+                  className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 ${
                     schedule.backup_schedule_enabled === "true" ? "translate-x-5" : "translate-x-0.5"
                   }`}
                 />
@@ -384,10 +383,10 @@ export default function BackupSettings() {
                   <tr key={b.id} className="border-b border-slate-100 last:border-0">
                     <td className="py-3 pr-4 text-slate-700">{formatDate(b.createdAt)}</td>
                     <td className="py-3 pr-4">
-                      <span className={`badge ${TYPE_BADGE[b.type]}`}>{b.type}</span>
+                      <span className={`badge ${TYPE_BADGE[b.type]}`}>{humanize(b.type)}</span>
                     </td>
                     <td className="py-3 pr-4">
-                      <span className={`badge ${STATUS_BADGE[b.status]}`}>{b.status}</span>
+                      <span className={`badge ${STATUS_BADGE[b.status]}`}>{humanize(b.status)}</span>
                       {b.status === "FAILED" && b.errorMessage && (
                         <span className="block text-xs text-red-500 mt-1 max-w-xs truncate" title={b.errorMessage}>
                           {b.errorMessage}

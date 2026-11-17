@@ -114,7 +114,7 @@ export default function MyAccount() {
   const name = account ? (isArabic ? account.nameAr || account.nameEn : account.nameEn || account.nameAr) || t("there", "بكِ") : "";
 
   return (
-    <main dir={isArabic ? "rtl" : "ltr"} className="pt-[73px] xl:pt-[125px] bg-[#FAF7F5] min-h-[80vh]">
+    <main dir={isArabic ? "rtl" : "ltr"} className="pt-[73px] xl:pt-[125px] bg-meta min-h-[80vh]">
       <div className="border-t border-gray-3">
         <div className="max-w-[1170px] mx-auto px-4 sm:px-8 xl:px-0 py-6 sm:py-10">
           {!account ? (
@@ -139,7 +139,7 @@ export default function MyAccount() {
                 <div className="grid grid-cols-3 gap-2 sm:gap-3 sm:w-[360px]">
                   <Stat label={t("Orders", "الطلبات")} value={String(account.stats.orders)} />
                   <Stat label={t("In progress", "قيد التنفيذ")} value={String(account.stats.activeOrders)} />
-                  <Stat label={t("Spent", "المشتريات")} value={account.stats.totalSpent.toFixed(3)} small />
+                  <Stat label={t("Spent", "المشتريات")} value={account.stats.totalSpent.toFixed(3)} unit={t("OMR", "ر.ع.")} small />
                 </div>
               </div>
 
@@ -189,10 +189,13 @@ export default function MyAccount() {
 
 type T = (en: string, ar: string) => string;
 
-function Stat({ label, value, small }: { label: string; value: string; small?: boolean }) {
+function Stat({ label, value, unit, small }: { label: string; value: string; unit?: string; small?: boolean }) {
   return (
-    <div className="rounded-2xl bg-[#FAF7F5] px-3 py-2.5 text-center">
-      <p className={`font-semibold text-dark tabular-nums ${small ? "text-base" : "text-lg"}`}>{value}</p>
+    <div className="rounded-2xl bg-meta px-3 py-2.5 text-center">
+      <p className={`font-semibold text-dark tabular-nums whitespace-nowrap ${small ? "text-base" : "text-lg"}`}>
+        {value}
+        {unit && <span className="ms-1 text-[11px] font-medium text-dark-4">{unit}</span>}
+      </p>
       <p className="text-[11px] text-dark-4 truncate">{label}</p>
     </div>
   );

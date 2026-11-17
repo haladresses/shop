@@ -7,7 +7,7 @@ import type { AttributeValue, CategoryAttribute } from "@/lib/attributes";
 const CHIP_LIMIT = 12;
 
 const chip = (active: boolean) =>
-  `inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+  `inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium ${
     active
       ? "border-indigo-500 bg-indigo-50 text-indigo-700"
       : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
@@ -80,7 +80,7 @@ function Control({
               disabled={disabled}
               // Clicking the selected answer again clears it (no answer).
               onClick={() => onChange(active ? null : c === "yes")}
-              className={`min-w-[64px] px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`min-w-[64px] px-4 py-1.5 rounded-md text-sm font-medium ${
                 active ? "bg-white text-indigo-700 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700"
               }`}
             >

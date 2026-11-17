@@ -74,6 +74,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     // Postgres treats "" as a real (colliding) value while NULLs never collide.
     if (scalar.barcode !== undefined) data.barcode = scalar.barcode || null;
 
+    if (scalar.supplierId) {
+      const supplier = await prisma.supplier.findUnique({ where: { id: scalar.supplierId }, select: { id: true } });
+      if (!supplier) return error("The selected supplier doesn't exist.");
+    }
+
     // Only admins choose a product's VAT rate (null = follow the category).
     if (taxRateId !== undefined) {
       const canSetTax = await userHasAnyPermission(user, ["admin.products.manage", "admin.tax.manage"]);

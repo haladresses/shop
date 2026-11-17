@@ -138,34 +138,44 @@ export default function Filters({
           </button>
         ))}
       </div>
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="flex items-end gap-1">
+      {/* Dates, with arrows to step to the previous / next period */}
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div className="flex items-end gap-1.5">
           <button type="button" onClick={() => shiftDay(single ? -1 : -(1 + daysSpan(f.from, f.to)))} className="admin-btn admin-btn-secondary !px-2 !py-2" title="Previous period" aria-label="Previous period">
             <LuChevronLeft size={15} />
           </button>
-          <label className="text-xs text-slate-500">
-            From
-            <input type="date" value={f.from} max={f.to} onChange={(e) => e.target.value && onChange({ preset: "custom", from: e.target.value })} className="admin-input !py-1.5 text-sm !w-auto block" />
+          <label className="block text-xs text-slate-500">
+            <span className="block mb-1">From</span>
+            <input type="date" value={f.from} max={f.to} onChange={(e) => e.target.value && onChange({ preset: "custom", from: e.target.value })} className="admin-input !py-1.5 text-sm !w-auto" />
           </label>
-          <label className="text-xs text-slate-500">
-            To
-            <input type="date" value={f.to} min={f.from} onChange={(e) => e.target.value && onChange({ preset: "custom", to: e.target.value })} className="admin-input !py-1.5 text-sm !w-auto block" />
+          <label className="block text-xs text-slate-500">
+            <span className="block mb-1">To</span>
+            <input type="date" value={f.to} min={f.from} onChange={(e) => e.target.value && onChange({ preset: "custom", to: e.target.value })} className="admin-input !py-1.5 text-sm !w-auto" />
           </label>
           <button type="button" onClick={() => shiftDay(single ? 1 : 1 + daysSpan(f.from, f.to))} className="admin-btn admin-btn-secondary !px-2 !py-2" title="Next period" aria-label="Next period">
             <LuChevronRight size={15} />
           </button>
         </div>
-        <label className="text-xs text-slate-500">
-          Channel
-          <select value={f.channel} onChange={(e) => onChange({ channel: e.target.value })} className="admin-input admin-select !py-1.5 text-sm block min-w-[130px]">
+        {(f.channel || f.seller || f.method || f.shift) && (
+          <button type="button" onClick={() => onChange({ channel: "", seller: "", method: "", shift: "" })} className="admin-btn admin-btn-secondary !py-2 !text-xs">
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      {/* The four filters on one even grid, so the fields always line up */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <label className="block text-xs text-slate-500 min-w-0">
+          <span className="block mb-1">Channel</span>
+          <select value={f.channel} onChange={(e) => onChange({ channel: e.target.value })} className="admin-input admin-select !py-1.5 text-sm">
             <option value="">All channels</option>
             <option value="POS">In store (POS)</option>
             <option value="ONLINE">Online</option>
           </select>
         </label>
-        <label className="text-xs text-slate-500">
-          Salesperson
-          <select value={f.seller} onChange={(e) => onChange({ seller: e.target.value })} className="admin-input admin-select !py-1.5 text-sm block min-w-[160px]">
+        <label className="block text-xs text-slate-500 min-w-0">
+          <span className="block mb-1">Salesperson</span>
+          <select value={f.seller} onChange={(e) => onChange({ seller: e.target.value })} className="admin-input admin-select !py-1.5 text-sm">
             <option value="">Everyone</option>
             <option value={ONLINE_SELLER}>Online store</option>
             {(meta?.sellers ?? []).map((s) => (
@@ -177,18 +187,18 @@ export default function Filters({
             <option value={UNKNOWN_SELLER}>Unassigned</option>
           </select>
         </label>
-        <label className="text-xs text-slate-500">
-          Payment method
-          <select value={f.method} onChange={(e) => onChange({ method: e.target.value })} className="admin-input admin-select !py-1.5 text-sm block min-w-[150px]">
+        <label className="block text-xs text-slate-500 min-w-0">
+          <span className="block mb-1">Payment method</span>
+          <select value={f.method} onChange={(e) => onChange({ method: e.target.value })} className="admin-input admin-select !py-1.5 text-sm">
             <option value="">All methods</option>
             {methods.map((m) => (
               <option key={m} value={m}>{methodName(m)}</option>
             ))}
           </select>
         </label>
-        <label className="text-xs text-slate-500">
-          POS shift
-          <select value={f.shift} onChange={(e) => onChange({ shift: e.target.value })} className="admin-input admin-select !py-1.5 text-sm block min-w-[170px] max-w-[240px]">
+        <label className="block text-xs text-slate-500 min-w-0">
+          <span className="block mb-1">POS shift</span>
+          <select value={f.shift} onChange={(e) => onChange({ shift: e.target.value })} className="admin-input admin-select !py-1.5 text-sm">
             <option value="">All shifts</option>
             {(meta?.shifts ?? []).map((s) => (
               <option key={s.id} value={s.id}>
@@ -198,11 +208,6 @@ export default function Filters({
             ))}
           </select>
         </label>
-        {(f.channel || f.seller || f.method || f.shift) && (
-          <button type="button" onClick={() => onChange({ channel: "", seller: "", method: "", shift: "" })} className="admin-btn admin-btn-secondary !py-2 text-xs">
-            Clear filters
-          </button>
-        )}
       </div>
     </div>
   );

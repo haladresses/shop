@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
   };
 
   const input =
-    "w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-[15px] text-slate-800 placeholder:text-slate-400 outline-none transition focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/10";
+    "w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-[15px] text-slate-800 placeholder:text-slate-400 outline-none focus:border-indigo-300 focus:ring-4 focus:ring-indigo-500/10";
 
   return (
     <div className="min-h-[100dvh] bg-[#F7F2EE] flex items-center justify-center p-4">
@@ -99,7 +99,7 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full h-12 rounded-xl bg-slate-900 hover:bg-[#8C3B49] text-white font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-70"
+            className="w-full h-12 rounded-xl bg-slate-900 hover:bg-[#8C3B49] text-white font-semibold flex items-center justify-center gap-2 disabled:opacity-70"
           >
             {loading ? <LuLoaderCircle size={18} className="animate-spin" /> : <LuLock size={16} />}
             {loading ? "Signing in..." : "Sign in"}

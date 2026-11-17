@@ -218,8 +218,8 @@ export function Figure({ label, ar, value, sub, strong }: { label: string; ar?: 
         <span className="truncate">{label}</span>
         {ar && <span dir="rtl" className="normal-case tracking-normal truncate">{ar}</span>}
       </p>
-      <p className={`tabular-nums truncate ${strong ? "text-xl font-bold text-slate-900" : "text-lg font-semibold text-slate-800"}`}>{value}</p>
-      {sub && <p className="text-[11px] text-slate-400 truncate">{sub}</p>}
+      <p className={`tabular-nums break-words ${strong ? "text-xl font-bold text-slate-900" : "text-lg font-semibold text-slate-800"}`}>{value}</p>
+      {sub && <p className="text-[11px] text-slate-400">{sub}</p>}
     </div>
   );
 }

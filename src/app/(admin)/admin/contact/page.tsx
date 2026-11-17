@@ -15,7 +15,6 @@ import {
   LuSearch,
   LuSettings2,
   LuTrash2,
-  LuUser,
   LuX,
 } from "react-icons/lu";
 
@@ -182,63 +181,54 @@ export default function AdminContactPage() {
         </div>
       )}
 
-      {/* Hero */}
-      <section className="admin-card border border-slate-200 p-5 sm:p-6">
-        <div className="w-full space-y-2">
-          <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">Contact Us</h1>
-          <p className="text-sm leading-6 text-slate-500">
-            Read and manage messages sent from the storefront contact form, and keep the public contact details accurate across the
-            whole site.
-          </p>
-        </div>
-
-        {/* Tabs */}
-        <div className="mt-5 inline-flex rounded-full border border-slate-200 bg-slate-50 p-1">
+      {/* Intro + tabs */}
+      <div className="space-y-3">
+        <p className="text-sm text-slate-500">
+          Read messages sent from the shop&apos;s contact form, and keep the public contact details up to date.
+        </p>
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setTab("inbox")}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-              tab === "inbox" ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"
+            className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium ${
+              tab === "inbox" ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
             }`}
           >
             <LuInbox size={16} /> Inbox
             {counts.new > 0 ? (
-              <span className={`rounded-full px-1.5 text-[11px] ${tab === "inbox" ? "bg-white/20" : "bg-amber-100 text-amber-700"}`}>
-                {counts.new}
-              </span>
+              <span className="rounded-full bg-amber-100 px-1.5 text-xs text-amber-700">{counts.new}</span>
             ) : null}
           </button>
           <button
             type="button"
             onClick={() => setTab("details")}
-            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
-              tab === "details" ? "bg-slate-900 text-white" : "text-slate-600 hover:text-slate-900"
+            className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium ${
+              tab === "details" ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
             }`}
           >
             <LuSettings2 size={16} /> Contact details
           </button>
         </div>
-      </section>
+      </div>
 
       {tab === "inbox" ? (
         <>
           {/* Toolbar */}
           <section className="admin-card p-4 sm:p-5">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="group relative min-w-0 flex-1">
-                <LuSearch size={16} className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-focus-within:text-slate-700" />
+              <div className="relative min-w-0 flex-1">
+                <LuSearch size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  style={{ paddingLeft: "3rem", paddingRight: query ? "2.25rem" : "0.875rem" }}
-                  className="admin-input !rounded-full border-slate-200 bg-white transition-colors duration-200 focus:border-slate-300"
+                  className="admin-input !pl-9 !pr-9"
                   placeholder="Search messages"
                 />
                 {query ? (
                   <button
                     type="button"
                     onClick={() => setQuery("")}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                     aria-label="Clear search"
                   >
                     <LuX size={14} />
@@ -248,7 +238,7 @@ export default function AdminContactPage() {
               <button
                 type="button"
                 onClick={loadMessages}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-900"
+                className="admin-btn admin-btn-secondary !px-2.5 shrink-0"
                 title="Refresh"
                 aria-label="Refresh"
               >
@@ -262,14 +252,14 @@ export default function AdminContactPage() {
                   key={s.id}
                   type="button"
                   onClick={() => setStatusFilter(s.id)}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors duration-200 ${
+                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium ${
                     statusFilter === s.id
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900"
+                      ? "border-indigo-200 bg-indigo-50 text-indigo-700"
+                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                   }`}
                 >
                   {s.label}
-                  <span className={`text-[11px] font-semibold ${statusFilter === s.id ? "text-white/70" : "text-slate-400"}`}>
+                  <span className={`text-xs ${statusFilter === s.id ? "text-indigo-500" : "text-slate-400"}`}>
                     {s.count}
                   </span>
                 </button>
@@ -284,10 +274,8 @@ export default function AdminContactPage() {
             </div>
           ) : messages.length === 0 ? (
             <section className="admin-card p-10 text-center">
-              <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-                <LuInbox size={22} />
-              </div>
-              <div className="text-lg font-semibold text-slate-800">No messages here</div>
+              <LuInbox size={28} className="mx-auto mb-2 text-slate-300" />
+              <div className="font-medium text-slate-700">No messages here</div>
               <div className="mt-2 text-sm text-slate-500">
                 {query || statusFilter !== "all"
                   ? "Try a different search or status filter."
@@ -311,16 +299,11 @@ export default function AdminContactPage() {
       ) : (
         /* Contact details */
         <section className="admin-card border border-slate-200 p-5 sm:p-6">
-          <div className="mb-5 flex items-start gap-3">
-            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white">
-              <LuSettings2 size={18} />
-            </span>
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900">Public contact details</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                These values power the storefront Contact page, the footer, and other site-wide contact points.
-              </p>
-            </div>
+          <div className="mb-5">
+            <h2 className="text-base font-semibold text-slate-800">Public contact details</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Shown on the shop&apos;s Contact page, in the footer and anywhere else the shop shows how to reach you.
+            </p>
           </div>
 
           {infoLoading ? (
@@ -341,7 +324,7 @@ export default function AdminContactPage() {
                       onChange={(e) => setInfo((prev) => ({ ...prev, [field.key]: e.target.value }))}
                       placeholder={field.placeholder}
                       dir={field.ltr ? "ltr" : undefined}
-                      className="admin-input rounded-xl border-slate-200 bg-white transition-colors duration-200 focus:border-slate-300"
+                      className="admin-input rounded-xl border-slate-200 bg-white focus:border-slate-300"
                     />
                   </div>
                 ))}
@@ -352,7 +335,7 @@ export default function AdminContactPage() {
                   type="button"
                   onClick={saveInfo}
                   disabled={savingInfo}
-                  className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  className="admin-btn admin-btn-primary disabled:opacity-50"
                 >
                   <LuSave size={16} /> {savingInfo ? "Saving..." : "Save details"}
                 </button>
@@ -379,29 +362,26 @@ function MessageCard({
 }) {
   const fullName = [message.firstName, message.lastName].filter(Boolean).join(" ");
   const created = new Date(message.createdAt);
-  const dateLabel = created.toLocaleString(undefined, {
+  const dateLabel = created.toLocaleString("en-GB", {
     dateStyle: "medium",
     timeStyle: "short",
   });
 
   return (
     <article
-      className={`admin-card border p-5 transition-colors duration-200 ${
+      className={`admin-card border p-5 ${
         message.status === "new" ? "border-amber-200" : "border-slate-200"
       }`}
     >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-              <LuUser size={16} />
-            </span>
             <span className="font-semibold text-slate-900">{fullName || "Unknown"}</span>
-            <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${STATUS_BADGE[message.status]}`}>
+            <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${STATUS_BADGE[message.status]}`}>
               {message.status}
             </span>
             {message.language ? (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-500">
                 {message.language}
               </span>
             ) : null}
@@ -436,7 +416,7 @@ function MessageCard({
               type="button"
               onClick={() => onStatus(message.id, "read")}
               disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+              className="admin-btn admin-btn-secondary !py-1.5 !px-2.5 !text-xs disabled:opacity-50"
             >
               <LuMailOpen size={14} /> Mark read
             </button>
@@ -445,7 +425,7 @@ function MessageCard({
               type="button"
               onClick={() => onStatus(message.id, "new")}
               disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+              className="admin-btn admin-btn-secondary !py-1.5 !px-2.5 !text-xs disabled:opacity-50"
             >
               <LuMail size={14} /> Mark unread
             </button>
@@ -455,7 +435,7 @@ function MessageCard({
               type="button"
               onClick={() => onStatus(message.id, "archived")}
               disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+              className="admin-btn admin-btn-secondary !py-1.5 !px-2.5 !text-xs disabled:opacity-50"
             >
               <LuArchive size={14} /> Archive
             </button>
@@ -464,7 +444,7 @@ function MessageCard({
               type="button"
               onClick={() => onStatus(message.id, "read")}
               disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+              className="admin-btn admin-btn-secondary !py-1.5 !px-2.5 !text-xs disabled:opacity-50"
             >
               <LuCheck size={14} /> Restore
             </button>
@@ -473,7 +453,7 @@ function MessageCard({
             type="button"
             onClick={() => onDelete(message.id)}
             disabled={busy}
-            className="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
+            className="admin-btn admin-btn-danger !py-1.5 !px-2.5 !text-xs disabled:opacity-50"
           >
             <LuTrash2 size={14} /> Delete
           </button>

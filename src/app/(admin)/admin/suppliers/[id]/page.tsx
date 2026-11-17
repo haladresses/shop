@@ -530,7 +530,7 @@ function OrdersTable({ rows, compact }: { rows: PoRow[]; compact?: boolean }) {
             <tr key={r.id} className="cursor-pointer" onClick={() => router.push(`/admin/purchases/${r.id}`)}>
               <td>
                 <span className="font-mono text-sm text-indigo-600">{r.number}</span>
-                <span className="block text-xs text-slate-400">{fmtDate(r.orderDate)}{r.supplierReference && ` · inv ${r.supplierReference}`}</span>
+                <span className="block text-xs text-slate-400">{fmtDate(r.orderDate)}{r.supplierReference && ` · invoice ${r.supplierReference}`}</span>
               </td>
               <td><StatusBadge status={r.status} /></td>
               {!compact && <td className="text-sm tabular-nums">{r.unitsReceived}/{r.unitsOrdered}</td>}

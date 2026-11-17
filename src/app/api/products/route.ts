@@ -19,6 +19,10 @@ export async function GET(req: NextRequest) {
     const categorySlug = sp.get("category") || "";
     const isActive = sp.get("isActive");
     const sellerId = sp.get("sellerId") || "";
+    const supplierId = sp.get("supplierId") || "";
+    // Storefront listings put items that have real photos before the ones
+    // still showing the default picture.
+    const photosFirst = sp.get("photosFirst") === "true";
     const isFeatured = sp.get("isFeatured");
     const isNew = sp.get("isNew");
     const isBestSeller = sp.get("isBestSeller");
@@ -52,6 +56,7 @@ export async function GET(req: NextRequest) {
       ...(categorySlug && { category: { slug: categorySlug } }),
       ...(isActive !== null && isActive !== "" && { isActive: isActive === "true" }),
       ...(sellerId && { sellerId }),
+      ...(supplierId && { supplierId }),
       ...(isFeatured !== null && isFeatured !== "" && { isFeatured: isFeatured === "true" }),
       ...(isNew !== null && isNew !== "" && { isNew: isNew === "true" }),
       ...(isBestSeller !== null && isBestSeller !== "" && { isBestSeller: isBestSeller === "true" }),
@@ -78,31 +83,50 @@ export async function GET(req: NextRequest) {
       ...(variantConds.length ? { AND: variantConds } : {}),
     };
 
-    const [products, total, bounds, facetVariants] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        skip,
-        take: pageSize,
-        orderBy,
-        include: {
-          category: { select: { nameEn: true, nameAr: true, slug: true } },
-          // Primary + one alternate photo (hover swap on product cards).
-          images: { orderBy: [{ isPrimary: "desc" }, { sortOrder: "asc" }], take: 2 },
-          // Active options so cards can show swatches/stock and quick-add a size.
-          variants: {
-            where: { isActive: true },
-            select: {
-              id: true,
-              color: true,
-              colorHex: true,
-              size: true,
-              priceAdjustment: true,
-              inventory: { select: { quantity: true } },
-            },
-          },
-          _count: { select: { variants: true, reviews: true } },
+    const include = {
+      category: { select: { nameEn: true, nameAr: true, slug: true } },
+      // Primary + one alternate photo (hover swap on product cards).
+      images: { orderBy: [{ isPrimary: "desc" as const }, { sortOrder: "asc" as const }], take: 2 },
+      // Active options so cards can show swatches/stock and quick-add a size.
+      variants: {
+        where: { isActive: true },
+        select: {
+          id: true,
+          color: true,
+          colorHex: true,
+          size: true,
+          priceAdjustment: true,
+          inventory: { select: { quantity: true } },
         },
-      }),
+      },
+      _count: { select: { variants: true, reviews: true } },
+    } satisfies Prisma.ProductInclude;
+
+    // One page of results. With `photosFirst`, every product that has a photo
+    // comes before the ones still showing the default picture; each group
+    // keeps the chosen sort order, and paging runs across both groups.
+    const findPage = async () => {
+      if (!photosFirst) return prisma.product.findMany({ where, skip, take: pageSize, orderBy, include });
+      const withPhotos: Prisma.ProductWhereInput = { AND: [where, { images: { some: {} } }] };
+      const withoutPhotos: Prisma.ProductWhereInput = { AND: [where, { images: { none: {} } }] };
+      const photoCount = await prisma.product.count({ where: withPhotos });
+      const first = skip < photoCount
+        ? await prisma.product.findMany({ where: withPhotos, skip, take: pageSize, orderBy, include })
+        : [];
+      const remaining = pageSize - first.length;
+      if (remaining <= 0) return first;
+      const rest = await prisma.product.findMany({
+        where: withoutPhotos,
+        skip: Math.max(0, skip - photoCount),
+        take: remaining,
+        orderBy,
+        include,
+      });
+      return [...first, ...rest];
+    };
+
+    const [products, total, bounds, facetVariants] = await Promise.all([
+      findPage(),
       prisma.product.count({ where }),
       // Price range across the category/search (ignores the current price/size/color selection).
       prisma.product.aggregate({ where: baseWhere, _min: { basePrice: true }, _max: { basePrice: true } }),
@@ -181,6 +205,11 @@ export async function POST(req: NextRequest) {
     if (canSetTax && taxRateId) {
       const rate = await prisma.taxRate.findUnique({ where: { id: taxRateId }, select: { isActive: true } });
       if (!rate?.isActive) return error("The selected VAT rate doesn't exist or is inactive.");
+    }
+
+    if (productData.supplierId) {
+      const supplier = await prisma.supplier.findUnique({ where: { id: productData.supplierId }, select: { id: true } });
+      if (!supplier) return error("The selected supplier doesn't exist.");
     }
 
     let slug = slugify(productData.nameEn);

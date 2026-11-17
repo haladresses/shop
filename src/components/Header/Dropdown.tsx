@@ -13,8 +13,9 @@ const Dropdown = ({ menuItem, stickyMenu }) => {
         pathUrl.includes(menuItem.title) && "before:!w-full"
       }`}
     >
-      <a
-        href="#"
+      <button
+        type="button"
+        aria-expanded={dropdownToggler}
         className={`hover:text-blue text-sm font-medium text-dark flex items-center gap-1.5 capitalize px-5 ${
           stickyMenu ? "xl:py-3" : "xl:py-4"
         } ${pathUrl.includes(menuItem.title) && "!text-blue"}`}
@@ -35,7 +36,7 @@ const Dropdown = ({ menuItem, stickyMenu }) => {
             fill=""
           />
         </svg>
-      </a>
+      </button>
 
       {/* <!-- Dropdown Start --> */}
       <ul

@@ -1,25 +1,26 @@
 "use client";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { fetchTestimonials, mapTestimonial, DEFAULT_TESTIMONIALS, TestimonialItem } from "@/lib/testimonials";
+import { fetchTestimonials, mapTestimonial, TestimonialItem } from "@/lib/testimonials";
 
 // Import Swiper styles
 import "swiper/css/navigation";
 import "swiper/css";
 import SingleItem from "./SingleItem";
+import SectionHeading from "@/components/Common/SectionHeading";
 
 const Testimonials = () => {
   const { language, isArabic } = useLanguage();
   const sliderRef = useRef(null);
-  const [items, setItems] = useState<TestimonialItem[]>(DEFAULT_TESTIMONIALS);
+  // Start empty: the saved list decides what shows, and nothing flashes first.
+  const [items, setItems] = useState<TestimonialItem[]>([]);
 
   useEffect(() => {
     const controller = new AbortController();
     fetchTestimonials(controller.signal)
       .then(setItems)
-      .catch(() => setItems(DEFAULT_TESTIMONIALS));
+      .catch(() => setItems([]));
     return () => controller.abort();
   }, []);
 
@@ -36,29 +37,16 @@ const Testimonials = () => {
   if (items.length === 0) return null;
 
   return (
-    <section className="overflow-hidden pt-4 pb-16.5">
+    <section className="overflow-hidden pt-8 sm:pt-10 pb-16">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
         <div className="">
-          <div className="swiper testimonial-carousel common-carousel p-5">
-            {/* <!-- section title --> */}
-            <div className="mb-10 flex items-center justify-between">
-              <div className={isArabic ? "text-right" : ""}>
-                <span className={`flex items-center gap-2.5 font-medium text-dark mb-1.5 ${isArabic ? "flex-row-reverse" : ""}`}>
-                  <Image
-                    src="/images/icons/icon-08.svg"
-                    alt="icon"
-                    width={17}
-                    height={17}
-                  />
-                  {isArabic ? "آراء العملاء" : "Testimonials"}
-                </span>
-                <h2 className="font-semibold text-xl xl:text-heading-5 text-dark">
-                  {isArabic ? "تجارب المتسوقات" : "User Feedbacks"}
-                </h2>
-              </div>
-
+          <div className="swiper testimonial-carousel common-carousel">
+            <SectionHeading
+              eyebrow={isArabic ? "آراء العملاء" : "Testimonials"}
+              title={isArabic ? "ماذا تقول عميلاتنا" : "What Our Customers Say"}
+            >
               <div className="carousel-controls flex items-center gap-3">
-                <div onClick={handlePrev} className="swiper-button-prev">
+                <button type="button" onClick={handlePrev} className="swiper-button-prev" aria-label={isArabic ? "السابق" : "Previous"}>
                   <svg
                     className="fill-current"
                     width="24"
@@ -74,9 +62,9 @@ const Testimonials = () => {
                       fill=""
                     />
                   </svg>
-                </div>
+                </button>
 
-                <div onClick={handleNext} className="swiper-button-next">
+                <button type="button" onClick={handleNext} className="swiper-button-next" aria-label={isArabic ? "التالي" : "Next"}>
                   <svg
                     className="fill-current"
                     width="24"
@@ -92,9 +80,9 @@ const Testimonials = () => {
                       fill=""
                     />
                   </svg>
-                </div>
+                </button>
               </div>
-            </div>
+            </SectionHeading>
 
             <Swiper
               key={language}

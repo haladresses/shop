@@ -210,7 +210,7 @@ export default function CartItemModal({
                 <button
                   key={url + i}
                   onClick={() => setImageIdx(i)}
-                  className={`h-20 w-16 shrink-0 overflow-hidden rounded-xl ring-2 transition ${i === imageIdx ? "ring-rose-400" : "ring-transparent opacity-70 hover:opacity-100"}`}
+                  className={`h-20 w-16 shrink-0 overflow-hidden rounded-xl ring-2 ${i === imageIdx ? "ring-rose-400" : "ring-transparent opacity-70 hover:opacity-100"}`}
                   aria-label={`Photo ${i + 1}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -291,7 +291,7 @@ export default function CartItemModal({
                       key={o.variantId}
                       onClick={() => setPick(current ? null : o.variantId)}
                       disabled={disabled}
-                      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                      className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium ${
                         current
                           ? "bg-slate-800 text-white"
                           : pick === o.variantId
@@ -318,7 +318,7 @@ export default function CartItemModal({
                     onSwap(next);
                     setPick(null);
                   }}
-                  className="pos-pop-in inline-flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-2.5 font-semibold text-white hover:bg-rose-600"
+                  className="inline-flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-2.5 font-semibold text-white hover:bg-rose-600"
                 >
                   <LuRefreshCw size={16} /> Switch to {shortLabel(picked)} · {omr(picked.unitPrice)}
                 </button>

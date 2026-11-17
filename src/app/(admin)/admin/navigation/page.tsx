@@ -80,7 +80,7 @@ export default function NavigationAdminPage() {
                 onClick={() => setExpanded((e) => ({ ...e, [i]: !e[i] }))}
                 className="flex items-center gap-2 font-semibold text-slate-700"
               >
-                <LuChevronRight size={16} className={`transition-transform ${expanded[i] ? "rotate-90" : ""}`} />
+                <LuChevronRight size={16} className={expanded[i] ? "rotate-90" : ""} />
                 {item.labelEn || item.labelAr || `Item ${i + 1}`}
                 {item.submenu.length > 0 && (
                   <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full text-xs bg-indigo-100 text-indigo-600">{item.submenu.length}</span>
@@ -129,18 +129,18 @@ export default function NavigationAdminPage() {
           </div>
         ))}
 
-        <button onClick={addItem} className="flex items-center gap-2 w-full justify-center py-3 rounded-lg border-2 border-dashed border-slate-300 text-slate-500 hover:border-indigo-400 hover:text-indigo-500 transition-colors">
+        <button onClick={addItem} className="flex items-center gap-2 w-full justify-center py-3 rounded-lg border-2 border-dashed border-slate-300 text-slate-500 hover:border-indigo-400 hover:text-indigo-500">
           <LuPlus size={18} /> Add Menu Item
         </button>
       </div>
 
-      <div className="flex items-center gap-3 sticky bottom-0 bg-slate-50 py-3">
+      <div className="admin-savebar">
         <button onClick={save} disabled={saving} className="admin-btn admin-btn-primary px-8">
           {saving ? "Saving..." : "Save Changes"}
         </button>
         {saved && (
           <span className="text-green-600 text-sm font-medium flex items-center gap-1">
-            <LuCheck size={16} /> Saved!
+            <LuCheck size={16} /> Saved
           </span>
         )}
       </div>

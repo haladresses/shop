@@ -170,7 +170,7 @@ export default function ProductPickerModal({
           <button
             type="button"
             onClick={() => setOnSale((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${
               onSale ? "bg-rose-600 text-white ring-rose-600" : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
             }`}
           >
@@ -179,7 +179,7 @@ export default function ProductPickerModal({
           <button
             type="button"
             onClick={() => setOnlyPicked((v) => !v)}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-colors ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${
               onlyPicked ? "bg-slate-800 text-white ring-slate-800" : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
             }`}
           >
@@ -224,7 +224,7 @@ export default function ProductPickerModal({
         {visible.map((p) => {
           const on = picked.has(p.id);
           return (
-            <label key={p.id} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${on ? "bg-indigo-50/50" : "hover:bg-slate-50"}`}>
+            <label key={p.id} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer ${on ? "bg-indigo-50/50" : "hover:bg-slate-50"}`}>
               <input type="checkbox" className="rounded" checked={on} onChange={() => toggle(p)} />
               <span className="w-10 h-12 rounded-lg bg-slate-100 overflow-hidden shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

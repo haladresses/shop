@@ -140,10 +140,7 @@ function SalesReport() {
       <div className="space-y-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
-            <h1 className="text-xl font-semibold text-slate-800">
-              Sales Report <span className="text-base font-normal text-slate-400" dir="rtl">تقرير المبيعات</span>
-            </h1>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm font-medium text-slate-700">
               {ctx.rangeLabel}
               {ctx.filterLabel && ` · ${ctx.filterLabel}`}
             </p>

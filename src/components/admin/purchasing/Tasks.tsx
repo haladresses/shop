@@ -134,7 +134,7 @@ export function TaskList({
               <button
                 key={f.id}
                 onClick={() => setFilter(f.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium ${
                   filter === f.id ? (f.id === "overdue" ? "bg-rose-600 text-white" : "bg-slate-800 text-white") : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
@@ -171,7 +171,7 @@ export function TaskList({
                 <button
                   onClick={() => canManage && toggleDone(t)}
                   disabled={!canManage}
-                  className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors ${
+                  className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
                     done ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 hover:border-emerald-500"
                   }`}
                   aria-label={done ? "Mark as open" : "Mark as done"}
