@@ -5,11 +5,9 @@ import { usePathname } from "next/navigation";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { normalizeWhatsApp, waLink, WhatsAppWidgetConfig } from "@/lib/whatsapp";
 
-const SEEN_KEY = "hala-wa-greeted";
-
 /**
  * Floating WhatsApp chat button with a greeting card. Fully driven by admin
- * settings; the greeting pops up once per session after the configured delay.
+ * settings; the card stays closed until the visitor taps the button.
  * On product pages the pre-filled message includes the product link.
  */
 export default function WhatsAppWidget() {
@@ -24,26 +22,6 @@ export default function WhatsAppWidget() {
       .then((d) => d.success && setCfg(normalizeWhatsApp(d.data)))
       .catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (!cfg?.enabled || !cfg.autoOpenSeconds) return;
-    let seen = false;
-    try {
-      seen = sessionStorage.getItem(SEEN_KEY) === "1";
-    } catch {
-      /* storage blocked */
-    }
-    if (seen) return;
-    const t = setTimeout(() => {
-      setOpen(true);
-      try {
-        sessionStorage.setItem(SEEN_KEY, "1");
-      } catch {
-        /* storage blocked */
-      }
-    }, cfg.autoOpenSeconds * 1000);
-    return () => clearTimeout(t);
-  }, [cfg]);
 
   if (!cfg?.enabled) return null;
 

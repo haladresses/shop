@@ -15,8 +15,6 @@ export type WhatsAppWidgetConfig = {
   prefillEn: string;
   prefillAr: string;
   position: "end" | "start";
-  /** Seconds before the greeting bubble pops up by itself (0 = never). */
-  autoOpenSeconds: number;
   showOnMobile: boolean;
 };
 
@@ -34,7 +32,6 @@ export const DEFAULT_WHATSAPP_WIDGET: WhatsAppWidgetConfig = {
   prefillEn: "Hello Hala Dresses, I'd like some help.",
   prefillAr: "مرحباً حلا للازياء، أحتاج مساعدة.",
   position: "end",
-  autoOpenSeconds: 12,
   showOnMobile: true,
 };
 
@@ -43,7 +40,6 @@ const str = (v: unknown, fb: string) => (typeof v === "string" ? v : fb);
 export function normalizeWhatsApp(raw: unknown): WhatsAppWidgetConfig {
   const o = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
   const d = DEFAULT_WHATSAPP_WIDGET;
-  const n = Number(o.autoOpenSeconds);
   return {
     enabled: typeof o.enabled === "boolean" ? o.enabled : d.enabled,
     phone: str(o.phone, d.phone).trim() || d.phone,
@@ -56,7 +52,6 @@ export function normalizeWhatsApp(raw: unknown): WhatsAppWidgetConfig {
     prefillEn: str(o.prefillEn, d.prefillEn),
     prefillAr: str(o.prefillAr, d.prefillAr),
     position: o.position === "start" ? "start" : "end",
-    autoOpenSeconds: o.autoOpenSeconds != null && Number.isFinite(n) ? Math.min(300, Math.max(0, Math.round(n))) : d.autoOpenSeconds,
     showOnMobile: typeof o.showOnMobile === "boolean" ? o.showOnMobile : d.showOnMobile,
   };
 }
