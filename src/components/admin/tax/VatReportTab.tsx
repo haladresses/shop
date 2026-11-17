@@ -376,13 +376,13 @@ function Kpi({ icon: Icon, label, value, sub, tone }: { icon: React.ElementType;
 function Warnings({ data }: { data: Report }) {
   const w = data.warnings;
   const items: React.ReactNode[] = [];
-  if (w.vatDisabled) items.push(<>VAT is currently switched off — new sales don&apos;t record VAT.</>);
-  if (w.missingVatNumber) items.push(<>No VAT number is set — tax invoices are printed without it (Settings tab).</>);
+  if (w.vatDisabled) items.push(<>VAT is currently switched off. New sales don&apos;t record VAT.</>);
+  if (w.missingVatNumber) items.push(<>No VAT number is set. Tax invoices are printed without it (Settings tab).</>);
   if (w.ordersMissingInvoice > 0) items.push(<>{w.ordersMissingInvoice} VAT sale(s) have no tax-invoice number.</>);
   if (w.suppliersWithoutVat.length > 0)
     items.push(
       <>
-        Input VAT may not be reclaimable — these suppliers charged VAT but have no VAT number on file:{" "}
+        Input VAT may not be reclaimable. These suppliers charged VAT but have no VAT number on file:{" "}
         {w.suppliersWithoutVat.map((s, i) => (
           <span key={s.supplierId}>
             {i > 0 && ", "}
@@ -448,7 +448,7 @@ function Documents({ data, tab, setTab }: { data: Report; tab: DocTab; setTab: (
               {data.documents.sales.map((s) => (
                 <tr key={s.id}>
                   <td>
-                    <p className="font-mono text-xs font-semibold">{s.invoiceNumber || "—"}</p>
+                    <p className="font-mono text-xs font-semibold">{s.invoiceNumber || "-"}</p>
                     <p className="text-xs text-slate-400">{s.orderNumber}</p>
                   </td>
                   <td className="whitespace-nowrap">{fmtDate(s.date)}</td>
@@ -480,7 +480,7 @@ function Documents({ data, tab, setTab }: { data: Report; tab: DocTab; setTab: (
             <tbody>
               {data.documents.creditNotes.map((c) => (
                 <tr key={c.id}>
-                  <td className="font-mono text-xs font-semibold">{c.creditNoteNumber || "—"}</td>
+                  <td className="font-mono text-xs font-semibold">{c.creditNoteNumber || "-"}</td>
                   <td className="text-xs">
                     {c.invoiceNumber || c.orderNumber}
                     {c.invoiceNumber && <span className="block text-slate-400">{c.orderNumber}</span>}
@@ -601,18 +601,18 @@ function VatPrint({
 }) {
   const cell: React.CSSProperties = { border: "1px solid #000", padding: "6px 8px", fontSize: 12 };
   return (
-    <div style={{ fontFamily: "Arial, 'Segoe UI', Tahoma, sans-serif", color: "#000", background: "#fff" }}>
+    <div style={{ fontFamily: "Vazirmatn, SBC, Arial, 'Segoe UI', Tahoma, sans-serif", color: "#000", background: "#fff" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24, borderBottom: "2px solid #000", paddingBottom: 10 }}>
         <div>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{legalEn}</div>
           {store.store_address && <div style={{ fontSize: 11 }}>{store.store_address}</div>}
           {store.store_phone && <div style={{ fontSize: 11 }}>{store.store_phone}</div>}
-          <div style={{ fontSize: 11, marginTop: 4 }}>VAT No.: {data.settings.vatNumber || "—"}</div>
+          <div style={{ fontSize: 11, marginTop: 4 }}>VAT No.: {data.settings.vatNumber || "-"}</div>
           {data.settings.crNumber && <div style={{ fontSize: 11 }}>CR No.: {data.settings.crNumber}</div>}
         </div>
         <div dir="rtl" style={{ textAlign: "right" }}>
           {legalAr && <div style={{ fontSize: 18, fontWeight: 700 }}>{legalAr}</div>}
-          <div style={{ fontSize: 11, marginTop: 4 }}>الرقم الضريبي: {data.settings.vatNumber || "—"}</div>
+          <div style={{ fontSize: 11, marginTop: 4 }}>الرقم الضريبي: {data.settings.vatNumber || "-"}</div>
           {data.settings.crNumber && <div style={{ fontSize: 11 }}>السجل التجاري: {data.settings.crNumber}</div>}
         </div>
       </div>
@@ -680,7 +680,7 @@ function VatPrint({
           {data.output.rows.map((r) => (
             <tr key={`${r.code}-${r.rate}-${r.type}`}>
               <td style={cell}>
-                {r.nameEn} — <span dir="rtl">{r.nameAr}</span>
+                {r.nameEn}: <span dir="rtl">{r.nameAr}</span>
               </td>
               <td style={{ ...cell, textAlign: "right" }}>{r.orders}</td>
               <td style={{ ...cell, textAlign: "right" }}>{money(r.taxable)}</td>
@@ -690,7 +690,7 @@ function VatPrint({
           {data.output.rows.length === 0 && (
             <tr>
               <td style={{ ...cell, textAlign: "center" }} colSpan={4}>
-                —
+                -
               </td>
             </tr>
           )}

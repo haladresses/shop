@@ -228,7 +228,7 @@ export default function PaymentModal({
             {loadingPos ? (
               <p className="px-4 py-4 text-sm text-slate-400">Loading open orders…</p>
             ) : pos.length === 0 ? (
-              <p className="px-4 py-4 text-sm text-slate-500">No unpaid orders — the whole payment will be kept as credit (e.g. against the opening balance or as an advance).</p>
+              <p className="px-4 py-4 text-sm text-slate-500">No unpaid orders: the whole payment will be kept as credit (e.g. against the opening balance or as an advance).</p>
             ) : (
               <div className="max-h-64 overflow-y-auto">
                 <table className="admin-table">
@@ -254,7 +254,7 @@ export default function PaymentModal({
                         <td className="text-right tabular-nums">{fmt3(p.outstanding)}</td>
                         <td className="text-right">
                           {mode === "auto" ? (
-                            <span className="tabular-nums text-slate-600">{autoPreview[p.id] ? fmt3(autoPreview[p.id]) : "—"}</span>
+                            <span className="tabular-nums text-slate-600">{autoPreview[p.id] ? fmt3(autoPreview[p.id]) : "-"}</span>
                           ) : (
                             <div className="flex items-center justify-end gap-1">
                               <input
@@ -289,7 +289,7 @@ export default function PaymentModal({
         </Field>
         {balance != null && amountNum > balance + 0.0005 && balance >= 0 && (
           <p className="text-sm text-amber-700 bg-amber-50 rounded-xl px-3 py-2">
-            This is more than you owe ({fmt3(balance)} OMR) — the extra {fmt3(amountNum - balance)} OMR will be kept as credit with the supplier.
+            This is more than you owe ({fmt3(balance)} OMR): the extra {fmt3(amountNum - balance)} OMR will be kept as credit with the supplier.
           </p>
         )}
         {err && <p className="text-sm text-rose-600">{err}</p>}

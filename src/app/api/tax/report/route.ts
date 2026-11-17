@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     const toKey = isDateKey(sp.get("to")) ? sp.get("to")! : todayKey;
     const fromKey = isDateKey(sp.get("from")) ? sp.get("from")! : `${toKey.slice(0, 7)}-01`;
     if (fromKey > toKey) return error("'from' must be before 'to'");
-    if (daysBetween(fromKey, toKey) > 366 * 3) return error("Range too large — pick at most 3 years");
+    if (daysBetween(fromKey, toKey) > 366 * 3) return error("Range too large: pick at most 3 years");
     const from = businessDayStart(fromKey);
     const to = businessDayEnd(toKey);
 

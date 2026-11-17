@@ -259,7 +259,7 @@ export default function PoDetail({ id }: { id: string }) {
 
       {cancelled && (
         <div className="rounded-2xl bg-rose-50 text-rose-800 px-4 py-3 text-sm flex items-center gap-2">
-          <LuBan size={16} /> Cancelled {fmtDate(po.cancelledAt, true)} — this order is no longer owed.
+          <LuBan size={16} /> Cancelled {fmtDate(po.cancelledAt, true)}. This order is no longer owed.
         </div>
       )}
 
@@ -311,7 +311,7 @@ export default function PoDetail({ id }: { id: string }) {
           )}
           <span className="flex-1" />
           {s === "PARTIALLY_RECEIVED" && canManage && (
-            <button onClick={() => setAction("close")} className="admin-btn admin-btn-secondary" title="The rest will never arrive — settle on what was delivered">
+            <button onClick={() => setAction("close")} className="admin-btn admin-btn-secondary" title="The rest will never arrive. Settle on what was delivered">
               <LuLock size={15} /> Close short
             </button>
           )}
@@ -346,18 +346,11 @@ export default function PoDetail({ id }: { id: string }) {
                 </li>
               ))}
             </ol>
-            <div className="mt-4">
-              <div className="flex justify-between text-xs text-slate-500 mb-1">
-                <span>
-                  Received {progress.received} of {progress.ordered} units
-                  {progress.returned > 0 && ` · ${progress.returned} returned`}
-                </span>
-                <span>{progress.ordered ? Math.round((progress.received / progress.ordered) * 100) : 0}%</span>
-              </div>
-              <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${progress.ordered ? Math.min(100, (progress.received / progress.ordered) * 100) : 0}%` }} />
-              </div>
-            </div>
+            <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+              Received <strong className="font-semibold text-slate-800 tabular-nums">{progress.received} of {progress.ordered}</strong> units
+              {progress.received < progress.ordered && ["ORDERED", "PARTIALLY_RECEIVED"].includes(s) && <>, {progress.ordered - progress.received} still to come</>}
+              {progress.returned > 0 && <>, {progress.returned} returned to the supplier</>}.
+            </p>
           </div>
 
           {/* Lines */}
@@ -407,15 +400,15 @@ export default function PoDetail({ id }: { id: string }) {
                         </td>
                         <td className="text-right tabular-nums">{i.quantity}</td>
                         <td className={`text-right tabular-nums font-medium ${done ? "text-emerald-600" : i.receivedQty > 0 ? "text-amber-600" : "text-slate-400"}`}>{i.receivedQty}</td>
-                        <td className="text-right tabular-nums text-slate-500">{i.returnedQty || "—"}</td>
+                        <td className="text-right tabular-nums text-slate-500">{i.returnedQty || "-"}</td>
                         <td className="text-right tabular-nums">{fmt3(i.unitCost)}</td>
-                        <td className="text-right tabular-nums text-slate-500">{i.discountPct ? `${i.discountPct}%` : "—"}</td>
+                        <td className="text-right tabular-nums text-slate-500">{i.discountPct ? `${i.discountPct}%` : "-"}</td>
                         <td className="text-right tabular-nums text-slate-500">
-                          {i.taxRate ? `${i.taxRate}%` : "—"}
+                          {i.taxRate ? `${i.taxRate}%` : "-"}
                           {i.taxAmount > 0 && <span className="block text-[11px]">{fmt3(i.taxAmount)}</span>}
                         </td>
                         <td className="text-right tabular-nums">{fmt3(i.netAmount)}</td>
-                        <td className="text-right tabular-nums text-slate-600">{i.productId && i.landedUnitCost != null ? fmt3(i.landedUnitCost) : "—"}</td>
+                        <td className="text-right tabular-nums text-slate-600">{i.productId && i.landedUnitCost != null ? fmt3(i.landedUnitCost) : "-"}</td>
                       </tr>
                     );
                   })}
@@ -543,7 +536,7 @@ export default function PoDetail({ id }: { id: string }) {
                   {po.overdue && ` · ${po.daysOverdue}d late`}
                 </dd>
               </div>
-              <div className="flex justify-between"><dt>Supplier invoice</dt><dd>{po.supplierReference || "—"}{po.invoiceDate ? ` · ${fmtDate(po.invoiceDate)}` : ""}</dd></div>
+              <div className="flex justify-between"><dt>Supplier invoice</dt><dd>{po.supplierReference || "-"}{po.invoiceDate ? ` · ${fmtDate(po.invoiceDate)}` : ""}</dd></div>
             </dl>
           </div>
 
@@ -733,7 +726,7 @@ function DetailsModal({ open, po, onClose, onSaved }: { open: boolean; po: PoDet
       {err && <p className="text-sm text-rose-600 mt-3">{err}</p>}
       {!po.canEditAll && !cancelled && (
         <p className="text-xs text-slate-400 mt-3 flex items-center gap-1.5">
-          <LuCircleCheck size={13} /> Goods have been received, so items and prices are locked — return goods to the supplier to correct them.
+          <LuCircleCheck size={13} /> Goods have been received, so items and prices are locked. Return goods to the supplier to correct them.
         </p>
       )}
     </AdminModal>

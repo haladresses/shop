@@ -11,7 +11,11 @@ export type LabelRow = {
   nameAr: string;
   variantLabel: string;
   sku: string | null;
+  /** The code printed by default: the product's barcode (the same for all its sizes/colours). */
   barcode: string | null;
+  productBarcode: string | null;
+  /** This size/colour's own, more specific code — if it has one. */
+  variantBarcode: string | null;
   price: number;
   basePrice: number;
   onHand: number | null;
@@ -59,6 +63,8 @@ export async function GET(req: NextRequest) {
           variantLabel: "",
           sku: p.sku,
           barcode: p.barcode,
+          productBarcode: p.barcode,
+          variantBarcode: null,
           price,
           basePrice: Number(p.basePrice),
           onHand: null,
@@ -74,8 +80,9 @@ export async function GET(req: NextRequest) {
           nameAr: p.nameAr,
           variantLabel: [v.color, v.size].filter(Boolean).join(" / "),
           sku: v.sku || p.sku,
-          // A single unnamed option shares the product's own barcode.
-          barcode: v.barcode || (p.variants.length === 1 ? p.barcode : null),
+          barcode: p.barcode || v.barcode,
+          productBarcode: p.barcode,
+          variantBarcode: v.barcode,
           price: Math.round((price + Number(v.priceAdjustment)) * 1000) / 1000,
           basePrice: Math.round((Number(p.basePrice) + Number(v.priceAdjustment)) * 1000) / 1000,
           onHand: v.inventory?.quantity ?? 0,

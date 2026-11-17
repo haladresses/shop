@@ -5,6 +5,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { ADMIN_NAV_ITEMS } from "@/lib/permissions";
 import { Toaster } from "react-hot-toast";
+import { LuCircleAlert, LuCircleCheck } from "react-icons/lu";
 import "../admin.css";
 
 type MeResponse = {
@@ -40,7 +41,9 @@ const pageTitles: Record<string, string> = {
   "/admin/contact": "Contact",
   "/admin/help": "Help Center",
   "/admin/roles": "Roles & Permissions",
+  "/admin/roles/new": "New Role",
   "/admin/settings": "Settings",
+  "/admin/profile": "My Profile",
   "/admin/legal-pages": "Legal Pages",
   "/admin/testimonials": "Testimonials",
   "/admin/countdown": "Countdown Deal",
@@ -61,6 +64,7 @@ function resolveTitle(pathname: string): string {
   if (/^\/admin\/promotions\/[^/]+$/.test(pathname)) return "Edit Promotion";
   if (/^\/admin\/supplier-returns\/[^/]+$/.test(pathname)) return "Supplier Return";
   if (/^\/admin\/purchases\/[^/]+$/.test(pathname)) return "Purchase Order";
+  if (/^\/admin\/roles\/[^/]+$/.test(pathname)) return "Edit Role";
   // Edit product: /admin/products/<id>
   if (/^\/admin\/products\/[^/]+$/.test(pathname)) return "Edit Product";
   return "Admin";
@@ -127,7 +131,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
       <Toaster
         position="top-center"
-        toastOptions={{ duration: 2600, style: { fontSize: "0.875rem", borderRadius: "0.75rem" } }}
+        toastOptions={{
+          duration: 2600,
+          style: { fontSize: "0.875rem", borderRadius: "0.75rem" },
+          // Still icons: the library's own tick and cross only appear through an
+          // animation, which the admin turns off (see admin.css "No motion").
+          success: { icon: <LuCircleCheck size={20} className="text-emerald-600 shrink-0" /> },
+          error: { icon: <LuCircleAlert size={20} className="text-rose-600 shrink-0" /> },
+        }}
       />
     </div>
   );

@@ -243,9 +243,9 @@ function preset(kind: "now" | "today" | "weekend" | "week" | "month"): { startsA
 }
 
 const COMBINE_RULES = [
-  "Item deals (% off, amount off, fixed price, buy X get Y, mix & match) run in priority order — highest number first.",
+  "Item deals (% off, amount off, fixed price, buy X get Y, mix & match) run in priority order. Highest number first.",
   "Each item in the basket can be used by only one item deal: whichever claims it first.",
-  "Then at most one “Spend & save” deal applies — the one that saves the customer most — on top of item deals.",
+  "Then at most one “Spend & save” deal applies. The one that saves the customer most. On top of item deals.",
   "Buy X get Y and mix & match use the most expensive qualifying items first; in buy X get Y the cheaper items in each set are the reward.",
 ];
 
@@ -424,7 +424,7 @@ export default function PromotionEditor({
         </Section>
 
         {/* 2 — Rule */}
-        <Section n={2} title="The deal" desc="Set the numbers — the sentence below shows exactly what customers get.">
+        <Section n={2} title="The deal" desc="Set the numbers: the sentence below shows exactly what customers get.">
           <div className="space-y-4">
             {t === "PERCENT_OFF" && (
               <Field label="Discount" name="discountPercent" error={err("discountPercent")}>
@@ -479,7 +479,7 @@ export default function PromotionEditor({
                   </div>
                 </Field>
                 <p className="text-xs text-slate-500 bg-slate-50 rounded-xl px-3 py-2">
-                  Works in sets of {(intOrNull(f.buyQuantity) ?? 1) + (intOrNull(f.getQuantity) ?? 1)} items, most expensive first — the{" "}
+                  Works in sets of {(intOrNull(f.buyQuantity) ?? 1) + (intOrNull(f.getQuantity) ?? 1)} items, most expensive first. The{" "}
                   {intOrNull(f.getQuantity) ?? 1} cheaper item(s) in each set are the reward. The customer needs the full set in the basket; the POS and checkout show a
                   “add 1 more” hint when they&apos;re close.
                 </p>
@@ -820,7 +820,7 @@ export default function PromotionEditor({
               </button>
             )}
             <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="Description (English)" name="descriptionEn" error={err("descriptionEn")} hint="Optional — shown on the product page">
+              <Field label="Description (English)" name="descriptionEn" error={err("descriptionEn")} hint="Optional: shown on the product page">
                 <textarea rows={3} className="admin-input" value={f.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} />
               </Field>
               <Field label="Description (Arabic)" name="descriptionAr" error={err("descriptionAr")}>
@@ -889,7 +889,7 @@ export default function PromotionEditor({
           </dl>
           {showErrors && Object.keys(issues).length > 0 && (
             <p className="text-xs text-rose-600 bg-rose-50 rounded-lg px-3 py-2">
-              {Object.keys(issues).length} thing(s) to fix — see the highlighted fields.
+              {Object.keys(issues).length} thing(s) to fix: see the highlighted fields.
             </p>
           )}
           {canManage && (

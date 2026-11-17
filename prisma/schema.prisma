@@ -44,6 +44,9 @@ enum PaymentMethod {
   CASH
   THAWANI
   STRIPE
+  // Value of goods the customer returned in an exchange, applied to the
+  // replacement sale (see Refund.exchangeOrderId).
+  EXCHANGE_CREDIT
 }
 
 enum OrderSource {
@@ -148,7 +151,14 @@ model User {
   passwordHash String
   nameEn       String?
   nameAr       String?
+  // Account type. Mirrors `appRole.type` whenever a role is assigned, so code
+  // that only cares about the kind of account (staff, seller, customer) keeps working.
   role         Role     @default(CUSTOMER)
+  // The role that grants this user's permissions (see AppRole). Null falls back
+  // to the built-in role matching `role`. Restrict: a role in use can't be
+  // deleted without moving its members to another role first.
+  roleId       String?
+  appRole      AppRole? @relation("UserAppRole", fields: [roleId], references: [id], onDelete: Restrict)
   isActive     Boolean  @default(true)
   avatar       String?
   createdAt    DateTime @default(now())
@@ -175,8 +185,39 @@ model User {
   posSales      Order[]        @relation("PosCashier")
   posShifts     PosShift[]
   supplierTasks SupplierTask[] @relation("SupplierTaskAssignee")
+  rolesCreated  AppRole[]      @relation("AppRoleCreator")
 
+  @@index([roleId])
   @@map("users")
+}
+
+// A named set of permissions given to users. The five built-in roles
+// (isSystem: super_admin, admin, staff, seller, customer) can't be deleted;
+// super admin always has every permission. Any number of custom roles can be added.
+model AppRole {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  nameEn      String
+  nameAr      String?
+  description String?
+  color       String   @default("#64748b")
+  // The account type users get when this role is assigned (written to User.role).
+  // SUPER_ADMIN is reserved for the built-in super admin role.
+  type        Role     @default(STAFF)
+  permissions String[] @default([])
+  isSystem    Boolean  @default(false)
+  // Seniority: people can only manage users and roles ranked below their own.
+  rank        Int      @default(10)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String?
+  createdBy   User?    @relation("AppRoleCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  users User[] @relation("UserAppRole")
+
+  @@index([type])
+  @@map("app_roles")
 }
 
 model Session {
@@ -848,24 +889,28 @@ model Expense {
 
 // Money returned to a customer for a (partial or full) return.
 model Refund {
-  id               String   @id @default(cuid())
-  orderId          String
-  amount           Decimal  @db.Decimal(10, 3)
-  method           String   @default("CASH")
-  reason           String?
+  id                  String   @id @default(cuid())
+  orderId             String
+  amount              Decimal  @db.Decimal(10, 3)
+  method              String   @default("CASH")
+  reason              String?
   // [{ orderItemId, variantId, productId, quantity, unitPrice, unitCost }]
-  items            Json?
-  restocked        Boolean  @default(true)
+  items               Json?
+  restocked           Boolean  @default(true)
   // VAT reversed by this refund (part of `amount`) and its credit-note number.
-  taxAmount        Decimal  @default(0) @db.Decimal(10, 3)
-  creditNoteNumber String?  @unique
-  createdBy        String?
-  createdAt        DateTime @default(now())
+  taxAmount           Decimal  @default(0) @db.Decimal(10, 3)
+  creditNoteNumber    String?  @unique
+  // Exchange: the replacement sale this credit was applied to (method "EXCHANGE").
+  exchangeOrderId     String?
+  exchangeOrderNumber String?
+  createdBy           String?
+  createdAt           DateTime @default(now())
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@index([createdAt])
+  @@index([exchangeOrderId])
   @@map("refunds")
 }
 

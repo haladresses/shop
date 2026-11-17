@@ -7,6 +7,9 @@ import { generateOrderNumber } from "@/lib/utils";
 import { PricingError, onlineShippingCost, priceCart } from "@/lib/orderPricing";
 import { nextDocumentNumber } from "@/lib/sequences";
 import { recordPromotionRedemptions } from "@/lib/promotions";
+import { orderItemCodeCondition } from "@/lib/barcodes";
+import { publicEmail } from "@/lib/validations/auth";
+import { ORDER_TODOS, isOrderTodo } from "@/lib/orderTodos";
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,8 +25,11 @@ export async function GET(req: NextRequest) {
     const paymentStatus = sp.get("paymentStatus") || "";
     const source = sp.get("source") || "";
     const search = sp.get("search") || "";
+    // Dashboard "Waiting for you" lists, e.g. ?todo=ship
+    const todo = sp.get("todo");
 
     const where = {
+      ...(isOrderTodo(todo) && { AND: [ORDER_TODOS[todo].where] }),
       ...(canViewAllOrders ? {} : { userId: user.id }),
       ...(status && { status: status as never }),
       ...(paymentStatus && { paymentStatus: paymentStatus as never }),
@@ -31,7 +37,10 @@ export async function GET(req: NextRequest) {
       ...(search && {
         OR: [
           { orderNumber: { contains: search, mode: "insensitive" as const } },
+          { invoiceNumber: { contains: search, mode: "insensitive" as const } },
           { guestEmail: { contains: search, mode: "insensitive" as const } },
+          { guestName: { contains: search, mode: "insensitive" as const } },
+          orderItemCodeCondition(search),
         ],
       }),
     };
@@ -58,7 +67,11 @@ export async function GET(req: NextRequest) {
       prisma.order.count({ where }),
     ]);
 
-    return paginated(orders, { page, pageSize, total });
+    // Phone-only accounts carry an internal placeholder email: never show it.
+    return paginated(
+      orders.map((o) => (o.user ? { ...o, user: { ...o.user, email: publicEmail(o.user.email) } } : o)),
+      { page, pageSize, total },
+    );
   } catch (e) {
     return serverError(e);
   }
@@ -113,7 +126,7 @@ export async function POST(req: NextRequest) {
           data: { quantity: { decrement: item.quantity } },
         });
         if (res.count !== 1) {
-          throw new Error("Not enough stock — someone else may have just bought the last one.");
+          throw new Error("Not enough stock: someone else may have just bought the last one.");
         }
       }
 
@@ -122,7 +135,7 @@ export async function POST(req: NextRequest) {
           orderNumber: generateOrderNumber(),
           invoiceNumber: await nextDocumentNumber(tx, "INV"),
           userId: sessionUser?.id || null,
-          guestEmail: !sessionUser ? body.guestEmail : null,
+          guestEmail: !sessionUser ? (typeof body.guestEmail === "string" && body.guestEmail.trim()) || null : null,
           guestName: !sessionUser ? body.guestName : null,
           ...orderMoney,
           couponCode: couponCode || null,

@@ -130,7 +130,7 @@ export default function ThreeBackdrop({ effect, from, to, accent, className = ""
       try {
         renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: "low-power" });
       } catch {
-        return; // no WebGL — the plain background stays
+        return; // no WebGL. The plain background stays
       }
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       renderer.setPixelRatio(dpr);

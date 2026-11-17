@@ -145,7 +145,7 @@ export default function PromotionSimulator({
                     aria-label="Unit price"
                   />
                   <span className={`ml-auto text-xs font-semibold tabular-nums ${saving > 0 ? "text-emerald-600" : "text-slate-300"}`}>
-                    {saving > 0 ? `−${saving.toFixed(3)}` : "—"}
+                    {saving > 0 ? `−${saving.toFixed(3)}` : "-"}
                   </span>
                 </div>
               </li>
@@ -196,7 +196,7 @@ export default function PromotionSimulator({
             </p>
           ))}
           {result.total === 0 && result.hints.length === 0 && (
-            <p className="text-[11px] text-slate-500">No saving for this basket — check the qualifying items and quantities.</p>
+            <p className="text-[11px] text-slate-500">No saving for this basket. Check the qualifying items and quantities.</p>
           )}
         </div>
       )}

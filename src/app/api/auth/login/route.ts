@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import prisma from "@/lib/db";
 import { verifyPassword, createSession } from "@/lib/auth";
 import { getEffectivePermissions } from "@/lib/permissions";
-import { loginSchema, parseIdentifier, phoneCandidates } from "@/lib/validations/auth";
+import { loginSchema, parseIdentifier, phoneCandidates, publicEmail } from "@/lib/validations/auth";
 import { ok, error, serverError } from "@/lib/api/response";
 
 export async function POST(req: NextRequest) {
@@ -42,7 +42,8 @@ export async function POST(req: NextRequest) {
     return ok({
       user: {
         id: user.id,
-        email: user.email,
+        email: publicEmail(user.email),
+        phone: user.phone,
         nameEn: user.nameEn,
         nameAr: user.nameAr,
         role: user.role,

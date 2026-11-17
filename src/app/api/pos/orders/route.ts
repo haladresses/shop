@@ -5,6 +5,7 @@ import { ok, unauthorized, forbidden, serverError } from "@/lib/api/response";
 import { getOpenShift, returnedByLine } from "@/lib/posShift";
 import { businessDayStart, toBusinessDateKey } from "@/lib/finance";
 import { lineRefund } from "@/lib/orderPricing";
+import { orderItemCodeCondition } from "@/lib/barcodes";
 
 /**
  * Sales for the POS "Recent sales" and "Returns" screens.
@@ -23,7 +24,14 @@ export async function GET(req: NextRequest) {
 
     let where;
     if (q) {
-      where = { orderNumber: { contains: q, mode: "insensitive" as const } };
+      where = {
+        OR: [
+          { orderNumber: { contains: q, mode: "insensitive" as const } },
+          { invoiceNumber: { contains: q, mode: "insensitive" as const } },
+          // Scanning the item being brought back finds the sales it was on.
+          orderItemCodeCondition(q),
+        ],
+      };
     } else if (scope === "shift") {
       const shift = await getOpenShift(user.id);
       where = shift ? { posShiftId: shift.id } : { id: "__none__" };

@@ -64,6 +64,8 @@ export type InvoiceData = {
   paymentStatus?: string;
   refundedAmount?: number;
   notes?: string | null;
+  /** Order number this sale replaced items from (exchanges). */
+  exchangeFor?: string | null;
   creditNote?: {
     number: string | null;
     reason: string | null;
@@ -81,9 +83,19 @@ export const METHOD_LABELS: Record<string, { en: string; ar: string }> = {
   THAWANI: { en: "Thawani", ar: "ثواني" },
   STRIPE: { en: "Card (online)", ar: "بطاقة (إلكتروني)" },
   CHEQUE: { en: "Cheque", ar: "شيك" },
+  EXCHANGE_CREDIT: { en: "Exchange credit", ar: "رصيد الاستبدال" },
+  EXCHANGE: { en: "Exchange", ar: "استبدال" },
   OTHER: { en: "Other", ar: "أخرى" },
 };
 export const methodLabels = (m: string) => METHOD_LABELS[m] ?? { en: m, ar: m };
+
+/** Label for a payment line: a negative amount is money paid back (e.g. an exchange difference). */
+export function paymentLabels(method: string, amount: number, creditNote = false): { en: string; ar: string } {
+  const m = methodLabels(method);
+  if (creditNote) return { en: `Refund · ${m.en}`, ar: `استرداد · ${m.ar}` };
+  if (amount < 0) return { en: `Paid back · ${m.en}`, ar: `مسترد · ${m.ar}` };
+  return m;
+}
 
 const n = (v: unknown) => (v == null || v === "" ? 0 : Number(v));
 const nn = (v: unknown) => (v == null || v === "" ? null : Number(v));
@@ -177,6 +189,7 @@ export function orderToInvoice(order: AnyRecord, opts: { copyLabel?: string; cas
     paymentStatus: (order.paymentStatus as string) ?? undefined,
     refundedAmount: n(order.refundedAmount),
     notes: (order.notes as string) ?? null,
+    exchangeFor: typeof order.notes === "string" ? (order.notes.match(/^Exchange for ([A-Z0-9-]+)/)?.[1] ?? null) : null,
   };
 }
 

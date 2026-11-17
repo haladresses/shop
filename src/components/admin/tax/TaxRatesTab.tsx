@@ -298,7 +298,7 @@ export default function TaxRatesTab({ canManage, onChanged }: { canManage: boole
               </label>
             </div>
             {draft.id && (
-              <p className="text-xs text-slate-400">Changing a rate only affects new sales — past invoices keep the rate they were issued with.</p>
+              <p className="text-xs text-slate-400">Changing a rate only affects new sales. Past invoices keep the rate they were issued with.</p>
             )}
             {err && <p className="text-sm text-rose-600">{err}</p>}
           </div>

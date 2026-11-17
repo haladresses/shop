@@ -435,7 +435,7 @@ export default function PurchaseOrderForm({ initial }: { initial: EditorInitial 
             <Field label="Expected delivery">
               <input type="date" className="admin-input" value={expectedDate} onChange={(e) => setExpectedDate(e.target.value)} />
             </Field>
-            <Field label="Payment due" hint="Leave empty — it's set from the supplier's terms when the goods arrive">
+            <Field label="Payment due" hint="Leave empty: it's set from the supplier's terms when the goods arrive">
               <input type="date" className="admin-input" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
             </Field>
             <Field label="Supplier invoice no.">
@@ -538,7 +538,7 @@ export default function PurchaseOrderForm({ initial }: { initial: EditorInitial 
                   <th className="text-right w-20">Disc %</th>
                   <th className="text-right w-20">VAT %</th>
                   <th className="text-right">Net</th>
-                  <th className="text-right" title="Net cost per unit incl. share of freight/charges — goes into stock value">Landed / unit</th>
+                  <th className="text-right" title="Net cost per unit incl. share of freight/charges: goes into stock value">Landed / unit</th>
                   <th />
                 </tr>
               </thead>
@@ -565,7 +565,7 @@ export default function PurchaseOrderForm({ initial }: { initial: EditorInitial 
                         )}
                       </td>
                       <td className="text-right tabular-nums text-slate-500 text-sm">
-                        {l.productId ? (l.onHand == null ? <span className="text-[11px] text-sky-600" title="This product's stock starts being tracked when this delivery arrives">new</span> : l.onHand) : "—"}
+                        {l.productId ? (l.onHand == null ? <span className="text-[11px] text-sky-600" title="This product's stock starts being tracked when this delivery arrives">new</span> : l.onHand) : "-"}
                       </td>
                       <td className="text-right">
                         <input type="number" min="1" inputMode="numeric" value={l.quantity} onChange={(e) => setLine(l.key, { quantity: e.target.value })} className="admin-input !py-1 text-right !w-20" />
@@ -604,7 +604,7 @@ export default function PurchaseOrderForm({ initial }: { initial: EditorInitial 
           {!tax.enabled && lines.some((l) => n(l.taxRate) > 0) && (
             <p className="flex items-start gap-2 text-sm text-amber-700 bg-amber-50 rounded-xl px-4 py-3">
               <LuCircleAlert size={16} className="mt-0.5 shrink-0" />
-              VAT is switched off for your store, so the VAT on this purchase can&apos;t be reclaimed — it&apos;s added to the products&apos; cost instead.
+              VAT is switched off for your store, so the VAT on this purchase can&apos;t be reclaimed. It&apos;s added to the products&apos; cost instead.
             </p>
           )}
         </div>
@@ -762,7 +762,7 @@ function ReorderModal({
       {loading ? (
         <div className="flex justify-center py-10"><span className="spinner" /></div>
       ) : visible.length === 0 ? (
-        <p className="text-center text-slate-400 py-10">{rows.length && onlyThis ? "Nothing low in stock from this supplier — untick the filter to see everything." : "Nothing is low in stock. 🎉"}</p>
+        <p className="text-center text-slate-400 py-10">{rows.length && onlyThis ? "Nothing low in stock from this supplier. Untick the filter to see everything." : "Nothing is low in stock. 🎉"}</p>
       ) : (
         <div className="flex justify-end mb-2">
           <button type="button" className="text-xs text-indigo-600 hover:underline" onClick={() => setPicked(Object.fromEntries(visible.map((r) => [r.key, String(r.suggestedQty)])))}>
@@ -791,7 +791,7 @@ function ReorderModal({
                 <td className={`text-right tabular-nums font-semibold ${(r.onHand ?? 0) <= 0 ? "text-rose-600" : "text-amber-600"}`}>{r.onHand}</td>
                 <td className="text-right tabular-nums text-slate-500">{r.lowStockAlert}</td>
                 <td className="text-xs text-slate-500">
-                  {r.lastCost != null ? `${fmt3(r.lastCost)} · ${fmtDate(r.lastCostDate)}` : "—"}
+                  {r.lastCost != null ? `${fmt3(r.lastCost)} · ${fmtDate(r.lastCostDate)}` : "-"}
                   {r.lastSupplier && <span className="block">{r.lastSupplier.nameEn}</span>}
                 </td>
                 <td className="text-right">

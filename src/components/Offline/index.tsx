@@ -21,7 +21,7 @@ const Offline = () => {
 
             <p className="max-w-[491px] w-full mx-auto mb-7.5">
               It looks like you&apos;ve lost your internet connection. Some pages you&apos;ve
-              already visited may still be available — otherwise, please reconnect and try
+              already visited may still be available. Otherwise, please reconnect and try
               again.
             </p>
 

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import {
   LuX, LuImagePlus, LuStar, LuTrash2, LuPlus, LuChevronUp, LuChevronDown,
   LuGripVertical, LuInfo, LuSlidersHorizontal, LuCircleCheck, LuExternalLink,
+  LuWandSparkles,
 } from "react-icons/lu";
 import {
   type CategoryAttribute,
@@ -398,6 +399,40 @@ export default function ProductForm({
   const setVariant = (idx: number, patch: Partial<VariantState>) =>
     set("variants", form.variants.map((v, i) => (i === idx ? { ...v, ...patch } : v)));
 
+  // Fresh, unique barcodes from the server (13-digit in-store EAN codes).
+  const [barcodeBusy, setBarcodeBusy] = useState<string | null>(null);
+  const reserveBarcodes = async (count: number, busyKey: string): Promise<string[] | null> => {
+    setBarcodeBusy(busyKey);
+    const d = await fetch("/api/products/barcodes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reserve: count }),
+    })
+      .then((r) => r.json())
+      .catch(() => null);
+    setBarcodeBusy(null);
+    if (!d?.success) {
+      setError(d?.error || "Could not generate a barcode");
+      return null;
+    }
+    return d.data.codes as string[];
+  };
+  const generateProductBarcode = async () => {
+    const codes = await reserveBarcodes(1, "product");
+    if (codes) set("barcode", codes[0]);
+  };
+  const generateVariantBarcode = async (idx: number) => {
+    const codes = await reserveBarcodes(1, `variant-${idx}`);
+    if (codes) setVariant(idx, { barcode: codes[0] });
+  };
+  const variantsWithoutBarcode = form.variants.filter((v) => !v.barcode.trim()).length;
+  const generateMissingVariantBarcodes = async () => {
+    const codes = await reserveBarcodes(variantsWithoutBarcode, "variants");
+    if (!codes) return;
+    let i = 0;
+    setForm((f) => ({ ...f, variants: f.variants.map((v) => (v.barcode.trim() ? v : { ...v, barcode: codes[i++] ?? "" })) }));
+  };
+
   const removeVariant = (idx: number) =>
     set("variants", form.variants.filter((_, i) => i !== idx));
 
@@ -442,8 +477,6 @@ export default function ProductForm({
     router.refresh();
     router.push("/admin/products");
   };
-
-  const pct = attrDefs.length ? Math.round((answered / attrDefs.length) * 100) : 0;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 w-full">
@@ -566,7 +599,16 @@ export default function ProductForm({
             <div>
               <Label>Barcode</Label>
               <div className="flex items-center gap-2">
-                <input className="admin-input" value={form.barcode} onChange={(e) => set("barcode", e.target.value)} placeholder="Scan or type the item's code" />
+                <input className="admin-input" value={form.barcode} onChange={(e) => set("barcode", e.target.value)} placeholder="Scan, type, generate or leave empty" />
+                <button
+                  type="button"
+                  onClick={generateProductBarcode}
+                  disabled={!!form.barcode.trim() || barcodeBusy === "product"}
+                  className="admin-btn admin-btn-secondary whitespace-nowrap text-xs disabled:opacity-40"
+                  title="Create a new unique barcode for this item"
+                >
+                  <LuWandSparkles size={13} /> Generate
+                </button>
                 <button
                   type="button"
                   onClick={() => set("barcode", form.sku)}
@@ -578,7 +620,9 @@ export default function ProductForm({
                 </button>
               </div>
               {form.variants.length > 0 && (
-                <p className="text-xs text-slate-400 mt-1">Only used if this product has no variants below — each variant has its own barcode.</p>
+                <p className="text-xs text-slate-400 mt-1">
+                  The product&apos;s barcode: the same code on labels, at the POS and in every search, for all its sizes and colours. Leave it empty and one is created automatically when you save.
+                </p>
               )}
             </div>
             {form.barcode.trim() && (
@@ -629,18 +673,15 @@ export default function ProductForm({
         </div>
 
         {attrDefs.length > 0 && !attrLoading && (
-          <div className="mb-5">
-            <div className="flex items-center justify-between text-xs mb-1.5">
-              <span className="text-slate-500">{answered} of {attrDefs.length} answered</span>
-              {requiredLeft.length > 0 ? (
-                <span className="text-rose-600 font-medium">{requiredLeft.length} required left</span>
-              ) : (
-                <span className="text-emerald-600 inline-flex items-center gap-1"><LuCircleCheck size={12} /> Required fields done</span>
-              )}
-            </div>
-            <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-              <div className="h-full rounded-full bg-indigo-500 transition-[width] duration-300" style={{ width: `${pct}%` }} />
-            </div>
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg bg-slate-50 px-3 py-2 text-sm">
+            <span className="text-slate-600">
+              <strong className="font-semibold text-slate-800 tabular-nums">{answered} of {attrDefs.length}</strong> details filled
+            </span>
+            {requiredLeft.length > 0 ? (
+              <span className="text-rose-600 font-medium">{requiredLeft.length} required still empty</span>
+            ) : (
+              <span className="text-emerald-700 inline-flex items-center gap-1"><LuCircleCheck size={14} /> All required details filled</span>
+            )}
           </div>
         )}
 
@@ -696,6 +737,21 @@ export default function ProductForm({
       </div>
 
       <Card title="Variants & Stock" desc="Optional. Add color/size combinations with their own stock and price adjustment.">
+        {variantsWithoutBarcode > 0 && (
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-amber-50 px-3 py-2.5 text-xs text-amber-900">
+            <span>
+              {variantsWithoutBarcode} option{variantsWithoutBarcode === 1 ? " uses" : "s use"} the product&apos;s barcode. Give {variantsWithoutBarcode === 1 ? "it its" : "them their"} own only if each size / colour should scan separately.
+            </span>
+            <button
+              type="button"
+              onClick={generateMissingVariantBarcodes}
+              disabled={barcodeBusy === "variants"}
+              className="admin-btn admin-btn-secondary !py-1.5 text-xs disabled:opacity-40"
+            >
+              <LuWandSparkles size={13} /> Generate {variantsWithoutBarcode === 1 ? "it" : `all ${variantsWithoutBarcode}`}
+            </button>
+          </div>
+        )}
         <div className="space-y-3">
           {form.variants.map((v, idx) => (
             <div key={idx} className="rounded-xl border border-slate-200 p-3">
@@ -734,9 +790,20 @@ export default function ProductForm({
 
               <div className="mt-3 flex flex-wrap items-end gap-3">
                 <div className="flex-1 min-w-[180px]">
-                  <label className="block text-xs text-slate-500 mb-1">Barcode</label>
+                  <label className="block text-xs text-slate-500 mb-1" title="Only needed if this exact size / colour should scan on its own; otherwise the product's barcode is used.">
+                    Own barcode <span className="text-slate-400">(optional)</span>
+                  </label>
                   <div className="flex items-center gap-1.5">
-                    <input className="admin-input !py-1.5 text-sm" value={v.barcode} onChange={(e) => setVariant(idx, { barcode: e.target.value })} placeholder="Scan or type this variant's code" />
+                    <input className="admin-input !py-1.5 text-sm" value={v.barcode} onChange={(e) => setVariant(idx, { barcode: e.target.value })} placeholder="Uses the product's barcode if empty" />
+                    <button
+                      type="button"
+                      onClick={() => generateVariantBarcode(idx)}
+                      disabled={!!v.barcode.trim() || barcodeBusy === `variant-${idx}`}
+                      className="admin-btn admin-btn-secondary whitespace-nowrap text-xs !py-1.5 disabled:opacity-40"
+                      title="Create a new unique barcode for this option"
+                    >
+                      <LuWandSparkles size={13} /> Generate
+                    </button>
                     <button
                       type="button"
                       onClick={() => setVariant(idx, { barcode: v.sku })}
@@ -755,7 +822,7 @@ export default function ProductForm({
               <div className="mt-3 pt-3 border-t border-slate-100">
                 <p className="text-xs text-slate-500 mb-2">
                   This option&apos;s own color is one flat color (e.g. a solid-colored bag). If this item mixes colors by
-                  area instead (e.g. yellow sleeves, blue body), break it down here — it&apos;ll show as this option&apos;s
+                  area instead (e.g. yellow sleeves, blue body), break it down here. It&apos;ll show as this option&apos;s
                   detail and swatch.
                 </p>
                 <div className="space-y-2">
@@ -863,7 +930,7 @@ function MarginPreview({ cost, price }: { cost: string; price: string }) {
       <span>Profit / unit: <strong>{profit.toFixed(3)} OMR</strong></span>
       <span>Margin: <strong>{margin.toFixed(1)}%</strong></span>
       {markup !== null && <span>Markup: <strong>{markup.toFixed(1)}%</strong></span>}
-      {!good && <span className="font-medium">Selling below cost — this product loses money.</span>}
+      {!good && <span className="font-medium">Selling below cost: this product loses money.</span>}
     </div>
   );
 }

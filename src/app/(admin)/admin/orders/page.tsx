@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback, Suspense } from "react";
+import { ORDER_TODOS, isOrderTodo } from "@/lib/orderTodos";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   LuSearch, LuChevronLeft, LuChevronRight, LuEye, LuShoppingBag,
@@ -102,6 +103,8 @@ type Refund = {
   amount: number | string;
   taxAmount?: number | string;
   creditNoteNumber?: string | null;
+  exchangeOrderId?: string | null;
+  exchangeOrderNumber?: string | null;
   method: string;
   reason?: string | null;
   restocked?: boolean;
@@ -187,6 +190,9 @@ function OrdersView() {
 
   const searchParams = useSearchParams();
   const router = useRouter();
+  // Opened from the Dashboard ("Waiting for you"): ?todo=confirm|ship|transfer
+  const todoParam = searchParams.get("todo");
+  const todo = isOrderTodo(todoParam) ? todoParam : null;
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -196,12 +202,13 @@ function OrdersView() {
       ...(statusFilter && { status: statusFilter }),
       ...(payFilter && { paymentStatus: payFilter }),
       ...(sourceFilter && { source: sourceFilter }),
+      ...(todo && { todo }),
     });
     const res = await fetch(`/api/orders?${params}`);
     const data = await res.json();
     if (data.success) { setOrders(data.data); setTotal(data.meta.total); }
     setLoading(false);
-  }, [page, search, statusFilter, payFilter, sourceFilter]);
+  }, [page, search, statusFilter, payFilter, sourceFilter, todo]);
 
   const loadStats = useCallback(async () => {
     const res = await fetch("/api/orders/stats");
@@ -354,7 +361,7 @@ function OrdersView() {
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         {statCards.map((s) => (
           <div key={s.label} className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${s.accent} ring-4 ${s.ring} flex items-center justify-center text-white flex-shrink-0`}>
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 flex-shrink-0">
               <s.icon size={22} />
             </div>
             <div className="min-w-0">
@@ -365,7 +372,21 @@ function OrdersView() {
         ))}
       </div>
 
-      {/* Toolbar — single professional row */}
+      {todo && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm">
+          <span className="text-amber-900">
+            Showing only: <strong>{ORDER_TODOS[todo].label}</strong>
+          </span>
+          <button
+            onClick={() => { setPage(1); router.replace("/admin/orders", { scroll: false }); }}
+            className="font-medium text-amber-900 underline"
+          >
+            Show all orders
+          </button>
+        </div>
+      )}
+
+      {/* Toolbar: single row */}
       <div className="flex items-center gap-2 sm:gap-3 rounded-2xl border border-slate-200/70 bg-white p-2 sm:p-2.5">
         <div className="relative min-w-0 flex-1">
           <LuSearch className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -545,7 +566,7 @@ function OrdersView() {
                 </button>
                 {selected.paymentStatus === "PAID" && Number(selected.refundedAmount ?? 0) < Number(selected.total) - 0.0005 && (
                   <button onClick={() => setReturnOpen(true)} disabled={detailLoading} className="admin-btn admin-btn-danger" title="Return some or all items of this order">
-                    <LuRotateCcw size={15} /> Return items
+                    <LuRotateCcw size={15} /> Return / exchange
                   </button>
                 )}
               </>
@@ -656,7 +677,7 @@ function OrdersView() {
                 <p className="text-xs font-semibold text-indigo-700 uppercase mb-1.5 flex items-center gap-1.5">
                   <LuStore size={13} /> Pickup from Hala Store
                 </p>
-                <p className="text-slate-600">Customer will collect this order in person — no delivery required.</p>
+                <p className="text-slate-600">Customer will collect this order in person. No delivery required.</p>
               </div>
             )}
 
@@ -691,7 +712,7 @@ function OrdersView() {
                             )}
                           </div>
                           <p className="text-xs text-slate-500 font-mono mt-0.5">
-                            {ch.phone ? `+${ch.phone.replace(/^(\+)?/, "")}` : "No number set — configure in Shipping settings"}
+                            {ch.phone ? `+${ch.phone.replace(/^(\+)?/, "")}` : "No number set: configure in Shipping settings"}
                           </p>
                           <div className="flex flex-wrap items-center gap-2 mt-2.5">
                             <button
@@ -812,6 +833,7 @@ function OrdersView() {
                           <p className="text-xs text-slate-500 truncate">
                             {fmtDate(r.createdAt)}
                             {r.creditNoteNumber && ` · ${r.creditNoteNumber}`}
+                            {r.exchangeOrderNumber && ` · exchanged for ${r.exchangeOrderNumber}`}
                             {r.reason && ` · ${r.reason}`}
                           </p>
                         </div>
@@ -950,7 +972,7 @@ function OrdersView() {
               >
                 Return individual items instead
               </button>{" "}
-              — e.g. 1 of 4 — and keep the rest of the order.
+             (e.g. 1 of 4) and keep the rest of the order.
             </p>
           )}
         </div>

@@ -259,7 +259,7 @@ export default function CategoriesPage() {
             type="button"
             onClick={() => toggleActive(cat)}
             className={`badge cursor-pointer ${cat.isActive ? "badge-delivered" : "badge-cancelled"}`}
-            title={cat.isActive ? "Visible in the shop — click to hide" : "Hidden — click to show in the shop"}
+            title={cat.isActive ? "Visible in the shop. Click to hide" : "Hidden: click to show in the shop"}
           >
             {cat.isActive ? "Active" : "Hidden"}
           </button>
@@ -307,7 +307,7 @@ export default function CategoriesPage() {
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         {stats.map((s) => (
           <div key={s.label} className="bg-white rounded-2xl border border-slate-200/70 p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-            <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${s.accent} ring-4 ${s.ring} flex items-center justify-center text-white flex-shrink-0`}>
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 flex-shrink-0">
               <s.icon size={22} />
             </div>
             <div className="min-w-0">
@@ -399,7 +399,7 @@ export default function CategoriesPage() {
             </div>
             <p className="font-semibold text-slate-800">“{created.nameEn}” is ready</p>
             <p className="text-sm text-slate-500 mt-1 max-w-sm mx-auto">
-              Next, choose the details every product in it should have — fabric, length, sleeves… It takes a minute with the
+              Next, choose the details every product in it should have. Fabric, length, sleeves… It takes a minute with the
               ready-made sets.
             </p>
             <p className="inline-flex items-center gap-1.5 text-xs text-indigo-600 mt-3">

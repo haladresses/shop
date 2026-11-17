@@ -28,7 +28,7 @@ export async function fetchJson<T>(url: string, init?: RequestInit): Promise<{ s
     const res = await fetch(url, { cache: "no-store", ...init });
     return await res.json();
   } catch {
-    return { success: false, error: "Network error — please try again." };
+    return { success: false, error: "Network error: please try again." };
   }
 }
 

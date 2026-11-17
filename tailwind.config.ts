@@ -11,8 +11,9 @@ const config: Config = {
   darkMode: "class",
   theme: {
     fontFamily: {
-      sbc: ["SBC", ...defaultTheme.fontFamily.sans],
+      sbc: ["Vazirmatn", "SBC", ...defaultTheme.fontFamily.sans],
       "euclid-circular-a": [
+        "Vazirmatn",
         "SBC",
         "Euclid Circular A",
         ...defaultTheme.fontFamily.sans,
@@ -30,6 +31,10 @@ const config: Config = {
       current: "currentColor",
       transparent: "transparent",
       white: "#FFFFFF",
+      // Pure black — backdrops (bg-black/60), printed documents (text-black,
+      // border-black) and image overlays rely on it; without it those classes
+      // silently did nothing because this palette replaces Tailwind's default.
+      black: "#000000",
       // Standard Tailwind palettes used by the admin panel (not part of the
       // storefront brand colors). Added because the custom `colors` object
       // below replaces Tailwind's default palette entirely.

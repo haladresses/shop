@@ -28,7 +28,7 @@ export const DEFAULT_NEWSLETTER_CONFIG: NewsletterConfig = {
   ctaAr: "اشتركي الآن",
   successEn: "Thanks for subscribing! Watch your inbox for new arrivals.",
   successAr: "شكراً لاشتراكك! ترقبي أحدث العروض قريباً.",
-  alreadySubscribedEn: "You're already subscribed — we've got you covered!",
+  alreadySubscribedEn: "You're already subscribed: we've got you covered!",
   alreadySubscribedAr: "أنتِ مشتركة بالفعل في نشرتنا البريدية!",
   invalidEmailEn: "Please enter a valid email address.",
   invalidEmailAr: "يرجى إدخال بريد إلكتروني صحيح.",

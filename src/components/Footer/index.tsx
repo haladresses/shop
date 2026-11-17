@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { FaInstagram, FaWhatsapp } from "react-icons/fa";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { SbcCredit } from "@/components/SiteDocument";
@@ -12,6 +13,7 @@ import {
 } from "@/lib/footer";
 
 const Footer = () => {
+  const isHome = usePathname() === "/";
   const { isArabic } = useLanguage();
   const year = new Date().getFullYear();
   const [config, setConfig] = useState<FooterConfig>(DEFAULT_FOOTER_CONFIG);
@@ -363,7 +365,8 @@ const Footer = () => {
               </div>
             </div>
           </div>
-          <SbcCredit className="mt-4 text-center sm:text-start" />
+          {/* The "Designed & built by" credit appears on the home page only. */}
+          {isHome && <SbcCredit className="mt-4 text-center sm:text-start" />}
         </div>
       </div>
       {/* <!-- footer bottom end --> */}

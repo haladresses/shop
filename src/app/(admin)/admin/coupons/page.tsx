@@ -96,7 +96,7 @@ export default function CouponsPage() {
                     <td className="font-medium">
                       {c.type === "PERCENTAGE" ? `${c.value}%` : `${Number(c.value).toFixed(3)} OMR`}
                     </td>
-                    <td>{c.minOrder ? `${Number(c.minOrder).toFixed(3)} OMR` : "—"}</td>
+                    <td>{c.minOrder ? `${Number(c.minOrder).toFixed(3)} OMR` : "-"}</td>
                     <td>{c.usedCount}{c.maxUses ? ` / ${c.maxUses}` : ""}</td>
                     <td className={isExpired(c.expiresAt) ? "text-red-500" : "text-slate-500"}>
                       {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : "Never"}

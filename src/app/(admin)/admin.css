@@ -18,7 +18,7 @@
 /* SBC as the admin base font (Tailwind sets font-family: inherit on form
    controls, so inputs, buttons and selects pick this up too). */
 body {
-  font-family: "SBC", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+  font-family: "Vazirmatn", "SBC", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -317,3 +317,21 @@ body {
 input:focus, textarea:focus, select:focus { outline: none; }
 *:focus-visible { outline: 2px solid rgba(99, 102, 241, .35); outline-offset: 2px; }
 input:focus-visible, textarea:focus-visible, select:focus-visible { outline: none; }
+
+/* ───────── No motion ─────────
+   The admin is a calm working tool for everyday staff: nothing fades,
+   slides, pops, pulses or moves on hover — on every page, popups and menus
+   included (they render under <body>, so this is scoped to the body class).
+   The only exception is the loading spinner, so people can see the app is
+   busy rather than frozen. */
+.admin-body *,
+.admin-body *::before,
+.admin-body *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+.admin-body .spinner,
+.admin-body .animate-spin {
+  animation: spin 0.8s linear infinite !important;
+}

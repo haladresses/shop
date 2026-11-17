@@ -45,6 +45,8 @@ import { priceSale, type SalePricing } from "@/lib/salePricing";
 import type { PromotionRule } from "@/lib/promotionEngine";
 import { DEFAULT_TAX_SETTINGS, NO_TAX, type RateInfo, type TaxSettings } from "@/lib/taxCalc";
 import ReturnModal from "@/components/pos/ReturnModal";
+import CartItemModal from "@/components/pos/CartItemModal";
+import StockCheckModal from "@/components/pos/StockCheckModal";
 
 // ───────────────────────── types ─────────────────────────
 
@@ -62,6 +64,8 @@ type PosLine = {
   barcode: string | null;
   unitPrice: number;
   stock: number | null;
+  lowStockAlert?: number | null;
+  location?: string | null;
   imageUrl: string | null;
   // For live pricing with the shared engine (promotions + VAT):
   tax?: RateInfo;
@@ -143,6 +147,8 @@ type Sale = {
 };
 
 const HELD_KEY = "hala-pos-held-carts";
+// Whether a scan adds the item straight to the sale (off: the cashier confirms it).
+const AUTO_ADD_KEY = "hala-pos-auto-add-on-scan";
 const lineKey = (l: { variantId: string | null; productId: string }) => l.variantId || l.productId;
 
 /** One catalogue tile per product — its sellable options grouped together. */
@@ -217,6 +223,28 @@ export default function PosPage() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [colorFilter, setColorFilter] = useState("");
   const [inStockOnly, setInStockOnly] = useState(true);
+  const [stockOpen, setStockOpen] = useState(false);
+  // Cart line opened in the big review modal.
+  const [viewKey, setViewKey] = useState<string | null>(null);
+  // The item found by the last scan, waiting for the cashier to add it.
+  const [scanned, setScanned] = useState<{ code: string; lines: PosLine[] } | null>(null);
+  const [autoAddOnScan, setAutoAddOnScan] = useState(false);
+  useEffect(() => {
+    try {
+      setAutoAddOnScan(localStorage.getItem(AUTO_ADD_KEY) === "1");
+    } catch {
+      /* storage blocked — keep the safe default */
+    }
+  }, []);
+  const toggleAutoAdd = () =>
+    setAutoAddOnScan((v) => {
+      try {
+        localStorage.setItem(AUTO_ADD_KEY, v ? "0" : "1");
+      } catch {
+        /* ignore */
+      }
+      return !v;
+    });
   const [catalog, setCatalog] = useState<PosLine[]>([]);
   const [catalogPage, setCatalogPage] = useState(1);
   const [catalogHasMore, setCatalogHasMore] = useState(false);
@@ -513,22 +541,63 @@ export default function PosPage() {
     scanInputRef.current?.focus();
   }, []);
 
+  /** Adds the scanned item: straight in for a single option, else the size / colour picker. */
+  const addScanned = (lines: PosLine[]) => {
+    setScanned(null);
+    if (lines.length === 1) addLine(lines[0]);
+    else setPicker(lines);
+  };
+
+  // A scan (or Enter) FINDS the item and shows it; the cashier then adds it
+  // with a click — or Enter on the empty box. "Add on scan" skips that step.
   const handleScanSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const value = scanValue.trim();
-    if (!value) return;
+    if (!value) {
+      if (scanned) addScanned(scanned.lines);
+      return;
+    }
     setScanError("");
     try {
       const byBarcode = await fetch(`/api/pos/lookup?barcode=${encodeURIComponent(value)}`).then((r) => r.json());
-      if (byBarcode.success && byBarcode.data.length >= 1) return addLine(byBarcode.data[0]);
-      if (catalog.length === 1) return addLine(catalog[0]);
+      if (byBarcode.success && byBarcode.data.length >= 1) {
+        const lines = byBarcode.data as PosLine[];
+        if (autoAddOnScan) return addScanned(lines);
+        setScanned({ code: value, lines });
+        setScanValue("");
+        beep("ok");
+        scanInputRef.current?.focus();
+        return;
+      }
+      // Not a barcode: it's a name / SKU search — the results are in the grid to pick from.
       if (catalog.length === 0) {
+        setScanned(null);
         setScanError(`No product found for "${value}"`);
         beep("error");
       }
     } catch {
       setScanError("Lookup failed. Try again.");
     }
+  };
+
+  /** Swap a cart line to another size / colour of the same product, keeping its quantity (within stock). */
+  const swapLine = (oldKey: string, next: PosLine) => {
+    setCart((prev) => {
+      const at = prev.findIndex((l) => lineKey(l) === oldKey);
+      if (at < 0) return prev;
+      const old = prev[at];
+      const nk = lineKey(next);
+      const rest = prev.filter((l) => lineKey(l) !== oldKey);
+      const existing = rest.find((l) => lineKey(l) === nk);
+      const cap = next.stock === null ? Infinity : next.stock;
+      const qty = Math.max(1, Math.min(old.quantity + (existing?.quantity ?? 0), cap));
+      if (existing) return rest.map((l) => (lineKey(l) === nk ? { ...l, quantity: qty } : l));
+      const out = [...rest];
+      out.splice(at, 0, { ...next, quantity: qty });
+      return out;
+    });
+    setViewKey(lineKey(next));
+    beep("ok");
   };
 
   const updateQty = (key: string, quantity: number) => {
@@ -729,9 +798,9 @@ export default function PosPage() {
               </div>
             </div>
             <ol className="space-y-3 text-sm">
-              <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><LuShieldCheck size={15} /></span><span className="text-slate-600 pt-1"><strong className="text-slate-800">Roles</strong> — make sure the cashier&apos;s role has &ldquo;Use POS&rdquo;.</span></li>
-              <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><LuKeyRound size={15} /></span><span className="text-slate-600 pt-1"><strong className="text-slate-800">Users</strong> — open the staff member and set a 4-digit POS PIN.</span></li>
-              <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><LuScanBarcode size={15} /></span><span className="text-slate-600 pt-1">Come back here — their name appears and they sign in with the PIN.</span></li>
+              <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><LuShieldCheck size={15} /></span><span className="text-slate-600 pt-1"><strong className="text-slate-800">Roles</strong>. Make sure the cashier&apos;s role has &ldquo;Use POS&rdquo;.</span></li>
+              <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><LuKeyRound size={15} /></span><span className="text-slate-600 pt-1"><strong className="text-slate-800">Users</strong>. Open the staff member and set a 4-digit POS PIN.</span></li>
+              <li className="flex gap-3"><span className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center shrink-0"><LuScanBarcode size={15} /></span><span className="text-slate-600 pt-1">Come back here: their name appears and they sign in with the PIN.</span></li>
             </ol>
             <div className="grid sm:grid-cols-2 gap-2.5 mt-6">
               <a href="/admin/users" className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-800 text-white px-5 py-3 font-medium hover:bg-slate-900"><LuUsers size={17} /> Manage staff</a>
@@ -945,6 +1014,7 @@ export default function PosPage() {
       onClear={resetSale}
       onHold={holdCart}
       onPay={openPay}
+      onOpenLine={setViewKey}
     />
   );
 
@@ -967,6 +1037,7 @@ export default function PosPage() {
         <div className="flex-1" />
         <HeaderBtn icon={LuPause} label="Held" badge={held.length} onClick={() => setHeldOpen(true)} />
         <HeaderBtn icon={LuHistory} label="Sales" onClick={() => setSalesOpen(true)} />
+        <HeaderBtn icon={LuPackageOpen} label="Stock" onClick={() => setStockOpen(true)} />
         <HeaderBtn icon={LuRotateCcw} label="Return" onClick={() => setReturnOpen(true)} />
         <HeaderBtn icon={LuArrowDownToLine} label="Cash in" onClick={() => setCashOpen("IN")} className="hidden lg:inline-flex" />
         <HeaderBtn icon={LuArrowUpFromLine} label="Cash out" onClick={() => setCashOpen("OUT")} className="hidden lg:inline-flex" />
@@ -1017,6 +1088,16 @@ export default function PosPage() {
             </button>
           </form>
           {scanError && <p className="text-rose-600 text-sm -mt-1 pos-shake">{scanError}</p>}
+          {scanned && (
+            <ScannedCard
+              code={scanned.code}
+              lines={scanned.lines}
+              inCart={(key) => cart.find((l) => lineKey(l) === key)?.quantity ?? 0}
+              inCartTotal={cart.filter((l) => l.productId === scanned.lines[0]?.productId).reduce((n, l) => n + l.quantity, 0)}
+              onAdd={() => addScanned(scanned.lines)}
+              onDismiss={() => { setScanned(null); scanInputRef.current?.focus(); }}
+            />
+          )}
 
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar -mx-1 px-1 shrink-0">
             <Chip active={categoryFilter === ""} onClick={() => setCategoryFilter("")}>All</Chip>
@@ -1033,6 +1114,13 @@ export default function PosPage() {
               className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border ${inStockOnly ? "border-emerald-400 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-white text-slate-500"}`}
             >
               In stock only
+            </button>
+            <button
+              onClick={toggleAutoAdd}
+              title={autoAddOnScan ? "Scanned items go straight into the sale" : "Scanned items are shown first. Click (or press Enter) to add"}
+              className={`shrink-0 text-xs font-medium px-3 py-1.5 rounded-full border ${autoAddOnScan ? "border-rose-400 bg-rose-50 text-rose-700" : "border-slate-200 bg-white text-slate-500"}`}
+            >
+              Add on scan: {autoAddOnScan ? "on" : "off"}
             </button>
             {colorFacets.length > 0 && <span className="w-px h-5 bg-slate-200 mx-1 shrink-0" />}
             {colorFacets.map((c) => (
@@ -1065,7 +1153,12 @@ export default function PosPage() {
                   const allInCart = !outOfStock && stock !== null && inCart >= stock;
                   const blocked = outOfStock || allInCart;
                   const colors = Array.from(new Set(g.map((l) => l.color).filter(Boolean)));
-                  const sizes = Array.from(new Set(g.map((l) => l.size).filter(Boolean)));
+                  const sizes = Array.from(new Set(g.map((l) => l.size).filter(Boolean))) as string[];
+                  // Low-stock level from inventory (the strictest of the options), 3 if unset.
+                  const lowAt = Math.min(...g.map((l) => l.lowStockAlert ?? 3));
+                  const sizeStock = sizes
+                    .sort(bySize)
+                    .map((sz) => [sz, g.filter((l) => l.size === sz).reduce((n, l) => n + Math.max(0, l.stock ?? 0), 0)] as const);
                   return (
                     <button
                       key={r.productId}
@@ -1100,12 +1193,27 @@ export default function PosPage() {
                         <p className="text-[11px] text-slate-400 truncate leading-tight min-h-[14px]">
                           {g.length === 1 ? formatVariantLabel(r) : [colors.length > 1 ? `${colors.length} colours` : colors[0], sizes.length > 1 ? `${sizes[0]}–${sizes[sizes.length - 1]}` : sizes[0]].filter(Boolean).join(" · ")}
                         </p>
+                        {stock !== null && sizeStock.length > 1 && (
+                          <div className="mt-1 flex flex-wrap gap-0.5">
+                            {sizeStock.slice(0, 6).map(([sz, n]) => (
+                              <span
+                                key={sz}
+                                className={`rounded px-1 text-[9.5px] font-medium tabular-nums leading-[15px] ${n <= 0 ? "bg-slate-100 text-slate-300 line-through" : n <= lowAt ? "bg-amber-50 text-amber-700" : "bg-slate-100 text-slate-600"}`}
+                              >
+                                {sz} {n}
+                              </span>
+                            ))}
+                            {sizeStock.length > 6 && <span className="text-[9.5px] text-slate-400 leading-[15px]">+{sizeStock.length - 6}</span>}
+                          </div>
+                        )}
                         <div className="flex items-center justify-between mt-1">
                           <span className="text-[13px] font-semibold text-slate-800">{Math.min(...g.map((l) => l.unitPrice)).toFixed(3)}</span>
                           {outOfStock ? (
                             <span className="text-[10px] text-rose-500 font-medium">Sold out</span>
                           ) : stock !== null ? (
-                            <span className={`text-[10px] ${stock <= 3 ? "text-amber-600 font-semibold" : "text-slate-400"}`}>{stock} pcs</span>
+                            <span className={`text-[10px] ${stock <= lowAt ? "text-amber-600 font-semibold" : "text-slate-500"}`}>
+                              {stock <= lowAt ? `Only ${stock} left` : `${stock} in stock`}
+                            </span>
                           ) : null}
                         </div>
                       </div>
@@ -1222,6 +1330,31 @@ export default function PosPage() {
         </button>
       </PosModal>
 
+      <StockCheckModal
+        open={stockOpen}
+        onClose={() => { setStockOpen(false); scanInputRef.current?.focus(); }}
+        inCart={(k) => cart.find((l) => lineKey(l) === k)?.quantity ?? 0}
+        onAdd={(l) => addLine(l as PosLine)}
+      />
+      {viewKey && (() => {
+        const idx = cart.findIndex((l) => lineKey(l) === viewKey);
+        const vl = idx >= 0 ? cart[idx] : null;
+        if (!vl) return null;
+        return (
+          <CartItemModal
+            line={vl}
+            saleLine={pricing.lines[idx]}
+            promotions={pricing.appliedPromotions.length === 1 ? pricing.appliedPromotions : []}
+            vatEnabled={pricing.vatEnabled}
+            pricesIncludeTax={pricing.pricesIncludeTax}
+            inCart={(k) => cart.find((l) => lineKey(l) === k)?.quantity ?? 0}
+            onClose={() => { setViewKey(null); scanInputRef.current?.focus(); }}
+            onQty={(q) => updateQty(viewKey, q)}
+            onRemove={() => { updateQty(viewKey, 0); setViewKey(null); }}
+            onSwap={(next) => swapLine(viewKey, next)}
+          />
+        );
+      })()}
       {picker && (
         <OptionPicker
           lines={picker}
@@ -1286,6 +1419,72 @@ function PadKey({ children, onClick, disabled }: { children: React.ReactNode; on
     <button onClick={onClick} disabled={disabled} className="h-16 rounded-2xl bg-white border border-slate-200 text-2xl font-medium text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-95 transition disabled:opacity-40">
       {children}
     </button>
+  );
+}
+
+/** The item found by a scan — shown for the cashier to check and add. */
+function ScannedCard({
+  code,
+  lines,
+  inCart,
+  inCartTotal,
+  onAdd,
+  onDismiss,
+}: {
+  code: string;
+  lines: PosLine[];
+  inCart: (key: string) => number;
+  inCartTotal: number;
+  onAdd: () => void;
+  onDismiss: () => void;
+}) {
+  const p = lines[0];
+  if (!p) return null;
+  const single = lines.length === 1;
+  const left = (l: PosLine) => (l.stock === null ? Infinity : l.stock - inCart(lineKey(l)));
+  const available = lines.some((l) => left(l) > 0);
+  const stock = lines.every((l) => l.stock === null) ? null : lines.reduce((n, l) => n + (l.stock ?? 0), 0);
+  const prices = lines.map((l) => l.unitPrice);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return (
+    <div className="pos-pop-in flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-2 ring-rose-300">
+      <div className="w-16 h-20 rounded-xl bg-slate-100 overflow-hidden shrink-0 flex items-center justify-center">
+        {p.imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={p.imageUrl} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <LuShoppingBag size={22} className="text-slate-300" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-rose-600 flex items-center gap-1"><LuScanBarcode size={13} /> Scanned · <span className="font-mono normal-case tracking-normal">{code}</span></p>
+        <p className="font-semibold text-slate-800 truncate">{p.nameEn}</p>
+        <p className="text-sm text-slate-500 truncate">
+          {single ? formatVariantLabel(p) || "Standard" : `${lines.length} sizes / colours`}
+          {" · "}
+          <span className="font-semibold text-slate-800">{min === max ? omr(min) : `${min.toFixed(3)} – ${omr(max)}`}</span>
+        </p>
+        <p className={`text-xs ${available ? "text-slate-400" : "text-rose-600 font-medium"}`}>
+          {!available ? (stock && stock > 0 ? "All available units are already in this sale" : "Sold out") : stock === null ? "Not stock-tracked" : `${stock} in stock`}
+          {inCartTotal > 0 && ` · ${inCartTotal} already in this sale`}
+        </p>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+        <button
+          onClick={onAdd}
+          disabled={!available}
+          autoFocus={false}
+          className="h-12 px-5 rounded-xl bg-emerald-500 text-white font-semibold hover:bg-emerald-600 disabled:opacity-40 inline-flex items-center gap-2"
+          title="Add to the sale (Enter)"
+        >
+          <LuPlus size={18} /> {single ? "Add to sale" : "Choose size / colour"}
+        </button>
+        <button onClick={onDismiss} className="h-12 w-12 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 inline-flex items-center justify-center" aria-label="Dismiss">
+          <LuX size={18} />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -1390,6 +1589,7 @@ function CartPanel(p: {
   onClear: () => void;
   onHold: () => void;
   onPay: (mode?: PayMode) => void;
+  onOpenLine: (key: string) => void;
 }) {
   return (
     <div className="flex flex-col w-full min-h-0 flex-1">
@@ -1436,18 +1636,25 @@ function CartPanel(p: {
               const saved = p.pricing.lines[idx]?.promotionDiscount ?? 0;
               return (
                 <li key={key} className={`flex items-center gap-3 px-4 py-3 transition-colors ${p.lastAddedKey === key ? "bg-rose-50" : ""}`}>
-                  <div className="w-11 h-11 rounded-xl bg-slate-100 overflow-hidden shrink-0">
-                    {l.imageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={l.imageUrl} alt="" className="w-full h-full object-cover" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-slate-800 truncate">{l.nameEn}</p>
-                    <p className="text-xs text-slate-400 truncate">
-                      {[formatVariantLabel(l), `${l.unitPrice.toFixed(3)} ea`].filter(Boolean).join(" · ")}
-                    </p>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => p.onOpenLine(key)}
+                    className="group flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left -m-1 p-1 hover:bg-slate-50"
+                    title="Open this item to review it"
+                  >
+                    <div className="w-11 h-11 rounded-xl bg-slate-100 overflow-hidden shrink-0 ring-rose-300 group-hover:ring-2">
+                      {l.imageUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={l.imageUrl} alt="" className="w-full h-full object-cover" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-slate-800 truncate group-hover:text-rose-600">{l.nameEn}</p>
+                      <p className="text-xs text-slate-400 truncate">
+                        {[formatVariantLabel(l), `${l.unitPrice.toFixed(3)} ea`].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                  </button>
                   <div className="flex items-center rounded-xl border border-slate-200 shrink-0">
                     <button onClick={() => p.updateQty(key, l.quantity - 1)} className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-rose-600" aria-label="Decrease">
                       <LuMinus size={14} />
@@ -1876,7 +2083,7 @@ function OptionPicker({
                     n <= 0 ? "bg-slate-50 text-slate-300 line-through cursor-not-allowed" : on ? "bg-rose-500 text-white" : "bg-slate-100 text-slate-800 hover:bg-slate-200"
                   }`}
                 >
-                  {l.size || "—"}
+                  {l.size || "-"}
                   <span className={`text-[10px] font-medium ${on ? "text-white/80" : n <= 2 ? "text-amber-600" : "text-slate-400"}`}>
                     {n === Infinity ? "" : n <= 0 ? "none" : `${n} left`}
                   </span>

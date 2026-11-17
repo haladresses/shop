@@ -64,7 +64,7 @@ export default function ProductTaxField({
         </label>
         {!enabled && settings && (
           <span className="text-[11px] font-medium rounded-full bg-amber-50 text-amber-700 px-2 py-0.5">
-            VAT is switched off — applies once it is enabled
+            VAT is switched off. Applies once it is enabled
           </span>
         )}
       </div>
@@ -76,7 +76,7 @@ export default function ProductTaxField({
         onChange={(e) => onChange(e.target.value)}
       >
         <option value="">
-          Inherit{inherited.rate ? ` — ${inherited.rate.nameEn} (${rateLabel(inherited.rate)}) from ${inherited.from}` : ""}
+          Inherit{inherited.rate ? `: ${inherited.rate.nameEn} (${rateLabel(inherited.rate)}) from ${inherited.from}` : ""}
         </option>
         {rates.map((r) => (
           <option key={r.id} value={r.id}>

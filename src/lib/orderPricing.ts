@@ -96,7 +96,7 @@ export async function priceCart(
       // Stock is re-checked atomically when the order is written; this is the fast, friendly failure.
       if ((variant.inventory?.quantity ?? 0) < item.quantity) {
         const label = [variant.color, variant.size].filter(Boolean).join(" / ") || "this option";
-        throw new PricingError(`Not enough stock for ${product.nameEn} (${label}) — ${variant.inventory?.quantity ?? 0} left`);
+        throw new PricingError(`Not enough stock for ${product.nameEn} (${label}): ${variant.inventory?.quantity ?? 0} left`);
       }
     }
     const unitPrice = r3(Number(product.salePrice ?? product.basePrice) + Number(variant?.priceAdjustment ?? 0));

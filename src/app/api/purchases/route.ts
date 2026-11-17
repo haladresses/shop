@@ -22,6 +22,7 @@ import {
   serializePurchaseOrderRow,
 } from "@/lib/purchasing";
 import { r3 } from "@/lib/taxCalc";
+import { productCodeConditions } from "@/lib/barcodes";
 
 const STATUSES: PurchaseOrderStatus[] = ["DRAFT", "ORDERED", "PARTIALLY_RECEIVED", "RECEIVED", "CANCELLED"];
 
@@ -84,7 +85,7 @@ export async function GET(req: NextRequest) {
           { supplier: { nameEn: { contains: search, mode: "insensitive" } } },
           { supplier: { code: { contains: search, mode: "insensitive" } } },
           { items: { some: { nameEn: { contains: search, mode: "insensitive" } } } },
-          { items: { some: { barcode: search } } },
+          { items: { some: { OR: [{ barcode: search }, { sku: search }, { product: { OR: productCodeConditions(search) } }] } } },
         ],
       }),
     };
@@ -181,7 +182,7 @@ export async function POST(req: NextRequest) {
 
     const supplier = await prisma.supplier.findUnique({ where: { id: d.supplierId }, select: { id: true, isActive: true } });
     if (!supplier) return error("Choose a supplier");
-    if (!supplier.isActive) return error("This supplier is inactive — reactivate it first.");
+    if (!supplier.isActive) return error("This supplier is inactive. Reactivate it first.");
 
     const orderDate = parseDay(d.orderDate) ?? new Date();
     const result = await prisma.$transaction(async (tx) => {

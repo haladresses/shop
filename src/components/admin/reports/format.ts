@@ -10,11 +10,11 @@ export const int = (n: number | null | undefined) => (n ?? 0).toLocaleString("en
 export const pct = (n: number | null | undefined) => `${(n ?? 0).toFixed(1)}%`;
 
 export function dateTime(iso: string | null | undefined) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return new Date(iso).toLocaleString("en-GB", { timeZone: TZ, day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 export function timeOnly(iso: string | null | undefined) {
-  if (!iso) return "—";
+  if (!iso) return "-";
   return new Date(iso).toLocaleTimeString("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
 }
 /** "Sun 16/11/2026" for a YYYY-MM-DD business day. */

@@ -39,7 +39,7 @@ export default function RootLayout({
           </title>
           <meta
             name="description"
-            content="Hala Dresses — women's and girls' fashion, evening wear, and accessories in Oman."
+            content="Hala Dresses: women's and girls' fashion, evening wear, and accessories in Oman."
           />
           <link rel="manifest" href="/manifest.json" />
           <meta name="theme-color" content="#8C3B49" />

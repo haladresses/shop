@@ -1003,10 +1003,11 @@ function buildHelpPrintHtml(lang: AdminHelpLang, topics: AdminHelpTopic[]): stri
 <title>${escapeHtml(t.documentTitle)}</title>
 <style>
   :root { --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --soft:#f8fafc; --warn:#b45309; --warnbg:#fffbeb; --warnline:#fde68a; --accent:#0f172a; }
+  @font-face { font-family: "Vazirmatn"; src: url("${typeof window !== "undefined" ? window.location.origin : ""}/fonts/vazirmatn/Vazirmatn-Variable.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0600-06FF, U+0750-077F, U+0870-089F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F; }
   * { box-sizing: border-box; }
   html, body { margin:0; padding:0; }
   body {
-    font-family: ${isRtl ? '"Segoe UI", "Tahoma", "Arial", sans-serif' : '"Segoe UI", "Helvetica Neue", Arial, sans-serif'};
+    font-family: ${isRtl ? '"Vazirmatn", "Segoe UI", "Tahoma", "Arial", sans-serif' : '"Vazirmatn", "Segoe UI", "Helvetica Neue", Arial, sans-serif'};
     color: var(--ink); background:#fff; line-height:1.6; font-size:13px;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
@@ -1067,7 +1068,7 @@ function buildHelpPrintHtml(lang: AdminHelpLang, topics: AdminHelpTopic[]): stri
       <div class="kicker">${escapeHtml(t.documentTitle)}</div>
       <h1>${escapeHtml(t.heroTitle)}</h1>
       <p>${escapeHtml(t.heroSubtitle)}</p>
-      <div class="meta">${escapeHtml(t.printGenerated)} — ${escapeHtml(dateStr)}</div>
+      <div class="meta">${escapeHtml(t.printGenerated)}: ${escapeHtml(dateStr)}</div>
     </header>
 
     <div class="block-title">${escapeHtml(t.quickStartTitle)}</div>

@@ -87,21 +87,13 @@ export default function WhatsAppSettings() {
         </div>
         <p className="text-xs text-slate-400 -mt-2">On product pages the product name and link are added to the pre-filled message automatically.</p>
 
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Button side</label>
             <select className="admin-input admin-select" value={cfg.position} onChange={(e) => set("position", e.target.value as "end" | "start")}>
               <option value="end">Right (left in Arabic)</option>
               <option value="start">Left (right in Arabic)</option>
             </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Auto-open greeting after</label>
-            <div className="flex items-center gap-2">
-              <input type="number" min={0} max={300} className="admin-input" value={cfg.autoOpenSeconds} onChange={(e) => set("autoOpenSeconds", Number(e.target.value))} />
-              <span className="text-sm text-slate-500">sec</span>
-            </div>
-            <p className="text-xs text-slate-400 mt-1">0 = never. Once per visit.</p>
           </div>
           <label className="flex items-center justify-between gap-3 cursor-pointer sm:pt-7">
             <span className="text-sm text-slate-700">Show on mobile</span>

@@ -33,7 +33,7 @@ export default function SellerTab({ query, onSeller }: { query: string; onSeller
     { key: "name", label: "Salesperson", ar: "البائع", kind: "text", value: (r) => r.name, render: (r) => <span className="font-medium text-indigo-700">{r.name}</span> },
     { key: "orders", label: "Receipts", ar: "الفواتير", kind: "int", value: (r) => r.orders, total: t?.orders },
     { key: "items", label: "Items", ar: "القطع", kind: "int", value: (r) => r.items, total: t?.items },
-    { key: "ipr", label: "Items / receipt", ar: "قطع/فاتورة", kind: "text", align: "right", value: (r) => (r.orders ? (r.items / r.orders).toFixed(2) : "—"), total: t && t.orders ? (t.items / t.orders).toFixed(2) : "—" },
+    { key: "ipr", label: "Items / receipt", ar: "قطع/فاتورة", kind: "text", align: "right", value: (r) => (r.orders ? (r.items / r.orders).toFixed(2) : "-"), total: t && t.orders ? (t.items / t.orders).toFixed(2) : "-" },
     { key: "subtotal", label: "Shelf price", ar: "سعر الرف", kind: "money", value: (r) => r.subtotal, total: t?.subtotal },
     { key: "offers", label: "Offers", ar: "العروض", kind: "money", value: (r) => r.offers, total: t?.offers },
     { key: "discounts", label: "Discounts given", ar: "الخصومات", kind: "money", value: (r) => r.discounts, total: t?.discounts },
@@ -44,8 +44,8 @@ export default function SellerTab({ query, onSeller }: { query: string; onSeller
     { key: "net", label: "Net", ar: "الصافي", kind: "money", value: (r) => r.net, total: t?.net, className: "font-semibold" },
     { key: "avgTicket", label: "Avg ticket", ar: "متوسط الفاتورة", kind: "money", value: (r) => r.avgTicket, total: t?.avgTicket },
     { key: "share", label: "Share of sales", ar: "النسبة", kind: "pct", value: (r) => r.share, total: data?.rows.length ? 100 : undefined },
-    { key: "first", label: "First sale", ar: "أول بيع", kind: "text", value: (r) => (r.firstSale ? dateTime(r.firstSale) : "—") },
-    { key: "last", label: "Last sale", ar: "آخر بيع", kind: "text", value: (r) => (r.lastSale ? dateTime(r.lastSale) : "—") },
+    { key: "first", label: "First sale", ar: "أول بيع", kind: "text", value: (r) => (r.firstSale ? dateTime(r.firstSale) : "-") },
+    { key: "last", label: "Last sale", ar: "آخر بيع", kind: "text", value: (r) => (r.lastSale ? dateTime(r.lastSale) : "-") },
   ];
   return (
     <div className="space-y-3">

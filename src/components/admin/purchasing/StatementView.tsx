@@ -157,7 +157,7 @@ export default function StatementView({ supplierId }: { supplierId: string }) {
                   <td className="text-sm whitespace-nowrap">{fmtDate(e.date)}</td>
                   <td className="text-sm">{TYPE_LABEL[e.type] ?? e.type}</td>
                   <td className="font-mono text-xs">
-                    {e.link && e.number ? <Link href={e.link} className="text-indigo-600 hover:underline">{e.number}</Link> : e.number ?? "—"}
+                    {e.link && e.number ? <Link href={e.link} className="text-indigo-600 hover:underline">{e.number}</Link> : e.number ?? "-"}
                   </td>
                   <td className="text-sm text-slate-600 max-w-[320px]">{e.description}</td>
                   <td className="text-right tabular-nums">{e.debit ? fmt3(e.debit) : ""}</td>

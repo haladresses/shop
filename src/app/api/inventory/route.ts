@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
                   nameEn: true,
                   nameAr: true,
                   sku: true,
+                  barcode: true,
                   basePrice: true,
                   salePrice: true,
                   costPrice: true,

@@ -16,6 +16,8 @@ type Row = {
   variantLabel: string | null;
   sku: string | null;
   barcode: string | null;
+  /** The product's own barcode (shared by all its sizes/colours). */
+  productBarcode: string | null;
   imageUrl: string | null;
   isActive: boolean;
   onHand: number | null;
@@ -86,7 +88,7 @@ export async function GET(req: NextRequest) {
           nameAr: p.nameAr,
           variantLabel: label(i.variant),
           sku: i.variant.sku || p.sku,
-          barcode: i.variant.barcode || p.barcode,
+          barcode: i.variant.barcode || p.barcode, productBarcode: p.barcode,
           imageUrl: p.images[0]?.url ?? null,
           isActive: p.isActive,
           onHand: i.quantity,
@@ -135,7 +137,7 @@ export async function GET(req: NextRequest) {
             variantId: single?.id ?? null,
             variantLabel: single ? label(single) : null,
             sku: single?.sku || p.sku,
-            barcode: single?.barcode || p.barcode,
+            barcode: single?.barcode || p.barcode, productBarcode: p.barcode,
             onHand: single?.inventory ? single.inventory.quantity : null,
             lowStockAlert: single?.inventory?.lowStockAlert ?? null,
             sellPrice: num(p.salePrice ?? p.basePrice),
@@ -150,7 +152,7 @@ export async function GET(req: NextRequest) {
             variantId: v.id,
             variantLabel: label(v),
             sku: v.sku || p.sku,
-            barcode: v.barcode || p.barcode,
+            barcode: v.barcode || p.barcode, productBarcode: p.barcode,
             onHand: v.inventory?.quantity ?? 0,
             lowStockAlert: v.inventory?.lowStockAlert ?? null,
             sellPrice: num(p.salePrice ?? p.basePrice) + num(v.priceAdjustment),
@@ -159,7 +161,9 @@ export async function GET(req: NextRequest) {
         }
       }
       if (barcode) {
-        const exact = rows.filter((r) => r.barcode === barcode || r.sku === barcode);
+        // A product's own barcode covers all its sizes/colours; a size/colour code just that one.
+        const productHit = rows.filter((r) => r.productBarcode === barcode);
+        const exact = productHit.length ? productHit : rows.filter((r) => r.barcode === barcode || r.sku === barcode);
         if (exact.length) rows = exact;
       }
     }

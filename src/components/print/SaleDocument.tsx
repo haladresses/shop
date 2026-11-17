@@ -1,5 +1,5 @@
 "use client";
-import { invoiceTitle, methodLabels, type InvoiceData, type StoreInfo } from "@/lib/invoice";
+import { invoiceTitle, paymentLabels, type InvoiceData, type StoreInfo } from "@/lib/invoice";
 import { rateLabel, type TaxSettings } from "@/lib/taxCalc";
 
 // The customer's bill — English and Arabic together on one document.
@@ -9,7 +9,7 @@ import { rateLabel, type TaxSettings } from "@/lib/taxCalc";
 type TaxInfo = Pick<TaxSettings, "enabled" | "vatNumber" | "legalNameEn" | "legalNameAr" | "crNumber" | "invoiceFooterEn" | "invoiceFooterAr">;
 
 const f3 = (v: number) => (Math.round(v * 1000) / 1000).toFixed(3);
-const AR_FONT = 'Tahoma, "Segoe UI", "Noto Naskh Arabic", "Geeza Pro", Arial, sans-serif';
+const AR_FONT = 'Vazirmatn, SBC, Tahoma, "Segoe UI", Arial, sans-serif';
 
 function dateParts(iso: string) {
   const d = new Date(iso);
@@ -84,7 +84,7 @@ function ThermalReceipt({ data, store, tax }: { data: InvoiceData; store: StoreI
         <div style={{ marginTop: 6, padding: "3px 0", borderTop: "1px solid #000", borderBottom: "1px solid #000" }}>
           <div className="font-bold" style={{ fontSize: 13, letterSpacing: 0.5 }}>{title.en.toUpperCase()}</div>
           <div dir="rtl" className="font-bold" style={{ fontSize: 13 }}>{title.ar}</div>
-          {data.copyLabel && <div style={{ fontSize: 11 }}>— {data.copyLabel} / نسخة —</div>}
+          {data.copyLabel && <div style={{ fontSize: 11 }}>({data.copyLabel} / نسخة)</div>}
         </div>
       </div>
 
@@ -166,8 +166,8 @@ function ThermalReceipt({ data, store, tax }: { data: InvoiceData; store: StoreI
       </div>
 
       {data.payments.map((p, i) => {
-        const m = methodLabels(p.method);
-        return <Bi key={i} en={isCN ? `Refund · ${m.en}` : m.en} ar={isCN ? `استرداد · ${m.ar}` : m.ar} value={f3(p.amount)} />;
+        const m = paymentLabels(p.method, p.amount, isCN);
+        return <Bi key={i} en={m.en} ar={m.ar} value={f3(Math.abs(p.amount))} />;
       })}
       {data.amountTendered != null && <Bi en="Cash tendered" ar="المبلغ المدفوع" value={f3(data.amountTendered)} />}
       {data.changeGiven != null && data.changeGiven > 0 && <Bi en="Change" ar="الباقي" value={f3(data.changeGiven)} strong />}
@@ -183,6 +183,11 @@ function ThermalReceipt({ data, store, tax }: { data: InvoiceData; store: StoreI
       <div style={{ textAlign: "center", fontSize: 11 }}>
         {tax.invoiceFooterEn && <div>{tax.invoiceFooterEn}</div>}
         {tax.invoiceFooterAr && <div dir="rtl">{tax.invoiceFooterAr}</div>}
+        {data.exchangeFor && !isCN && (
+          <div className="font-bold" style={{ marginBottom: 2 }}>
+            Exchange for order {data.exchangeFor} · <span dir="rtl">استبدال للطلب {data.exchangeFor}</span>
+          </div>
+        )}
         <div>Thank you for shopping with us!</div>
         <div dir="rtl">شكراً لتسوقكم معنا</div>
       </div>
@@ -291,8 +296,8 @@ function A4Invoice({ data, store, tax }: { data: InvoiceData; store: StoreInfo; 
               </td>
               <td className={`${td} text-right`}>{l.quantity}</td>
               <td className={`${td} text-right`}>{f3(l.unitPrice)}</td>
-              <td className={`${td} text-right`}>{l.discount > 0 ? `-${f3(l.discount)}` : "—"}</td>
-              {vat && <td className={`${td} text-right`}>{l.taxable != null ? f3(l.taxable) : "—"}</td>}
+              <td className={`${td} text-right`}>{l.discount > 0 ? `-${f3(l.discount)}` : "-"}</td>
+              {vat && <td className={`${td} text-right`}>{l.taxable != null ? f3(l.taxable) : "-"}</td>}
               {vat && <td className={`${td} text-right`}>{rateLabel({ rate: l.taxRate, type: l.taxRate > 0 ? "STANDARD" : "ZERO_RATED" })}</td>}
               {vat && <td className={`${td} text-right`}>{f3(l.tax)}</td>}
               <td className={`${td} text-right font-semibold`}>{f3(l.gross)}</td>
@@ -331,10 +336,10 @@ function A4Invoice({ data, store, tax }: { data: InvoiceData; store: StoreInfo; 
                 {isCN ? "Refunded by" : "Payment"} / <span dir="rtl">{isCN ? "طريقة الاسترداد" : "الدفع"}</span>
               </div>
               {data.payments.map((p, i) => {
-                const m = methodLabels(p.method);
+                const m = paymentLabels(p.method, p.amount, isCN);
                 return (
                   <div key={i}>
-                    {m.en} / <span dir="rtl">{m.ar}</span>: {f3(p.amount)} OMR
+                    {m.en} / <span dir="rtl">{m.ar}</span>: {f3(Math.abs(p.amount))} OMR
                   </div>
                 );
               })}
@@ -342,6 +347,9 @@ function A4Invoice({ data, store, tax }: { data: InvoiceData; store: StoreInfo; 
             </div>
           )}
           {data.notes && !isCN && <div className="mt-2">Notes / <span dir="rtl">ملاحظات</span>: {data.notes}</div>}
+          {data.exchangeFor && !isCN && (
+            <div className="mt-1 font-semibold">Exchange for order {data.exchangeFor} / <span dir="rtl">استبدال للطلب {data.exchangeFor}</span></div>
+          )}
         </div>
         <div className="w-[300px] shrink-0 tabular-nums">
           <Bi en="Subtotal" ar="المجموع الفرعي" value={f3(data.subtotal)} />

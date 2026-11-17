@@ -290,8 +290,8 @@ function NewSupplierReturn() {
             <div className="grid sm:grid-cols-2 gap-2">
               {(
                 [
-                  ["po", "From a purchase order", "Items received on one of their orders — valued at what you paid for them.", LuClipboardList],
-                  ["stock", "Stock not on an order", "E.g. bought before the system was used — you enter the cost.", LuPackage],
+                  ["po", "From a purchase order", "Items received on one of their orders, valued at what you paid for them.", LuClipboardList],
+                  ["stock", "Stock not on an order", "E.g. bought before the system was used. You enter the cost.", LuPackage],
                 ] as const
               ).map(([id, title, hint, Icon]) => (
                 <button
@@ -358,9 +358,9 @@ function NewSupplierReturn() {
                                   <p className="text-xs text-slate-500">{i.productId ? i.variantLabel || "Standard" : "Not a stock item"}</p>
                                 </td>
                                 <td className="text-right tabular-nums">{i.receivedQty}</td>
-                                <td className="text-right tabular-nums text-slate-500">{i.returnedQty || "—"}</td>
-                                <td className="text-right tabular-nums text-slate-500">{i.onHand ?? "—"}</td>
-                                <td className="text-right tabular-nums">{i.quantity > 0 ? fmt3((i.netAmount + i.taxAmount) / i.quantity) : "—"}</td>
+                                <td className="text-right tabular-nums text-slate-500">{i.returnedQty || "-"}</td>
+                                <td className="text-right tabular-nums text-slate-500">{i.onHand ?? "-"}</td>
+                                <td className="text-right tabular-nums">{i.quantity > 0 ? fmt3((i.netAmount + i.taxAmount) / i.quantity) : "-"}</td>
                                 <td className="text-right">
                                   <input type="number" min="0" max={max} placeholder={`max ${max}`} className="admin-input !py-1 text-right" value={poQty[i.id] ?? ""} onChange={(e) => setPoQty({ ...poQty, [i.id]: e.target.value })} />
                                 </td>

@@ -1,6 +1,11 @@
 import { Role } from "@prisma/client";
 import prisma from "@/lib/db";
 
+/**
+ * Legacy storage of the role -> permissions matrix (settings table). Roles now
+ * live in the `app_roles` table; this row is only read once, to seed the
+ * built-in roles on databases that predate it.
+ */
 export const ROLE_PERMISSIONS_SETTING_KEY = "rbac_role_permissions_v1";
 
 export type PermissionDefinition = {
@@ -142,9 +147,37 @@ export const PERMISSION_CATALOG: PermissionDefinition[] = [
   { key: "seller.uploads.manage", label: "Manage Uploads", description: "Upload product and content images.", area: "seller", group: "Seller Operations" },
 ];
 
-const ALL_PERMISSION_KEYS = new Set(PERMISSION_CATALOG.map((item) => item.key));
+export const ALL_PERMISSIONS: string[] = PERMISSION_CATALOG.map((item) => item.key).sort();
+const ALL_PERMISSION_KEYS = new Set(ALL_PERMISSIONS);
 
-const DEFAULT_ROLE_PERMISSIONS: Record<Role, string[]> = {
+/** "view" = can see; "manage" = can change or act; "access" = can open a panel/terminal. */
+export type PermissionKind = "access" | "view" | "manage";
+export function permissionKind(key: string): PermissionKind {
+  if (key.endsWith(".view")) return "view";
+  if (key.endsWith(".access")) return "access";
+  return "manage";
+}
+
+// Acting on something you can't open is useless: these need another permission to work.
+const EXTRA_REQUIRES: Record<string, string[]> = {
+  "admin.purchases.manage": ["admin.suppliers.view"],
+  "admin.purchases.receive": ["admin.suppliers.view"],
+  "admin.supplier_payments.manage": ["admin.suppliers.view"],
+};
+
+/** Permissions this one depends on (e.g. "admin.orders.manage" needs "admin.orders.view"). */
+export function permissionRequires(key: string): string[] {
+  const out = new Set<string>(EXTRA_REQUIRES[key] ?? []);
+  const parts = key.split(".");
+  if (parts.length === 3 && parts[2] !== "view") {
+    const view = `${parts[0]}.${parts[1]}.view`;
+    if (ALL_PERMISSION_KEYS.has(view)) out.add(view);
+  }
+  out.delete(key);
+  return Array.from(out);
+}
+
+export const DEFAULT_ROLE_PERMISSIONS: Record<Role, string[]> = {
   [Role.SUPER_ADMIN]: PERMISSION_CATALOG.map((item) => item.key),
   [Role.ADMIN]: [
     "panel.admin.access",
@@ -247,7 +280,8 @@ const DEFAULT_ROLE_PERMISSIONS: Record<Role, string[]> = {
 
 export type RolePermissionsMatrix = Record<Role, string[]>;
 
-function sanitizePermissions(input: unknown): string[] {
+/** Keep only known permission keys, de-duplicated and sorted. */
+export function sanitizePermissions(input: unknown): string[] {
   if (!Array.isArray(input)) return [];
   return Array.from(
     new Set(
@@ -263,10 +297,72 @@ function buildDefaultMatrix(): RolePermissionsMatrix {
   }, {} as RolePermissionsMatrix);
 }
 
+// ─────────────────────────────────────────────
+// Built-in roles
+// ─────────────────────────────────────────────
+
+/** Fixed palette for role colours (solid, readable on white). */
+export const ROLE_COLORS = [
+  "#c026d3", // fuchsia
+  "#7c3aed", // violet
+  "#4f46e5", // indigo
+  "#2563eb", // blue
+  "#0284c7", // sky
+  "#0d9488", // teal
+  "#059669", // emerald
+  "#65a30d", // lime
+  "#d97706", // amber
+  "#ea580c", // orange
+  "#e11d48", // rose
+  "#db2777", // pink
+  "#78716c", // stone
+  "#64748b", // slate
+] as const;
+
+/** Seniority by account type: used for built-in roles and as a fallback. */
+export const ROLE_RANK: Record<Role, number> = {
+  [Role.SUPER_ADMIN]: 100,
+  [Role.ADMIN]: 80,
+  [Role.STAFF]: 60,
+  [Role.SELLER]: 40,
+  [Role.CUSTOMER]: 0,
+};
+/** Highest rank a custom role may have (super admin stays on top). */
+export const MAX_CUSTOM_RANK = 99;
+
+export const BUILTIN_ROLE_KEY: Record<Role, string> = {
+  [Role.SUPER_ADMIN]: "super_admin",
+  [Role.ADMIN]: "admin",
+  [Role.STAFF]: "staff",
+  [Role.SELLER]: "seller",
+  [Role.CUSTOMER]: "customer",
+};
+export const SUPER_ADMIN_ROLE_KEY = BUILTIN_ROLE_KEY[Role.SUPER_ADMIN];
+
+export const BUILTIN_ROLES: {
+  key: string;
+  type: Role;
+  nameEn: string;
+  nameAr: string;
+  description: string;
+  color: string;
+  rank: number;
+  sortOrder: number;
+}[] = [
+  { key: "super_admin", type: Role.SUPER_ADMIN, nameEn: "Super Admin", nameAr: "مدير عام", description: "Owner level. Always has every permission and can manage everyone.", color: "#c026d3", rank: ROLE_RANK.SUPER_ADMIN, sortOrder: 0 },
+  { key: "admin", type: Role.ADMIN, nameEn: "Admin", nameAr: "مدير", description: "Runs the store day to day: orders, products, stock, people and settings.", color: "#7c3aed", rank: ROLE_RANK.ADMIN, sortOrder: 1 },
+  { key: "staff", type: Role.STAFF, nameEn: "Staff", nameAr: "موظف", description: "Shop floor and back office: orders, products, stock and the POS.", color: "#059669", rank: ROLE_RANK.STAFF, sortOrder: 2 },
+  { key: "seller", type: Role.SELLER, nameEn: "Seller", nameAr: "بائع", description: "Marketplace seller with access to the seller portal only.", color: "#0284c7", rank: ROLE_RANK.SELLER, sortOrder: 3 },
+  { key: "customer", type: Role.CUSTOMER, nameEn: "Customer", nameAr: "عميل", description: "Shops on the website. No access to the admin panel.", color: "#64748b", rank: ROLE_RANK.CUSTOMER, sortOrder: 4 },
+];
+
+// ─────────────────────────────────────────────
+// Legacy settings matrix (read-only, used once to seed built-in roles)
+// ─────────────────────────────────────────────
+
 // Permissions added after a role matrix may already have been saved to the
 // database. A stored matrix that predates one of these gets it granted (once)
-// to the roles that have it by default; saving records them as known, so an
-// admin who later unticks one keeps it unticked.
+// to the roles that have it by default.
 const LATER_PERMISSIONS = [
   "admin.finance.view",
   "admin.finance.manage",
@@ -308,10 +404,10 @@ export function normalizeRolePermissions(input: unknown, applyLaterDefaults = fa
   return defaults;
 }
 
-export async function getRolePermissionsMatrix(): Promise<RolePermissionsMatrix> {
+/** The matrix as the pre-AppRole code computed it (settings row, or defaults). */
+async function readLegacyMatrix(): Promise<RolePermissionsMatrix> {
   const row = await prisma.setting.findUnique({ where: { key: ROLE_PERMISSIONS_SETTING_KEY } });
   if (!row) return buildDefaultMatrix();
-
   try {
     return normalizeRolePermissions(JSON.parse(row.value), true);
   } catch {
@@ -319,44 +415,142 @@ export async function getRolePermissionsMatrix(): Promise<RolePermissionsMatrix>
   }
 }
 
-export async function saveRolePermissionsMatrix(matrix: RolePermissionsMatrix): Promise<RolePermissionsMatrix> {
-  const normalized = normalizeRolePermissions(matrix);
-  const stored = JSON.stringify({ ...normalized, [KNOWN_PERMISSIONS_FIELD]: [...ALL_PERMISSION_KEYS] });
-  await prisma.setting.upsert({
-    where: { key: ROLE_PERMISSIONS_SETTING_KEY },
-    update: {
-      value: stored,
-      type: "json",
-      group: "security",
-      labelEn: "Role permissions",
-      labelAr: "صلاحيات الأدوار",
-    },
-    create: {
-      key: ROLE_PERMISSIONS_SETTING_KEY,
-      value: stored,
-      type: "json",
-      group: "security",
-      labelEn: "Role permissions",
-      labelAr: "صلاحيات الأدوار",
-    },
+// ─────────────────────────────────────────────
+// Role cache (permissions are checked on every request)
+// ─────────────────────────────────────────────
+
+export type CachedRole = {
+  id: string;
+  key: string;
+  nameEn: string;
+  nameAr: string | null;
+  color: string;
+  type: Role;
+  rank: number;
+  isSystem: boolean;
+  /** Sanitized. For the super admin role: always the full catalog. */
+  permissions: string[];
+};
+
+type RoleCache = { at: number; byId: Map<string, CachedRole>; byKey: Map<string, CachedRole> };
+
+const CACHE_TTL_MS = 30_000;
+const roleState = globalThis as unknown as {
+  __appRoleCache?: RoleCache | null;
+  __appRoleSync?: Promise<void> | null;
+  __appRoleSynced?: boolean;
+};
+
+/** Call after any write to app_roles so the next permission check reloads. */
+export function invalidateRoleCache() {
+  roleState.__appRoleCache = null;
+}
+
+/**
+ * One-time (per process) upkeep, idempotent and safe to run concurrently:
+ *  1. create any missing built-in role, seeded from the legacy settings matrix;
+ *  2. point users without a role at the built-in role for their account type;
+ *  3. grant permissions that were added to the catalog since the last run to the
+ *     built-in roles that have them by default (the super admin row's stored
+ *     list records which keys were already known).
+ */
+async function syncRoles() {
+  const existing = await prisma.appRole.findMany({ where: { key: { in: BUILTIN_ROLES.map((r) => r.key) } } });
+  const have = new Set(existing.map((r) => r.key));
+  const missing = BUILTIN_ROLES.filter((r) => !have.has(r.key));
+
+  if (missing.length) {
+    const legacy = await readLegacyMatrix();
+    await prisma.appRole.createMany({
+      data: missing.map((r) => ({
+        id: `role_${r.key}`,
+        key: r.key,
+        nameEn: r.nameEn,
+        nameAr: r.nameAr,
+        description: r.description,
+        color: r.color,
+        type: r.type,
+        rank: r.rank,
+        sortOrder: r.sortOrder,
+        isSystem: true,
+        permissions: r.type === Role.SUPER_ADMIN ? ALL_PERMISSIONS : legacy[r.type],
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  const builtins = await prisma.appRole.findMany({ where: { key: { in: BUILTIN_ROLES.map((r) => r.key) } } });
+  for (const r of builtins) {
+    if (!BUILTIN_ROLES.some((b) => b.key === r.key && b.type === r.type)) continue;
+    await prisma.user.updateMany({ where: { roleId: null, role: r.type }, data: { roleId: r.id } });
+  }
+
+  const superRole = builtins.find((r) => r.key === SUPER_ADMIN_ROLE_KEY);
+  if (superRole) {
+    const known = new Set(superRole.permissions);
+    const added = ALL_PERMISSIONS.filter((k) => !known.has(k));
+    if (added.length) {
+      for (const r of builtins) {
+        if (r.key === SUPER_ADMIN_ROLE_KEY) continue;
+        const def = BUILTIN_ROLES.find((b) => b.key === r.key);
+        if (!def) continue;
+        const grant = added.filter((k) => DEFAULT_ROLE_PERMISSIONS[def.type].includes(k));
+        if (grant.length) {
+          await prisma.appRole.update({ where: { id: r.id }, data: { permissions: sanitizePermissions([...r.permissions, ...grant]) } });
+        }
+      }
+      await prisma.appRole.update({ where: { id: superRole.id }, data: { permissions: ALL_PERMISSIONS } });
+    }
+  }
+}
+
+async function ensureSynced() {
+  if (roleState.__appRoleSynced) return;
+  if (!roleState.__appRoleSync) {
+    roleState.__appRoleSync = syncRoles()
+      .then(() => {
+        roleState.__appRoleSynced = true;
+      })
+      .finally(() => {
+        roleState.__appRoleSync = null;
+      });
+  }
+  await roleState.__appRoleSync;
+}
+
+async function loadRoleCache(): Promise<RoleCache> {
+  const cached = roleState.__appRoleCache;
+  if (cached && Date.now() - cached.at < CACHE_TTL_MS) return cached;
+  await ensureSynced();
+  const rows = await prisma.appRole.findMany({
+    select: { id: true, key: true, nameEn: true, nameAr: true, color: true, type: true, rank: true, isSystem: true, permissions: true },
   });
-
-  return normalized;
+  const byId = new Map<string, CachedRole>();
+  const byKey = new Map<string, CachedRole>();
+  for (const r of rows) {
+    const role: CachedRole = {
+      ...r,
+      permissions: r.type === Role.SUPER_ADMIN ? ALL_PERMISSIONS : sanitizePermissions(r.permissions),
+    };
+    byId.set(r.id, role);
+    byKey.set(r.key, role);
+  }
+  const next = { at: Date.now(), byId, byKey };
+  roleState.__appRoleCache = next;
+  return next;
 }
 
-export async function getPermissionsForRole(role: Role): Promise<string[]> {
-  const matrix = await getRolePermissionsMatrix();
-  return matrix[role] ?? [];
+export async function getCachedRole(id: string): Promise<CachedRole | null> {
+  return (await loadRoleCache()).byId.get(id) ?? null;
 }
 
-export async function roleHasPermission(role: Role, permission: string): Promise<boolean> {
-  const permissions = await getPermissionsForRole(role);
-  return permissions.includes(permission);
+/** The built-in role for an account type (null only if the table is unreachable). */
+export async function getBuiltInRole(type: Role): Promise<CachedRole | null> {
+  return (await loadRoleCache()).byKey.get(BUILTIN_ROLE_KEY[type]) ?? null;
 }
-
 
 // ─────────────────────────────────────────────
-// Per-user overrides & role ranking
+// Effective permissions
 // ─────────────────────────────────────────────
 
 export type PermissionOverrides = { grant: string[]; revoke: string[] };
@@ -366,34 +560,53 @@ export function parseOverrides(raw: unknown): PermissionOverrides {
   return { grant: sanitizePermissions(o.grant), revoke: sanitizePermissions(o.revoke) };
 }
 
-/** Role permissions, plus this user's extra grants, minus their revokes. */
-export async function getEffectivePermissions(user: { role: Role; permissionOverrides?: unknown }): Promise<string[]> {
-  const base = await getPermissionsForRole(user.role);
-  if (user.role === Role.SUPER_ADMIN) return base; // always everything
+/** Anything permissions are computed for: a user row or the session user. */
+export type PermissionSubject = { role: Role; roleId: string | null; permissionOverrides?: unknown };
+
+/** The user's assigned role, or the built-in role for their account type. */
+export async function resolveUserRole(user: { role: Role; roleId: string | null }): Promise<CachedRole | null> {
+  const cache = await loadRoleCache();
+  return (user.roleId ? cache.byId.get(user.roleId) : undefined) ?? cache.byKey.get(BUILTIN_ROLE_KEY[user.role]) ?? null;
+}
+
+/** Permissions the role gives, before this user's overrides. */
+export async function getRoleBasePermissions(user: { role: Role; roleId: string | null }): Promise<string[]> {
+  if (user.role === Role.SUPER_ADMIN) return ALL_PERMISSIONS;
+  const role = await resolveUserRole(user);
+  return role ? role.permissions : [...DEFAULT_ROLE_PERMISSIONS[user.role]].sort();
+}
+
+/** Role permissions, plus this user's extra grants, minus their revokes. Super admins: everything. */
+export async function getEffectivePermissions(user: PermissionSubject): Promise<string[]> {
+  if (user.role === Role.SUPER_ADMIN) return ALL_PERMISSIONS; // always everything
+  const base = await getRoleBasePermissions(user);
   const { grant, revoke } = parseOverrides(user.permissionOverrides);
   const set = new Set([...base, ...grant]);
   for (const r of revoke) set.delete(r);
   return Array.from(set).sort();
 }
 
-/** Higher number = more senior. Used to stop privilege escalation. */
-export const ROLE_RANK: Record<Role, number> = {
-  [Role.SUPER_ADMIN]: 4,
-  [Role.ADMIN]: 3,
-  [Role.STAFF]: 2,
-  [Role.SELLER]: 1,
-  [Role.CUSTOMER]: 0,
-};
-
-/** Actor may edit/deactivate/delete the target account. */
-export function canManageUser(actor: { id: string; role: Role }, target: { id: string; role: Role }): boolean {
-  if (actor.id === target.id) return false;
-  if (actor.role === Role.SUPER_ADMIN) return true;
-  return ROLE_RANK[actor.role] > ROLE_RANK[target.role];
+/** Seniority of the user's role (higher = more senior). */
+export async function getUserRank(user: { role: Role; roleId: string | null }): Promise<number> {
+  if (user.role === Role.SUPER_ADMIN) return ROLE_RANK.SUPER_ADMIN;
+  const role = await resolveUserRole(user);
+  return role?.rank ?? ROLE_RANK[user.role];
 }
 
-/** Actor may give someone this role (never above — or, except super admins, equal to — their own). */
-export function canAssignRole(actor: { role: Role }, role: Role): boolean {
-  if (actor.role === Role.SUPER_ADMIN) return true;
-  return ROLE_RANK[role] < ROLE_RANK[actor.role];
+/** Permissions of the built-in role for an account type. */
+export async function getPermissionsForRole(role: Role): Promise<string[]> {
+  if (role === Role.SUPER_ADMIN) return ALL_PERMISSIONS;
+  const builtIn = await getBuiltInRole(role);
+  return builtIn ? builtIn.permissions : [...DEFAULT_ROLE_PERMISSIONS[role]].sort();
+}
+
+export async function roleHasPermission(role: Role, permission: string): Promise<boolean> {
+  const permissions = await getPermissionsForRole(role);
+  return permissions.includes(permission);
+}
+
+/** Built-in roles' permissions keyed by account type. */
+export async function getRolePermissionsMatrix(): Promise<RolePermissionsMatrix> {
+  const entries = await Promise.all(ROLE_ORDER.map(async (role) => [role, await getPermissionsForRole(role)] as const));
+  return Object.fromEntries(entries) as RolePermissionsMatrix;
 }

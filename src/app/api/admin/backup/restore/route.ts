@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 
     return ok({
       message:
-        "Restore completed. Active sessions were reset by the restored data — you may need to sign in again.",
+        "Restore completed. Active sessions were reset by the restored data. You may need to sign in again.",
     });
   } catch (e) {
     return serverError(e);

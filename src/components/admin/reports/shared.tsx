@@ -24,9 +24,9 @@ export const pct = (n: number | null | undefined) => `${(n ?? 0).toFixed(1)}%`;
 export const fmtDateTime = (iso: string | null | undefined) =>
   iso
     ? new Date(iso).toLocaleString("en-GB", { timeZone: SHOP_TZ, day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
-    : "—";
+    : "-";
 export const fmtTime = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleTimeString("en-GB", { timeZone: SHOP_TZ, hour: "2-digit", minute: "2-digit" }) : "—";
+  iso ? new Date(iso).toLocaleTimeString("en-GB", { timeZone: SHOP_TZ, hour: "2-digit", minute: "2-digit" }) : "-";
 /** "2026-11-16" → "Mon 16 Nov 2026" */
 export const fmtDay = (key: string) => {
   const d = new Date(`${key}T12:00:00Z`);
@@ -192,7 +192,7 @@ export type Column<T> = {
 const alignOf = (c: Column<unknown>) => (c.kind && c.kind !== "text" ? "right" : "left");
 
 export function formatValue(kind: ColumnKind | undefined, v: number | string | null | undefined): string {
-  if (v == null || v === "") return "—";
+  if (v == null || v === "") return "-";
   if (typeof v === "string") return v;
   if (kind === "money") return f3(v);
   if (kind === "int") return int(v);
@@ -397,7 +397,7 @@ export function DataTable<T>({
       {footer}
 
       <PrintArea id={printId}>
-        <div style={{ fontFamily: 'Tahoma, "Segoe UI", Arial, sans-serif', color: "#000" }}>
+        <div style={{ fontFamily: 'Vazirmatn, SBC, Tahoma, "Segoe UI", Arial, sans-serif', color: "#000" }}>
           <PrintHeader title={title} titleAr={titleAr} extra={printExtra} />
           <table style={printTable}>
             <thead>

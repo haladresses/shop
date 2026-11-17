@@ -71,10 +71,10 @@ export default function PaymentTab({ query }: { query: string }) {
     <div className="space-y-5">
       {error && <p className="text-sm text-rose-600 bg-rose-50 rounded-xl px-4 py-3">{error}</p>}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Figure label="Received" ar="المقبوض" value={t ? money(t.amount) : "—"} sub={t ? `${int(t.transactions)} transactions` : ""} />
-        <Figure label="Refunded" ar="المسترد" value={t ? money(t.refunds) : "—"} sub={t ? `${int(t.refundCount)} refunds` : ""} />
-        <Figure label="Net takings" ar="صافي المقبوض" value={t ? money(t.net) : "—"} strong />
-        <Figure label="Gross sales" ar="إجمالي المبيعات" value={data ? money(data.grossSales) : "—"} sub={data?.unrecorded ? `${money(data.unrecorded)} without a payment record` : "Reconciles with payments"} />
+        <Figure label="Received" ar="المقبوض" value={t ? money(t.amount) : "-"} sub={t ? `${int(t.transactions)} transactions` : ""} />
+        <Figure label="Refunded" ar="المسترد" value={t ? money(t.refunds) : "-"} sub={t ? `${int(t.refundCount)} refunds` : ""} />
+        <Figure label="Net takings" ar="صافي المقبوض" value={t ? money(t.net) : "-"} strong />
+        <Figure label="Gross sales" ar="إجمالي المبيعات" value={data ? money(data.grossSales) : "-"} sub={data?.unrecorded ? `${money(data.unrecorded)} without a payment record` : "Reconciles with payments"} />
       </div>
       <ReportTable
         id="sales-by-payment"

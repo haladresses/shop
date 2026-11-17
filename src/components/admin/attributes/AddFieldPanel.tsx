@@ -55,7 +55,7 @@ export default function AddFieldPanel({
           <input
             autoFocus
             className="admin-input !pl-9"
-            placeholder="Search ready-made fields — fabric, sleeves, الخامة…"
+            placeholder="Search ready-made fields: fabric, sleeves, الخامة…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => {
@@ -89,7 +89,7 @@ export default function AddFieldPanel({
 
       {!query && (
         <section className="mb-5">
-          <SectionTitle><LuSparkles size={13} /> Starter sets — add a typical category in one click</SectionTitle>
+          <SectionTitle><LuSparkles size={13} /> Starter sets: add a typical category in one click</SectionTitle>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {PRESET_KITS.map((kit) => {
               const missing = kit.keys.filter((k) => state(k) === "available");
@@ -183,7 +183,7 @@ export default function AddFieldPanel({
       )}
 
       {query && !presets.length && !types.length && (
-        <p className="text-sm text-slate-500">No ready-made field matches “{raw}” — use the button above to create it.</p>
+        <p className="text-sm text-slate-500">No ready-made field matches “{raw}”: use the button above to create it.</p>
       )}
     </div>
   );

@@ -57,7 +57,7 @@ export default function TaxPage() {
             <p className={`text-sm ${on ? "text-emerald-800/80" : "text-amber-800/80"}`}>
               {on
                 ? `Charged on every sale (online and POS) at ${settings.defaultRate.nameEn} (${rateLabel(settings.defaultRate)}) unless a product or category says otherwise. Prices ${
-                    settings.pricesIncludeTax ? "already include VAT" : "are shown before VAT — VAT is added at checkout"
+                    settings.pricesIncludeTax ? "already include VAT" : "are shown before VAT. VAT is added at checkout"
                   }.`
                 : "No VAT is added to sales and invoices don't show VAT. Set up your rates and VAT number, then switch it on in Settings."}
             </p>
@@ -65,7 +65,7 @@ export default function TaxPage() {
           {on && (
             <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs shrink-0">
               <dt className="text-emerald-800/70">VAT number</dt>
-              <dd className="font-mono font-semibold text-emerald-900">{settings.vatNumber || "— missing —"}</dd>
+              <dd className="font-mono font-semibold text-emerald-900">{settings.vatNumber || "Not set"}</dd>
               <dt className="text-emerald-800/70">Prices</dt>
               <dd className="font-semibold text-emerald-900">{settings.pricesIncludeTax ? "Incl. VAT" : "Excl. VAT"}</dd>
             </dl>

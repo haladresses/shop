@@ -31,7 +31,7 @@ export default function ReviewsPage() {
             <p className="text-slate-500 max-w-md">
               Customer reviews will appear here. You can approve or reject reviews before they are shown publicly.
             </p>
-            <p className="text-slate-400 text-sm mt-2">No reviews yet — they will appear once customers start reviewing products.</p>
+            <p className="text-slate-400 text-sm mt-2">No reviews yet: they will appear once customers start reviewing products.</p>
           </div>
         )}
       </div>

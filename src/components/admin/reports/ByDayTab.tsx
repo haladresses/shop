@@ -59,12 +59,12 @@ export default function ByDayTab({ query, onDay }: { query: string; onDay: (day:
     <div className="space-y-5">
       {error && <p className="text-sm text-rose-600 bg-rose-50 rounded-xl px-4 py-3">{error}</p>}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-        <Figure label="Trading days" ar="أيام البيع" value={t ? int(t.activeDays) : "—"} sub={data ? `of ${data.rows.length} in period` : ""} />
-        <Figure label="Receipts" ar="الفواتير" value={t ? int(t.orders) : "—"} sub={t ? `${int(t.items)} items` : ""} />
-        <Figure label="Gross sales" ar="إجمالي المبيعات" value={t ? money(t.gross) : "—"} />
-        <Figure label="Refunds" ar="المرتجعات" value={t ? money(t.refunds) : "—"} sub={t ? `${int(t.refundCount)} return(s)` : ""} />
-        <Figure label="Avg per trading day" ar="متوسط اليوم" value={t && t.activeDays ? money(t.net / t.activeDays) : "—"} />
-        <Figure label="Net sales" ar="صافي المبيعات" value={t ? money(t.net) : "—"} sub={t ? `Excl. VAT ${money(t.netExVat)}` : ""} strong />
+        <Figure label="Trading days" ar="أيام البيع" value={t ? int(t.activeDays) : "-"} sub={data ? `of ${data.rows.length} in period` : ""} />
+        <Figure label="Receipts" ar="الفواتير" value={t ? int(t.orders) : "-"} sub={t ? `${int(t.items)} items` : ""} />
+        <Figure label="Gross sales" ar="إجمالي المبيعات" value={t ? money(t.gross) : "-"} />
+        <Figure label="Refunds" ar="المرتجعات" value={t ? money(t.refunds) : "-"} sub={t ? `${int(t.refundCount)} return(s)` : ""} />
+        <Figure label="Avg per trading day" ar="متوسط اليوم" value={t && t.activeDays ? money(t.net / t.activeDays) : "-"} />
+        <Figure label="Net sales" ar="صافي المبيعات" value={t ? money(t.net) : "-"} sub={t ? `Excl. VAT ${money(t.netExVat)}` : ""} strong />
       </div>
       <ReportTable
         id="sales-by-day"
@@ -81,7 +81,7 @@ export default function ByDayTab({ query, onDay }: { query: string; onDay: (day:
             <input type="checkbox" checked={hideEmpty} onChange={(e) => setHideEmpty(e.target.checked)} className="rounded" /> Hide days without sales
           </label>
         }
-        note="Sales are dated by when the order was placed; refunds by when they were made — so a day's net can be negative. Click a day for its full end-of-day summary."
+        note="Sales are dated by when the order was placed; refunds by when they were made. So a day's net can be negative. Click a day for its full end-of-day summary."
       />
     </div>
   );

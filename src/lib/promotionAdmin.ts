@@ -121,8 +121,8 @@ export async function checkTargetsExist(n: NormalizedPromotion): Promise<string 
     productIds.length ? prisma.product.count({ where: { id: { in: productIds } } }) : 0,
     categoryIds.length ? prisma.category.count({ where: { id: { in: categoryIds } } }) : 0,
   ]);
-  if (pc !== productIds.length) return "Some of the selected products no longer exist — please re-select them.";
-  if (cc !== categoryIds.length) return "Some of the selected categories no longer exist — please re-select them.";
+  if (pc !== productIds.length) return "Some of the selected products no longer exist. Please re-select them.";
+  if (cc !== categoryIds.length) return "Some of the selected categories no longer exist. Please re-select them.";
   return null;
 }
 

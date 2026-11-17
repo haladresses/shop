@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/db";
 import { hashPassword, createSession } from "@/lib/auth";
-import { normalizePhone, parseIdentifier, phoneCandidates, PHONE_ACCOUNT_DOMAIN, registerSchema } from "@/lib/validations/auth";
+import { normalizePhone, parseIdentifier, phoneCandidates, PHONE_ACCOUNT_DOMAIN, publicEmail, registerSchema } from "@/lib/validations/auth";
 import { created, error, serverError } from "@/lib/api/response";
 import { cookies } from "next/headers";
 
@@ -29,12 +29,14 @@ export async function POST(req: NextRequest) {
       },
     });
     if (existing) {
-      return error(id.kind === "phone" ? "This mobile number already has an account — sign in instead." : "This email already has an account — sign in instead.", 409);
+      return error(id.kind === "phone" ? "This mobile number already has an account. Sign in instead." : "This email already has an account. Sign in instead.", 409);
     }
 
     const passwordHash = await hashPassword(password);
+    // New shoppers get the built-in Customer role straight away.
+    const customerRole = await prisma.appRole.findUnique({ where: { key: "customer" }, select: { id: true } });
     const user = await prisma.user.create({
-      data: { email, passwordHash, nameEn, nameAr, phone },
+      data: { email, passwordHash, nameEn, nameAr, phone, roleId: customerRole?.id ?? null },
     });
 
     const token = await createSession(user.id);
@@ -50,7 +52,8 @@ export async function POST(req: NextRequest) {
     return created({
       user: {
         id: user.id,
-        email: user.email,
+        email: publicEmail(user.email),
+        phone: user.phone,
         nameEn: user.nameEn,
         role: user.role,
       },

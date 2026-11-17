@@ -227,7 +227,7 @@ export async function ensureStockVariant(tx: Prisma.TransactionClient, productId
     return product.variants[0].id;
   }
   if (product.variants.length > 1) {
-    throw new PurchasingError(`${product.nameEn} now has sizes/colours — choose the exact option on the order before receiving it.`);
+    throw new PurchasingError(`${product.nameEn} now has sizes/colours: choose the exact option on the order before receiving it.`);
   }
   const barcodeTaken = product.barcode
     ? await tx.productVariant.findUnique({ where: { barcode: product.barcode }, select: { id: true } })
@@ -413,7 +413,7 @@ export async function receivePurchaseLines(
   });
   if (!po) throw new PurchasingError("Purchase order not found", 404);
   if (!["DRAFT", "ORDERED", "PARTIALLY_RECEIVED"].includes(po.status)) {
-    throw new PurchasingError(`This order is ${po.status.toLowerCase().replace("_", " ")} — nothing more can be received.`, 409);
+    throw new PurchasingError(`This order is ${po.status.toLowerCase().replace("_", " ")}. Nothing more can be received.`, 409);
   }
 
   const merged = new Map<string, number>();
@@ -537,7 +537,7 @@ export async function createSupplierReturn(
   let units = 0;
   let po: Prisma.PurchaseOrderGetPayload<{ include: { items: true } }> | null = null;
   const dn = await nextDocumentNumber(tx, "DN", input.returnedAt);
-  const note = (extra: string) => `${dn} · returned to ${supplier.nameEn}${extra}${input.reason ? ` — ${input.reason}` : ""}`;
+  const note = (extra: string) => `${dn} · returned to ${supplier.nameEn}${extra}${input.reason ? `: ${input.reason}` : ""}`;
 
   if (input.purchaseOrderId) {
     po = await tx.purchaseOrder.findUnique({ where: { id: input.purchaseOrderId }, include: { items: true } });
@@ -807,7 +807,7 @@ export async function recordSupplierPayment(
     for (const [poId, amt] of merged) {
       const po = pos.find((p) => p.id === poId);
       if (!po || po.supplierId !== input.supplierId) throw new PurchasingError("A selected order doesn't belong to this supplier.");
-      if (!PAYABLE_STATUSES.includes(po.status)) throw new PurchasingError(`${po.number} isn't placed yet (or is cancelled) — it can't be paid.`);
+      if (!PAYABLE_STATUSES.includes(po.status)) throw new PurchasingError(`${po.number} isn't placed yet (or is cancelled): it can't be paid.`);
       if (amt > poOutstanding(po) + 0.0005) {
         throw new PurchasingError(`${po.number} only has ${poOutstanding(po).toFixed(3)} OMR left to pay.`);
       }

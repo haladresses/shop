@@ -35,7 +35,7 @@ function NewPurchaseOrder() {
         const d = await api<PoDetailData>(`/api/purchases/${from}`);
         if (d.success && d.data) {
           setInitial(poToEditor(d.data, true));
-          setNote(`Copied from ${d.data.number} — check prices and quantities before placing it.`);
+          setNote(`Copied from ${d.data.number}. Check prices and quantities before placing it.`);
           return;
         }
       }

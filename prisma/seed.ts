@@ -50,6 +50,9 @@ async function main() {
     },
   });
 
+  // Roles: the five built-in roles (app_roles) are created from the permission
+  // defaults in src/lib/permissions.ts and given to these users automatically
+  // the first time the app checks a permission (syncRoles), so nothing to seed here.
   console.log("✅ Users created");
 
   // ── Categories ────────────────────────────────────────────
@@ -270,8 +273,8 @@ async function main() {
       nameEn: "Royal Embroidered Kaftan Gown",
       nameAr: "فستان قفطان مطرز ملكي",
       slug: "royal-embroidered-kaftan-gown",
-      descriptionEn: "A regal, fully embroidered kaftan gown with a flowing overlay — a showstopper for Eid and weddings.",
-      descriptionAr: "قفطان ملكي مطرز بالكامل بطبقة خارجية انسيابية — إطلالة مبهرة للعيد والأعراس.",
+      descriptionEn: "A regal, fully embroidered kaftan gown with a flowing overlay, a showstopper for Eid and weddings.",
+      descriptionAr: "قفطان ملكي مطرز بالكامل بطبقة خارجية انسيابية، إطلالة مبهرة للعيد والأعراس.",
       categoryId: categories["evening-wear"],
       basePrice: 45.000,
       isFeatured: true,
@@ -418,8 +421,8 @@ async function main() {
       nameEn: "Matching Floral Mom & Me Set",
       nameAr: "طقم مطابق للأم والابنة مزهر",
       slug: "matching-floral-mom-me-set",
-      descriptionEn: "Coordinated floral dresses for mother and daughter — perfect for family photos.",
-      descriptionAr: "فستانان مزهران متناسقان للأم والابنة — مثاليان لصور العائلة.",
+      descriptionEn: "Coordinated floral dresses for mother and daughter, perfect for family photos.",
+      descriptionAr: "فستانان مزهران متناسقان للأم والابنة، مثاليان لصور العائلة.",
       categoryId: categories["mom-mini-sets"],
       basePrice: 21.900,
       isFeatured: true,

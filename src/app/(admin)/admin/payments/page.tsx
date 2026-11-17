@@ -131,7 +131,7 @@ export default function PaymentsPage() {
                     <td className="font-medium">{Number(p.amount).toFixed(3)} OMR</td>
                     <td className="text-slate-600">{methodLabels[p.method] || p.method}</td>
                     <td><span className={`badge ${statusColors[p.status] || "badge-unpaid"}`}>{p.status}</span></td>
-                    <td className="font-mono text-xs text-slate-400">{p.transactionId || "—"}</td>
+                    <td className="font-mono text-xs text-slate-400">{p.transactionId || "-"}</td>
                     <td className="text-slate-500 text-sm">{new Date(p.createdAt).toLocaleDateString()}</td>
                     <td>
                       {p.method === "THAWANI" && p.status === "PAID" && (
@@ -178,7 +178,7 @@ export default function PaymentsPage() {
             <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-4 text-left">{refundError}</p>
           )}
           <p className="text-sm text-slate-500">
-            Order <span className="font-mono font-medium">{refundTarget?.order.orderNumber}</span> — refunding{" "}
+            Order <span className="font-mono font-medium">{refundTarget?.order.orderNumber}</span>. Refunding{" "}
             <span className="font-medium">{refundTarget ? Number(refundTarget.amount).toFixed(3) : ""} OMR</span> via
             Thawani. This cannot be undone.
           </p>

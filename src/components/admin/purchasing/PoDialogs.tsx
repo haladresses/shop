@@ -262,8 +262,8 @@ export function ReturnToSupplierModal({
                       </td>
                       <td className="text-right tabular-nums">{i.receivedQty}</td>
                       <td className="text-right tabular-nums text-slate-500">{i.returnedQty}</td>
-                      <td className="text-right tabular-nums text-slate-500">{i.onHand ?? "—"}</td>
-                      <td className="text-right tabular-nums">{i.quantity > 0 ? fmt3((i.netAmount + i.taxAmount) / i.quantity) : "—"}</td>
+                      <td className="text-right tabular-nums text-slate-500">{i.onHand ?? "-"}</td>
+                      <td className="text-right tabular-nums">{i.quantity > 0 ? fmt3((i.netAmount + i.taxAmount) / i.quantity) : "-"}</td>
                       <td className="text-right">
                         <input type="number" min="0" max={max} placeholder={`max ${max}`} className="admin-input !py-1 text-right" value={qty[i.id] ?? ""} onChange={(e) => setQty({ ...qty, [i.id]: e.target.value })} />
                       </td>

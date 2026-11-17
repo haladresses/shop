@@ -106,7 +106,7 @@ export default function LegalPagesAdminPage() {
             );
           })}
         </nav>
-        <p className="hidden lg:block text-xs text-slate-400 px-2">These pages are linked from the store footer. Write in both languages — shoppers see the one matching their language.</p>
+        <p className="hidden lg:block text-xs text-slate-400 px-2">These pages are linked from the store footer. Write in both languages. Shoppers see the one matching their language.</p>
       </aside>
 
       <section className="min-w-0 space-y-4">
@@ -125,7 +125,7 @@ export default function LegalPagesAdminPage() {
       {(dirty || saved) && (
         <div className="fixed bottom-5 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 z-40 flex items-center gap-3 rounded-2xl bg-slate-900 text-white ps-5 pe-2 py-2 shadow-2xl">
           {saved && !dirty ? (
-            <span className="text-sm flex items-center gap-1.5 pe-3"><LuCheck size={16} /> Saved — live on the store</span>
+            <span className="text-sm flex items-center gap-1.5 pe-3"><LuCheck size={16} /> Saved: live on the store</span>
           ) : (
             <>
               <span className="text-sm">Unsaved changes</span>

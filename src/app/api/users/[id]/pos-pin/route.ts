@@ -1,10 +1,10 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db";
-import { getAuthFromRequest, userHasPermission } from "@/lib/auth";
-import { canManageUser } from "@/lib/permissions";
+import { guard } from "@/lib/api/guard";
+import { getActor, userBlockReason } from "@/lib/roles";
 import { isValidPin, hashPin, PIN_LENGTH } from "@/lib/pos";
-import { ok, error, unauthorized, forbidden, notFound, serverError } from "@/lib/api/response";
+import { ok, error, notFound, serverError } from "@/lib/api/response";
 
 const bodySchema = z.object({
   pin: z.string().nullable(),
@@ -13,9 +13,9 @@ const bodySchema = z.object({
 /** Set (or clear, with `pin: null`) a user's POS PIN. Admin-only. */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const admin = await getAuthFromRequest(req);
-    if (!admin) return unauthorized();
-    if (!(await userHasPermission(admin, "admin.users.manage"))) return forbidden();
+    const g = await guard(req, "admin.users.manage");
+    if ("res" in g) return g.res;
+    const admin = await getActor(g.user);
 
     const { id } = await params;
     const parsed = bodySchema.safeParse(await req.json());
@@ -23,8 +23,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) return notFound("User");
-    // Your own PIN, or someone below you — never a peer or senior.
-    if (admin.id !== user.id && !canManageUser(admin, user)) return forbidden();
+    // Your own PIN, or someone below you: never a peer or senior.
+    if (admin.id !== user.id) {
+      const reason = await userBlockReason(admin, user);
+      if (reason) return error(reason, 403);
+    }
 
     if (parsed.data.pin === null) {
       await prisma.user.update({

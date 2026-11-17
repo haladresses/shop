@@ -77,7 +77,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         date: r.returnedAt,
         type: "RETURN",
         number: r.number,
-        description: `Goods returned${r.purchaseOrder ? ` from ${r.purchaseOrder.number}` : ""}${r.reason ? ` — ${r.reason}` : ""}`,
+        description: `Goods returned${r.purchaseOrder ? ` from ${r.purchaseOrder.number}` : ""}${r.reason ? `: ${r.reason}` : ""}`,
         debit: 0,
         credit: num(r.total),
         link: r.purchaseOrder ? `/admin/purchases/${r.purchaseOrder.id}` : null,

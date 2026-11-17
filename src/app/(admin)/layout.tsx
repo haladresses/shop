@@ -11,6 +11,8 @@ export default function AdminRootLayout({
   return (
     <SiteDocument
       lang="en"
+      // Plain, motion-free admin (see admin.css "No motion").
+      bodyClassName="admin-body"
       head={
         <>
           <title>Admin Panel | Hala Dresses</title>

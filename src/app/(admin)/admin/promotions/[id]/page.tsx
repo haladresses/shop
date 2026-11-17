@@ -70,29 +70,52 @@ export default function PromotionDetailPage() {
 
 function Performance({ detail }: { detail: PromotionDetail }) {
   const { stats, series, recent } = detail;
-  const max = Math.max(1, ...series.map((s) => s.orders));
   const avgSaving = stats.redemptions ? stats.discount / stats.redemptions : 0;
+  // Only the days the deal was actually used, newest first.
+  const activeDays = series.filter((s) => s.orders > 0).reverse();
+  const days30 = activeDays.reduce((t, s) => ({ orders: t.orders + s.orders, discount: t.discount + s.discount }), { orders: 0, discount: 0 });
   return (
-    <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4">
-      <div className="admin-card p-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+    <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-4 items-start">
+      <div className="admin-card">
+        <p className="px-4 pt-4 pb-2 text-sm font-semibold text-slate-700">All time</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-4 pb-4">
           <Stat label="Orders" value={stats.redemptions.toLocaleString()} />
           <Stat label="Discount given" value={omr(stats.discount)} />
           <Stat label="Sales with deal" value={omr(stats.revenue)} />
           <Stat label="Avg saving" value={omr(avgSaving)} />
         </div>
-        <p className="text-xs font-medium text-slate-500 mb-2">Orders per day · last 30 days</p>
-        <div className="flex items-end gap-[3px] h-20" role="img" aria-label="Orders per day over the last 30 days">
-          {series.map((s) => (
-            <div key={s.day} className="flex-1 h-full flex items-end" title={`${s.day}: ${s.orders} order(s), ${s.discount.toFixed(3)} OMR off`}>
-              <div className={`w-full rounded-t ${s.orders ? "bg-indigo-500" : "bg-slate-100"}`} style={{ height: `${s.orders ? Math.max(8, (s.orders / max) * 100) : 6}%` }} />
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-between text-[10px] text-slate-400 mt-1">
-          <span>{series[0]?.day.slice(5)}</span>
-          <span>{series[series.length - 1]?.day.slice(5)}</span>
-        </div>
+        <p className="px-4 pt-3 pb-2 text-sm font-semibold text-slate-700 border-t border-slate-100">Last 30 days, by day</p>
+        {activeDays.length === 0 ? (
+          <p className="px-4 pb-6 text-sm text-slate-400">Not used in the last 30 days.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="admin-table tabular-nums">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th className="text-right">Orders</th>
+                  <th className="text-right">Discount given (OMR)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeDays.map((s) => (
+                  <tr key={s.day}>
+                    <td className="whitespace-nowrap">{dayName(s.day)}</td>
+                    <td className="text-right">{s.orders}</td>
+                    <td className="text-right">{s.discount.toFixed(3)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="bg-slate-100">
+                  <td className="font-bold text-slate-900 border-t-2 border-slate-300">Total, 30 days</td>
+                  <td className="text-right font-bold text-slate-900 border-t-2 border-slate-300">{days30.orders}</td>
+                  <td className="text-right font-bold text-slate-900 border-t-2 border-slate-300">{days30.discount.toFixed(3)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="admin-card overflow-hidden">
@@ -119,7 +142,7 @@ function Performance({ detail }: { detail: PromotionDetail }) {
                         {new Date(r.createdAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })} · {r.order.source === "POS" ? "POS" : "Online"}
                       </p>
                     </td>
-                    <td className="text-slate-600">{r.order.customer || "—"}</td>
+                    <td className="text-slate-600">{r.order.customer || "-"}</td>
                     <td className="text-right tabular-nums text-emerald-700">−{r.discount.toFixed(3)}</td>
                     <td className="text-right tabular-nums">{r.order.total.toFixed(3)}</td>
                   </tr>
@@ -131,6 +154,11 @@ function Performance({ detail }: { detail: PromotionDetail }) {
       </div>
     </div>
   );
+}
+
+/** "2026-11-16" → "Mon 16 Nov 2026" */
+function dayName(key: string) {
+  return new Date(`${key}T12:00:00Z`).toLocaleDateString("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short", year: "numeric" });
 }
 
 function Stat({ label, value }: { label: string; value: string }) {

@@ -237,7 +237,7 @@ export default function SupplierFormModal({
           <Field label="Status">
             <label className="flex items-center gap-2 h-[38px] text-sm text-slate-700">
               <input type="checkbox" checked={f.isActive} onChange={(e) => set("isActive", e.target.checked)} className="rounded" />
-              Active — can be used on new purchase orders
+              Active: can be used on new purchase orders
             </label>
           </Field>
         </Section>
