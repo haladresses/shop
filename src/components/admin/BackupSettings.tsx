@@ -18,7 +18,7 @@ type Backup = {
   id: string;
   filename: string;
   sizeBytes: string | null;
-  type: "MANUAL" | "SCHEDULED";
+  type: "MANUAL" | "SCHEDULED" | "PRE_RESTORE";
   status: "IN_PROGRESS" | "COMPLETED" | "FAILED";
   includesFiles: boolean;
   errorMessage: string | null;
@@ -34,6 +34,24 @@ type ScheduleSettings = {
 };
 
 type RestoreTarget = Backup | "upload";
+
+type RestoreResult = {
+  backupCreatedAt: string | null;
+  safetyBackupId: string;
+  schemaUpdates: number;
+  filesRestored: boolean;
+  signedIn: boolean;
+  warnings: string[];
+};
+
+type Notice = {
+  type: "success" | "error";
+  text: string;
+  /** Extra points shown under the message, e.g. restore steps that need attention. */
+  details?: string[];
+  /** Show a link to sign in again. */
+  signIn?: boolean;
+};
 
 function formatBytes(bytes: string | null) {
   if (!bytes) return "-";
@@ -62,14 +80,41 @@ const STATUS_BADGE: Record<Backup["status"], string> = {
 const TYPE_BADGE: Record<Backup["type"], string> = {
   MANUAL: "badge-admin",
   SCHEDULED: "badge-staff",
+  PRE_RESTORE: "badge-pending",
 };
+
+const TYPE_LABEL: Record<Backup["type"], string> = {
+  MANUAL: "Manual",
+  SCHEDULED: "Scheduled",
+  PRE_RESTORE: "Before restore",
+};
+
+/** Reads an API response, also when the server answered with something other than JSON. */
+async function readJson(res: Response): Promise<{ success?: boolean; data?: unknown; error?: string }> {
+  try {
+    return await res.json();
+  } catch {
+    return { success: false, error: `The server answered with an error (HTTP ${res.status}).` };
+  }
+}
+
+function restoreSummary(r: RestoreResult): string {
+  const parts = ["Restore completed."];
+  if (r.backupCreatedAt) parts.push(`The data is now as it was on ${formatDate(r.backupCreatedAt)}.`);
+  if (r.schemaUpdates > 0) parts.push("The database structure was updated to match this version of the site.");
+  parts.push(
+    'The data from before the restore was saved as a "Before restore" backup, so this restore can be undone from Backup History.'
+  );
+  if (!r.signedIn) parts.push("Your account is not in the restored data, so sign in again with an account from the backup.");
+  return parts.join(" ");
+}
 
 export default function BackupSettings() {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [backups, setBackups] = useState<Backup[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<Notice | null>(null);
 
   const [schedule, setSchedule] = useState<ScheduleSettings>({
     backup_schedule_enabled: "false",
@@ -84,6 +129,7 @@ export default function BackupSettings() {
   const [restoreFilesToo, setRestoreFilesToo] = useState(true);
   const [confirmText, setConfirmText] = useState("");
   const [restoring, setRestoring] = useState(false);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const normalizedConfirmText = confirmText.trim().toUpperCase();
 
@@ -116,7 +162,7 @@ export default function BackupSettings() {
     setMessage(null);
     try {
       const res = await fetch("/api/admin/backup", { method: "POST" });
-      const data = await res.json();
+      const data = await readJson(res);
       if (data.success) {
         setMessage({ type: "success", text: "Backup created successfully." });
         await loadAll();
@@ -133,7 +179,7 @@ export default function BackupSettings() {
   const removeBackup = async (id: string) => {
     if (!confirm("Delete this backup permanently? This cannot be undone.")) return;
     const res = await fetch(`/api/admin/backup/${id}`, { method: "DELETE" });
-    const data = await res.json();
+    const data = await readJson(res);
     if (data.success) setBackups((b) => b.filter((x) => x.id !== id));
     else setMessage({ type: "error", text: data.error || "Delete failed." });
   };
@@ -166,6 +212,7 @@ export default function BackupSettings() {
     }
     setConfirmText("");
     setRestoreFilesToo(true);
+    setRestoreError(null);
     if (target !== "upload" && fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -180,6 +227,7 @@ export default function BackupSettings() {
 
     setRestoring(true);
     setMessage(null);
+    setRestoreError(null);
     try {
       const formData = new FormData();
       formData.set("confirm", normalizedConfirmText);
@@ -191,16 +239,24 @@ export default function BackupSettings() {
       }
 
       const res = await fetch("/api/admin/backup/restore", { method: "POST", body: formData });
-      const data = await res.json();
+      const data = await readJson(res);
       if (data.success) {
-        setMessage({ type: "success", text: data.data.message });
+        const result = data.data as RestoreResult;
+        setMessage({
+          type: "success",
+          text: restoreSummary(result),
+          details: result.warnings,
+          signIn: !result.signedIn,
+        });
         setRestoreTarget(null);
-        await loadAll();
+        setRestoreFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        if (result.signedIn) await loadAll();
       } else {
-        setMessage({ type: "error", text: data.error || "Restore failed." });
+        setRestoreError(data.error || "Restore failed.");
       }
     } catch {
-      setMessage({ type: "error", text: "Restore failed. Check server logs." });
+      setRestoreError("The server could not be reached. Check the connection, then look at Backup History before trying again.");
     } finally {
       setRestoring(false);
     }
@@ -225,12 +281,31 @@ export default function BackupSettings() {
     <div className="space-y-6">
       {message && (
         <div
-          className={`rounded-lg px-4 py-3 text-sm font-medium flex items-center gap-2 ${
+          className={`rounded-lg px-4 py-3 text-sm ${
             message.type === "success" ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
           }`}
         >
-          {message.type === "success" ? <LuCheck size={16} /> : <LuTriangleAlert size={16} />}
-          {message.text}
+          <div className="flex items-start gap-2 font-medium">
+            <span className="mt-0.5 flex-shrink-0">
+              {message.type === "success" ? <LuCheck size={16} /> : <LuTriangleAlert size={16} />}
+            </span>
+            <span>{message.text}</span>
+          </div>
+          {message.details && message.details.length > 0 && (
+            <div className="mt-3 rounded-md bg-amber-50 text-amber-800 px-3 py-2">
+              <p className="font-medium">Needs attention:</p>
+              <ul className="list-disc pl-5 mt-1 space-y-1">
+                {message.details.map((d) => (
+                  <li key={d}>{d}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {message.signIn && (
+            <a href="/signin" className="admin-btn admin-btn-secondary inline-flex mt-3">
+              Sign in again
+            </a>
+          )}
         </div>
       )}
 
@@ -341,7 +416,7 @@ export default function BackupSettings() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".gz,.tar.gz,application/gzip"
+              accept=".gz,.tgz,.tar,application/gzip,application/x-gzip,application/x-tar"
               onChange={(e) => setRestoreFile(e.target.files?.[0] ?? null)}
               className="text-sm text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-slate-100 file:text-slate-700 file:text-sm hover:file:bg-slate-200"
             />
@@ -383,7 +458,9 @@ export default function BackupSettings() {
                   <tr key={b.id} className="border-b border-slate-100 last:border-0">
                     <td className="py-3 pr-4 text-slate-700">{formatDate(b.createdAt)}</td>
                     <td className="py-3 pr-4">
-                      <span className={`badge ${TYPE_BADGE[b.type]}`}>{humanize(b.type)}</span>
+                      <span className={`badge ${TYPE_BADGE[b.type] ?? "badge-admin"}`}>
+                        {TYPE_LABEL[b.type] ?? humanize(b.type)}
+                      </span>
                     </td>
                     <td className="py-3 pr-4">
                       <span className={`badge ${STATUS_BADGE[b.status]}`}>{humanize(b.status)}</span>
@@ -460,12 +537,31 @@ export default function BackupSettings() {
         }
       >
         <div className="space-y-4">
+          <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">
+            <span className="text-slate-500">Restoring: </span>
+            {restoreTarget === "upload" || restoreTarget === null ? (
+              <span className="font-medium break-all">{restoreFile?.name ?? "-"}</span>
+            ) : (
+              <span className="font-medium">
+                {formatDate(restoreTarget.createdAt)} ({TYPE_LABEL[restoreTarget.type] ?? humanize(restoreTarget.type)})
+              </span>
+            )}
+          </div>
+
           <p className="text-sm text-slate-700">
             This will <strong>completely replace</strong> the current database
             {restoreTarget !== "upload" ? " with the selected backup" : " with the uploaded file"}.
-            All data created after this backup was made will be permanently lost. Active admin
-            sessions may be logged out.
+            Changes made after this backup was created will no longer be in the site.
           </p>
+
+          <ul className="text-sm text-slate-600 list-disc pl-5 space-y-1">
+            <li>The backup is checked and test-loaded first. If it has a problem, nothing is changed.</li>
+            <li>
+              The current data is saved automatically as a &quot;Before restore&quot; backup, so you can
+              undo the restore from Backup History.
+            </li>
+            <li>The restore is done in one step: either all of it is applied, or nothing is.</li>
+          </ul>
 
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input
@@ -487,8 +583,22 @@ export default function BackupSettings() {
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder="RESTORE"
               autoComplete="off"
+              disabled={restoring}
             />
           </div>
+
+          {restoring && (
+            <p className="text-sm text-slate-600">
+              Restoring. This can take a minute or two. Keep this page open.
+            </p>
+          )}
+
+          {restoreError && (
+            <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 flex items-start gap-2">
+              <LuTriangleAlert size={16} className="mt-0.5 flex-shrink-0" />
+              <span>{restoreError}</span>
+            </div>
+          )}
         </div>
       </AdminModal>
     </div>
