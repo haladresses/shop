@@ -23,6 +23,7 @@ const pageTitles: Record<string, string> = {
   "/admin/categories": "Categories",
   "/admin/orders": "Orders",
   "/admin/reports": "Sales Report",
+  "/admin/delivery-report": "Shipping Report",
   "/admin/finance": "Finance",
   "/admin/returns": "Customer Returns",
   "/admin/inventory": "Inventory",

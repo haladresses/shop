@@ -77,17 +77,38 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         id: true,
         status: true,
         orderNumber: true,
+        shippedAt: true,
+        deliveredAt: true,
         items: { select: { id: true, variantId: true, quantity: true } },
         refunds: { select: { items: true, restocked: true } },
       },
     });
     if (!existing) return notFound("Order");
 
-    const { status, paymentStatus, notes } = parsed.data;
+    const { status, paymentStatus, notes, trackingNumber, deliveryCost } = parsed.data;
 
     const data: Prisma.OrderUpdateInput = {};
     if (status !== undefined) data.status = status as never;
     if (notes !== undefined) data.notes = notes;
+    if (trackingNumber !== undefined) data.trackingNumber = trackingNumber || null;
+    if (deliveryCost !== undefined) data.deliveryCost = deliveryCost;
+
+    // Delivery timeline follows the status: moving back to an earlier step
+    // clears the later dates, and a date is only set once (re-saving the same
+    // status keeps the original time).
+    if (status !== undefined && status !== existing.status) {
+      const now = new Date();
+      if (["PENDING", "CONFIRMED", "PROCESSING"].includes(status)) {
+        data.shippedAt = null;
+        data.deliveredAt = null;
+      } else if (status === "SHIPPED") {
+        data.shippedAt = existing.shippedAt ?? now;
+        data.deliveredAt = null;
+      } else if (status === "DELIVERED") {
+        data.shippedAt = existing.shippedAt ?? now;
+        data.deliveredAt = existing.deliveredAt ?? now;
+      }
+    }
 
     // Determine the effective payment status: explicit value wins, otherwise
     // delivering an order implies it has been paid.

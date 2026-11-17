@@ -460,6 +460,17 @@ model Order {
   driverWhatsappSentAt   DateTime?
   waselleeWhatsappSentAt DateTime?
 
+  // ── Delivery tracking ──
+  // Set automatically from the status: when the order left the shop
+  // (Shipped) and when the customer received it (Delivered; for store
+  // pickups and POS sales, the hand-over time).
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  // Courier waybill / tracking number.
+  trackingNumber String?
+  // What the shop paid the driver/courier for this delivery (optional).
+  deliveryCost   Decimal?  @db.Decimal(10, 3)
+
   // In-store POS sales vs the online storefront; cashierId records which
   // staff member rang up a POS sale (see /pos).
   source         OrderSource @default(ONLINE)
@@ -513,6 +524,7 @@ model Order {
   @@index([paymentStatus, createdAt])
   @@index([source, createdAt])
   @@index([posShiftId])
+  @@index([shippingMethod, createdAt])
   @@map("orders")
 }
 

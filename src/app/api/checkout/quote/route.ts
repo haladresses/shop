@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import prisma from "@/lib/db";
 import { ok, error, serverError } from "@/lib/api/response";
-import { PricingError, onlineShippingCost, priceCart } from "@/lib/orderPricing";
+import { PricingError, getShippingRules, onlineShippingCost, priceCart } from "@/lib/orderPricing";
 
 const quoteSchema = z.object({
   items: z
@@ -30,10 +30,11 @@ export async function POST(req: NextRequest) {
         ? await prisma.waselleeBranch.findUnique({ where: { id: waselleeBranchId } })
         : null;
 
+    const shippingRules = await getShippingRules();
     const priced = await priceCart(items, {
       channel: "ONLINE",
       shipping: (subtotal) =>
-        onlineShippingCost({ shippingMethod, branch: branch?.isActive ? branch : null, deliveryType: waselleeDeliveryType ?? "HOME_DELIVERY" }, subtotal),
+        onlineShippingCost({ shippingMethod, branch: branch?.isActive ? branch : null, deliveryType: waselleeDeliveryType ?? "HOME_DELIVERY" }, subtotal, shippingRules),
     });
     const { pricing, settings } = priced;
     return ok({

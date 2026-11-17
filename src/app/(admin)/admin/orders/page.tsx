@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, Suspense } from "react";
+import { useEffect, useRef, useState, useCallback, Suspense } from "react";
 import { ORDER_TODOS, isOrderTodo } from "@/lib/orderTodos";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
@@ -90,6 +90,11 @@ type Order = {
   whatsappNotifiedAt?: string | null;
   whatsappNotifyError?: string | null;
   waselleeManualWhatsAppLink?: string | null;
+  // Delivery tracking
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  trackingNumber?: string | null;
+  deliveryCost?: number | string | null;
   // VAT, promotions and returns
   invoiceNumber?: string | null;
   taxTotal?: number | string;
@@ -168,6 +173,10 @@ function OrdersView() {
   const [selected, setSelected] = useState<Order | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [updating, setUpdating] = useState(false);
+  // Delivery details form (tracking number, courier cost) for the open order.
+  const [delivery, setDelivery] = useState({ tracking: "", cost: "" });
+  const [deliverySaving, setDeliverySaving] = useState(false);
+  const [deliveryMsg, setDeliveryMsg] = useState("");
   const [notesDraft, setNotesDraft] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
   const [confirmStatus, setConfirmStatus] = useState<string | null>(null);
@@ -281,12 +290,47 @@ function OrdersView() {
         ...prev,
         status,
         ...(status === "DELIVERED" ? { paymentStatus: "PAID" } : {}),
+        shippedAt: data.data?.shippedAt ?? null,
+        deliveredAt: data.data?.deliveredAt ?? null,
       } : null);
       load();
       loadStats();
     }
     setUpdating(false);
     setConfirmStatus(null);
+  };
+
+  // Keep the form in step with the open order; the "Saved" note is only
+  // cleared when a different order is opened.
+  const deliveryFor = useRef<string | null>(null);
+  useEffect(() => {
+    setDelivery({
+      tracking: selected?.trackingNumber ?? "",
+      cost: selected?.deliveryCost == null ? "" : String(Number(selected.deliveryCost)),
+    });
+    if (deliveryFor.current !== (selected?.id ?? null)) {
+      deliveryFor.current = selected?.id ?? null;
+      setDeliveryMsg("");
+    }
+  }, [selected?.id, selected?.trackingNumber, selected?.deliveryCost]);
+
+  const saveDelivery = async () => {
+    if (!selected) return;
+    const cost = delivery.cost.trim() === "" ? null : Number(delivery.cost);
+    if (cost != null && (!Number.isFinite(cost) || cost < 0)) {
+      setDeliveryMsg("Enter a valid cost (0 or more).");
+      return;
+    }
+    setDeliverySaving(true);
+    setDeliveryMsg("");
+    const data = await patchOrder(selected.id, { trackingNumber: delivery.tracking.trim(), deliveryCost: cost });
+    setDeliverySaving(false);
+    if (data.success) {
+      setSelected((prev) => (prev ? { ...prev, trackingNumber: delivery.tracking.trim() || null, deliveryCost: cost } : null));
+      setDeliveryMsg("Saved");
+    } else {
+      setDeliveryMsg(data.error || "Could not save.");
+    }
   };
 
   const handleStatusClick = (status: string) => {
@@ -665,6 +709,49 @@ function OrdersView() {
                 <p className="text-slate-600">Customer will collect this order in person. No delivery required.</p>
               </div>
             )}
+
+            {/* Delivery: timeline (set from the status) and courier details */}
+            <div className="rounded-xl border border-slate-200 mb-5 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-200">
+                <LuTruck size={15} className="text-slate-500" />
+                <p className="text-sm font-semibold text-slate-700">Delivery</p>
+                <span className="text-xs text-slate-400 ml-auto">Dates are recorded when the status changes</span>
+              </div>
+              <div className="p-4 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <p className="text-xs text-slate-500">Placed</p>
+                    <p className="font-medium text-slate-800">{fmtDate(selected.createdAt)}</p>
+                  </div>
+                  {selected.shippingMethod !== "STORE_PICKUP" && (
+                    <div>
+                      <p className="text-xs text-slate-500">Shipped</p>
+                      <p className="font-medium text-slate-800">{selected.shippedAt ? fmtDate(selected.shippedAt) : "-"}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-xs text-slate-500">{selected.shippingMethod === "STORE_PICKUP" ? "Collected" : "Delivered"}</p>
+                    <p className="font-medium text-slate-800">{selected.deliveredAt ? fmtDate(selected.deliveredAt) : "-"}</p>
+                  </div>
+                </div>
+                {selected.source !== "POS" && selected.shippingMethod !== "STORE_PICKUP" && (
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_180px_auto] gap-3 items-end">
+                    <label className="block">
+                      <span className="block text-xs font-medium text-slate-500 mb-1">Tracking number</span>
+                      <input className="admin-input" value={delivery.tracking} maxLength={100} onChange={(e) => setDelivery((d) => ({ ...d, tracking: e.target.value }))} placeholder="Courier waybill or reference" dir="ltr" />
+                    </label>
+                    <label className="block">
+                      <span className="block text-xs font-medium text-slate-500 mb-1">Courier cost (OMR)</span>
+                      <input type="number" step="0.001" min="0" className="admin-input" value={delivery.cost} onChange={(e) => setDelivery((d) => ({ ...d, cost: e.target.value }))} placeholder="What you paid" />
+                    </label>
+                    <button type="button" onClick={saveDelivery} disabled={deliverySaving} className="admin-btn admin-btn-secondary">
+                      {deliverySaving ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                )}
+                {deliveryMsg && <p className={`text-xs ${deliveryMsg === "Saved" ? "text-emerald-700" : "text-rose-600"}`}>{deliveryMsg}</p>}
+              </div>
+            </div>
 
             {/* WhatsApp dispatch — prepared messages sent manually via WhatsApp Web */}
             <div className="rounded-xl border border-slate-200 mb-5 overflow-hidden">

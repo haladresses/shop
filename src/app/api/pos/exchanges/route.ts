@@ -122,6 +122,9 @@ export async function POST(req: NextRequest) {
             },
             shippingMethod: "STORE_PICKUP",
             status: "DELIVERED",
+            // Handed over at the counter.
+            shippedAt: new Date(),
+            deliveredAt: new Date(),
             paymentStatus: "PAID",
             source: "POS",
             cashierId: user.id,
