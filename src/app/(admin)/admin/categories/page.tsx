@@ -212,7 +212,7 @@ export default function CategoriesPage() {
               aria-label={isCollapsed ? `Show sub-categories of ${cat.nameEn}` : `Hide sub-categories of ${cat.nameEn}`}
               className="w-6 h-6 flex-shrink-0 rounded-md text-slate-400 hover:bg-slate-200/60 hover:text-slate-600 flex items-center justify-center"
             >
-              <LuChevronRight size={16} className={`transition-transform ${isCollapsed ? "" : "rotate-90"}`} />
+              <LuChevronRight size={16} className={isCollapsed ? "" : "rotate-90"} />
             </button>
           ) : (
             <span className="w-6 flex-shrink-0" />
@@ -245,7 +245,7 @@ export default function CategoriesPage() {
           )}
           <Link
             href={`/admin/categories/${cat.id}/attributes`}
-            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+            className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium ${
               cat._count.attributes > 0
                 ? "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
                 : "border border-dashed border-amber-300 text-amber-700 hover:bg-amber-50"
@@ -271,7 +271,7 @@ export default function CategoriesPage() {
           </Link>
           {!cat.parentId && (
             <button type="button" onClick={() => openCreate(cat.id)} className="admin-btn admin-btn-secondary text-xs !py-1.5" title="Add a sub-category">
-              <LuFolderPlus size={14} /> <span className="hidden md:inline">Sub</span>
+              <LuFolderPlus size={14} /> <span className="hidden md:inline">Sub-category</span>
             </button>
           )}
           <button type="button" onClick={() => openEdit(cat)} className="admin-btn admin-btn-secondary text-xs !py-1.5" title="Edit details">

@@ -1,5 +1,6 @@
 "use client";
 import "../css/style.css";
+import "./pos.css";
 import SiteDocument from "@/components/SiteDocument";
 
 export default function PosRootLayout({
@@ -10,7 +11,8 @@ export default function PosRootLayout({
   return (
     <SiteDocument
       lang="en"
-      bodyClassName="bg-slate-100"
+      // Plain, motion-free till (see pos.css "No motion").
+      bodyClassName="pos-body bg-slate-100"
       head={
         <>
           <title>POS | Hala Dresses</title>

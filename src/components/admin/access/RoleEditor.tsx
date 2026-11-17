@@ -142,12 +142,15 @@ export default function RoleEditor({ id }: { id: string | null }) {
           <Link href="/admin/roles" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-1">
             <LuArrowLeft size={14} /> Roles
           </Link>
-          <div className="flex flex-wrap items-center gap-2">
-            <ColorDot color={form.color} size={12} />
-            <h1 className="text-xl font-semibold text-slate-800 truncate">{isNew ? "New role" : role?.nameEn}</h1>
-            {role && <TypeBadge type={role.type} />}
-            {isSystem && <span className="text-[10px] font-semibold uppercase tracking-wide rounded px-1.5 py-0.5 bg-slate-100 text-slate-500">Built-in</span>}
-          </div>
+          {/* A new role has no name yet; the top bar already says "New Role". */}
+          {!isNew && (
+            <div className="flex flex-wrap items-center gap-2">
+              <ColorDot color={form.color} size={12} />
+              <h1 className="text-xl font-semibold text-slate-800 truncate">{role?.nameEn}</h1>
+              {role && <TypeBadge type={role.type} />}
+              {isSystem && <span className="text-xs font-medium rounded px-1.5 py-0.5 bg-slate-100 text-slate-500">Built-in</span>}
+            </div>
+          )}
           {role && (
             <p className="text-xs text-slate-500 mt-1">
               {role.userCount} {role.userCount === 1 ? "person" : "people"} · Updated {ago(role.updatedAt)}

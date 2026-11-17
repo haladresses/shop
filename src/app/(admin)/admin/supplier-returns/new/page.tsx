@@ -267,7 +267,6 @@ function NewSupplierReturn() {
         <Link href="/admin/supplier-returns" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-1">
           <LuChevronLeft size={16} /> Supplier returns
         </Link>
-        <h1 className="text-xl font-semibold text-slate-800">Return goods to a supplier</h1>
       </div>
 
       <div className="grid xl:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
@@ -298,7 +297,7 @@ function NewSupplierReturn() {
                   key={id}
                   type="button"
                   onClick={() => setMode(id)}
-                  className={`text-left rounded-xl border p-3 flex gap-3 transition-colors ${mode === id ? "border-indigo-400 bg-indigo-50/60" : "border-slate-200 hover:bg-slate-50"}`}
+                  className={`text-left rounded-xl border p-3 flex gap-3 ${mode === id ? "border-indigo-400 bg-indigo-50/60" : "border-slate-200 hover:bg-slate-50"}`}
                 >
                   <Icon size={18} className="text-slate-500 shrink-0 mt-0.5" />
                   <span>
@@ -320,7 +319,7 @@ function NewSupplierReturn() {
                     <option value="">{loadingOrders ? "Loading…" : orders.length ? "Choose an order with received goods…" : "No received orders from this supplier"}</option>
                     {orders.map((o) => (
                       <option key={o.id} value={o.id}>
-                        {o.number} · {fmtDate(o.orderDate)} · {o.unitsReceived} units received{o.supplierReference ? ` · inv ${o.supplierReference}` : ""}
+                        {o.number} · {fmtDate(o.orderDate)} · {o.unitsReceived} units received{o.supplierReference ? ` · invoice ${o.supplierReference}` : ""}
                       </option>
                     ))}
                   </select>
@@ -391,7 +390,7 @@ function NewSupplierReturn() {
                       <tr>
                         <th>Item</th>
                         <th className="text-right">In stock</th>
-                        <th className="text-right w-24">Qty</th>
+                        <th className="text-right w-24">Quantity</th>
                         <th className="text-right w-32">Unit cost (excl. VAT)</th>
                         <th className="text-right w-20">VAT %</th>
                         <th className="text-right">Total</th>

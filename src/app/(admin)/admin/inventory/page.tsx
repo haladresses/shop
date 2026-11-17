@@ -141,7 +141,7 @@ export default function InventoryPage() {
           <button
             key={id}
             onClick={() => setTab(id)}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${tab === id ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${tab === id ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
           >
             <Icon size={16} /> {label}
           </button>
@@ -171,8 +171,8 @@ function Kpi({ icon: Icon, label, value, sub, tone }: { icon: React.ElementType;
       <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${color}`}><Icon size={20} /></span>
       <div className="min-w-0">
         <p className="text-xs text-slate-500">{label}</p>
-        <p className="text-lg font-bold text-slate-800 tabular-nums truncate">{value}</p>
-        {sub && <p className="text-[11px] text-slate-400 truncate">{sub}</p>}
+        <p className="text-lg font-bold text-slate-800 tabular-nums break-words">{value}</p>
+        {sub && <p className="text-[11px] text-slate-400">{sub}</p>}
       </div>
     </div>
   );
@@ -270,7 +270,7 @@ function StockTab({
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search product, SKU, barcode, color or location" className="admin-input !py-2 !pl-9 text-sm" />
         </div>
         <div className="flex rounded-xl bg-slate-100 p-1 text-xs shrink-0 overflow-x-auto">
-          {[["all", "All"], ["in", "In stock"], ["low", "Low"], ["out", "Out"]].map(([v, l]) => (
+          {[["all", "All"], ["in", "In stock"], ["low", "Low stock"], ["out", "Out of stock"]].map(([v, l]) => (
             <button key={v} onClick={() => setStatus(v)} className={`px-3 py-1.5 rounded-lg font-medium whitespace-nowrap ${status === v ? "bg-white shadow-sm text-slate-800" : "text-slate-500"}`}>{l}</button>
           ))}
         </div>
@@ -284,7 +284,7 @@ function StockTab({
           <option value="qty-desc">Highest stock first</option>
           <option value="name">Name A–Z</option>
         </select>
-        <a href={`/api/inventory/export?${filterParams()}`} className="admin-btn admin-btn-secondary !py-2 text-sm shrink-0"><LuDownload size={15} /> CSV</a>
+        <a href={`/api/inventory/export?${filterParams()}`} className="admin-btn admin-btn-secondary !py-2 text-sm shrink-0"><LuDownload size={15} /> Export CSV</a>
       </div>
 
       <p className="text-xs text-slate-500 px-1">{total.toLocaleString()} item{total === 1 ? "" : "s"}</p>
@@ -585,7 +585,7 @@ function MovementsTab({ inventoryId, compact }: { inventoryId?: string; compact?
                 <th>Date</th>
                 {!compact && <th>Product</th>}
                 <th>Type</th>
-                <th className="text-right">Qty</th>
+                <th className="text-right">Quantity</th>
                 <th className="text-right">Balance</th>
                 <th>Reference / note</th>
                 <th>By</th>
@@ -758,7 +758,7 @@ function ReceiveTab({ onDone }: { onDone: () => void }) {
                   <tr>
                     <th>Item</th>
                     <th className="text-right">On hand</th>
-                    <th className="text-right w-28">Qty received</th>
+                    <th className="text-right w-28">Quantity received</th>
                     <th className="text-right w-32">Unit cost</th>
                     <th className="text-right">Line total</th>
                     <th />

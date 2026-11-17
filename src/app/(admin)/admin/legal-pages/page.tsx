@@ -99,7 +99,7 @@ export default function LegalPagesAdminPage() {
               <button
                 key={t.key}
                 onClick={() => setTab(t.key)}
-                className={`shrink-0 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-start transition ${on ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"}`}
+                className={`shrink-0 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-start ${on ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"}`}
               >
                 <Icon size={17} className={on ? "text-white" : "text-slate-400"} /> {t.label}
               </button>
@@ -198,7 +198,7 @@ function LegalPageEditor({
         </div>
       ))}
 
-      <button onClick={addSection} className="flex items-center gap-2 w-full justify-center py-3 rounded-2xl border-2 border-dashed border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-800 transition-colors">
+      <button onClick={addSection} className="flex items-center gap-2 w-full justify-center py-3 rounded-2xl border-2 border-dashed border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-800">
         <LuPlus size={18} /> Add Section
       </button>
     </div>
@@ -257,7 +257,7 @@ function FaqEditor({ config, onChange }: { config: FaqConfig; onChange: (c: FaqC
         </div>
       ))}
 
-      <button onClick={addItem} className="flex items-center gap-2 w-full justify-center py-3 rounded-2xl border-2 border-dashed border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-800 transition-colors">
+      <button onClick={addItem} className="flex items-center gap-2 w-full justify-center py-3 rounded-2xl border-2 border-dashed border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-800">
         <LuPlus size={18} /> Add Question
       </button>
     </div>

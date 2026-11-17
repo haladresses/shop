@@ -35,7 +35,7 @@ const LegalPageView = ({
     <>
       <Breadcrumb title={title} pages={[title]} />
 
-      <section className="overflow-hidden py-14 sm:py-20 bg-gray-2">
+      <section className="overflow-hidden py-14 sm:py-20 bg-meta">
         <div className="max-w-[900px] w-full mx-auto px-4 sm:px-8 xl:px-0">
           <div className={`bg-white rounded-xl shadow-1 p-5 sm:p-8 xl:p-11 ${isArabic ? "text-right" : "text-left"}`} dir={isArabic ? "rtl" : "ltr"}>
             {loading ? (

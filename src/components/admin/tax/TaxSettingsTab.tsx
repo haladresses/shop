@@ -250,7 +250,7 @@ export default function TaxSettingsTab({
       </Section>
 
       {canManage && dirty && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-xl admin-slide-up">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-2rem)] max-w-xl">
           <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-900 text-white px-4 py-3 shadow-2xl">
             <span className="text-sm">You have unsaved changes</span>
             <div className="flex gap-2">

@@ -132,7 +132,6 @@ function People() {
     <div className="space-y-4 pb-24">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-800">People</h1>
           <p className="text-sm text-slate-500">Customers, staff and sellers. Each person has one role that decides what they can do.</p>
         </div>
         {canManage && (

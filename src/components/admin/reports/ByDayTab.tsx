@@ -47,7 +47,7 @@ export default function ByDayTab({ query, onDay }: { query: string; onDay: (day:
     { key: "refunds", label: "Refunds", ar: "المرتجعات", kind: "money", value: (r) => r.refunds, total: t?.refunds },
     { key: "net", label: "Net sales", ar: "صافي المبيعات", kind: "money", value: (r) => r.net, total: t?.net, className: "font-semibold" },
     { key: "netExVat", label: "Net excl. VAT", ar: "الصافي قبل الضريبة", kind: "money", value: (r) => r.netExVat, total: t?.netExVat },
-    { key: "avgTicket", label: "Avg ticket", ar: "متوسط الفاتورة", kind: "money", value: (r) => r.avgTicket, total: t?.avgTicket },
+    { key: "avgTicket", label: "Average sale", ar: "متوسط الفاتورة", kind: "money", value: (r) => r.avgTicket, total: t?.avgTicket },
     { key: "pos", label: "POS", ar: "المتجر", kind: "money", value: (r) => r.pos, total: t?.pos },
     { key: "online", label: "Online", ar: "الإلكتروني", kind: "money", value: (r) => r.online, total: t?.online },
     { key: "cash", label: "Cash", ar: "نقداً", kind: "money", value: (r) => r.cash, total: t?.cash },
@@ -63,7 +63,7 @@ export default function ByDayTab({ query, onDay }: { query: string; onDay: (day:
         <Figure label="Receipts" ar="الفواتير" value={t ? int(t.orders) : "-"} sub={t ? `${int(t.items)} items` : ""} />
         <Figure label="Gross sales" ar="إجمالي المبيعات" value={t ? money(t.gross) : "-"} />
         <Figure label="Refunds" ar="المرتجعات" value={t ? money(t.refunds) : "-"} sub={t ? `${int(t.refundCount)} return(s)` : ""} />
-        <Figure label="Avg per trading day" ar="متوسط اليوم" value={t && t.activeDays ? money(t.net / t.activeDays) : "-"} />
+        <Figure label="Average per trading day" ar="متوسط اليوم" value={t && t.activeDays ? money(t.net / t.activeDays) : "-"} />
         <Figure label="Net sales" ar="صافي المبيعات" value={t ? money(t.net) : "-"} sub={t ? `Excl. VAT ${money(t.netExVat)}` : ""} strong />
       </div>
       <ReportTable

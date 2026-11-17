@@ -84,7 +84,6 @@ function Suppliers() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-800">Suppliers</h1>
           <p className="text-sm text-slate-500">Who you buy from, what you owe them, what&apos;s coming and what needs doing.</p>
         </div>
         <div className="flex flex-wrap gap-2">

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { LuChevronDown, LuLogOut, LuMenu, LuStar, LuStore, LuUserRound } from "react-icons/lu";
 import { useShortcuts } from "@/lib/adminShortcuts";
+import { humanize } from "@/components/admin/labels";
 
 type AdminUser = {
   nameEn?: string | null;
@@ -16,7 +17,7 @@ type AdminUser = {
 };
 
 const PLACEHOLDER_DOMAIN = "@phone.haladresses.local";
-const roleName = (u: AdminUser) => u.appRole?.nameEn ?? u.role.replace("_", " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+const roleName = (u: AdminUser) => u.appRole?.nameEn ?? humanize(u.role);
 
 /**
  * Top bar of the admin: page title on the left, the signed-in person on the
@@ -110,7 +111,7 @@ export default function AdminHeader({ title, onMenuClick }: { title?: string; on
             aria-haspopup="menu"
             aria-expanded={open}
           >
-            <span className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+            <span className="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 font-semibold text-sm flex-shrink-0">
               {name.charAt(0).toUpperCase()}
             </span>
             <span className="hidden sm:block text-left min-w-0">

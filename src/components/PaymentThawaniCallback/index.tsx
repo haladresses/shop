@@ -78,7 +78,7 @@ function CallbackView() {
   const isPaid = result?.paymentStatus === "PAID";
 
   return (
-    <section className="overflow-hidden py-20 bg-gray-2">
+    <section className="overflow-hidden py-14 sm:py-20 bg-meta">
       <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
         <div className="bg-white rounded-xl shadow-1 px-4 py-10 sm:py-15 lg:py-20 xl:py-25">
           <div className="text-center max-w-[520px] mx-auto">
@@ -111,7 +111,7 @@ function CallbackView() {
                   {result &&
                     `${t("Order", "الطلب")} ${result.orderNumber}: ${t("total", "الإجمالي")} ${Number(
                       result.total
-                    ).toFixed(3)} OMR`}
+                    ).toFixed(3)} ${t("OMR", "ر.ع.")}`}
                 </p>
                 {error && (
                   <p className="mb-5 text-red text-sm bg-red-light-6 border border-red-light-4 rounded-md py-3 px-4">
@@ -146,7 +146,7 @@ const PaymentThawaniCallback = () => {
   const { isArabic } = useLanguage();
   return (
     <>
-      <Breadcrumb title={isArabic ? "حالة الدفع" : "Payment Status"} pages={["payment"]} />
+      <Breadcrumb title={isArabic ? "حالة الدفع" : "Payment Status"} pages={[isArabic ? "حالة الدفع" : "Payment Status"]} />
       <Suspense fallback={<div className="py-20 text-center text-dark-4">...</div>}>
         <CallbackView />
       </Suspense>

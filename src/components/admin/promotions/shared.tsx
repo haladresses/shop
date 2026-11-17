@@ -78,12 +78,12 @@ export type PromotionDetail = PromotionListItem & {
 };
 
 export const TYPE_META: Record<PromotionTypeKey, { icon: IconType; tile: string; examples: string[] }> = {
-  BUY_X_GET_Y: { icon: LuGift, tile: "bg-rose-50 text-rose-600", examples: ["Buy 1, get 2 free", "Buy 2, get 1 at 50% off"] },
-  MIX_AND_MATCH: { icon: LuShuffle, tile: "bg-violet-50 text-violet-600", examples: ["Any 3 for 20 OMR", "Any 2 scarves for 5 OMR"] },
-  PERCENT_OFF: { icon: LuPercent, tile: "bg-emerald-50 text-emerald-600", examples: ["20% off the new collection", "30% off on Fridays"] },
-  AMOUNT_OFF: { icon: LuCoins, tile: "bg-amber-50 text-amber-600", examples: ["2 OMR off every abaya", "5 OMR off selected dresses"] },
-  FIXED_PRICE: { icon: LuTag, tile: "bg-sky-50 text-sky-600", examples: ["All scarves 3 OMR", "Clearance at 9.900 OMR"] },
-  ORDER_THRESHOLD: { icon: LuShoppingBag, tile: "bg-indigo-50 text-indigo-600", examples: ["Spend 50, save 10%", "Spend 30, save 5 OMR"] },
+  BUY_X_GET_Y: { icon: LuGift, tile: "bg-slate-100 text-slate-600", examples: ["Buy 1, get 2 free", "Buy 2, get 1 at 50% off"] },
+  MIX_AND_MATCH: { icon: LuShuffle, tile: "bg-slate-100 text-slate-600", examples: ["Any 3 for 20 OMR", "Any 2 scarves for 5 OMR"] },
+  PERCENT_OFF: { icon: LuPercent, tile: "bg-slate-100 text-slate-600", examples: ["20% off the new collection", "30% off on Fridays"] },
+  AMOUNT_OFF: { icon: LuCoins, tile: "bg-slate-100 text-slate-600", examples: ["2 OMR off every abaya", "5 OMR off selected dresses"] },
+  FIXED_PRICE: { icon: LuTag, tile: "bg-slate-100 text-slate-600", examples: ["All scarves 3 OMR", "Clearance at 9.900 OMR"] },
+  ORDER_THRESHOLD: { icon: LuShoppingBag, tile: "bg-slate-100 text-slate-600", examples: ["Spend 50, save 10%", "Spend 30, save 5 OMR"] },
 };
 
 export const STATUS_META: Record<PromotionStatus, { label: string; chip: string; dot: string }> = {

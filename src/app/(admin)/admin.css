@@ -18,7 +18,7 @@
 /* SBC as the admin base font (Tailwind sets font-family: inherit on form
    controls, so inputs, buttons and selects pick this up too). */
 body {
-  font-family: "Vazirmatn", "SBC", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+  font-family: "Vazirmatn", "Inter", "SBC", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -31,8 +31,17 @@ body {
   font-size: 0.875rem;
   font-weight: 500;
   color: #cbd5e1; /* slate-300 */
-  transition: background-color 0.15s ease, color 0.15s ease;
   text-decoration: none;
+}
+
+/* One neutral colour for every menu icon; it turns white with the text. */
+.admin-nav-icon {
+  color: #94a3b8; /* slate-400 */
+}
+
+.admin-nav-link:hover .admin-nav-icon,
+.admin-nav-link.active .admin-nav-icon {
+  color: #ffffff;
 }
 
 .admin-nav-link:hover {
@@ -51,11 +60,6 @@ body {
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   border: 1px solid #f1f5f9;
-  transition: box-shadow 0.2s;
-}
-
-.stat-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .badge {
@@ -129,7 +133,6 @@ body {
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
   border: none;
   line-height: 1;
 }
@@ -166,6 +169,35 @@ body {
   background: #fecaca;
 }
 
+/* Small square icon button for row actions (Duplicate, Delete...).
+   Always give it a title and aria-label. */
+.admin-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  color: #64748b; /* slate-500 */
+  background: transparent;
+  cursor: pointer;
+}
+
+.admin-icon-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.admin-icon-btn-danger:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.admin-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .admin-input {
   width: 100%;
   padding: 0.5rem 0.875rem;
@@ -175,7 +207,6 @@ body {
   color: #1e293b;
   background: #ffffff;
   outline: none;
-  transition: border-color 0.15s;
 }
 
 .admin-input:focus {
@@ -197,6 +228,29 @@ body {
   border-radius: 0.75rem;
   border: 1px solid #e2e8f0;
   overflow: hidden;
+}
+
+/* Save bar pinned to the bottom of an edit page. Solid white and as wide as
+   the content area (it cancels <main>'s padding), so fields never show
+   through it. Use it as the last element on the page. */
+.admin-savebar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 -1rem -1rem;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+}
+
+@media (min-width: 640px) {
+  .admin-savebar {
+    margin: 0 -1.5rem -1.5rem;
+    padding: 0.75rem 1.5rem;
+  }
 }
 
 .admin-modal-overlay {
@@ -269,47 +323,6 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-/* Help Center screenshot lightbox */
-@keyframes helpLightboxBackdropIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-@keyframes helpLightboxPanelIn {
-  from { opacity: 0; transform: translateY(10px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.help-lightbox-backdrop {
-  animation: helpLightboxBackdropIn 0.18s ease-out;
-}
-
-.help-lightbox-panel {
-  animation: helpLightboxPanelIn 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .help-lightbox-backdrop,
-  .help-lightbox-panel {
-    animation: none;
-  }
-}
-
-/* Soft entrance for expanding panels and the unsaved-changes bar. */
-@keyframes adminFadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes adminSlideUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.admin-fade-in { animation: adminFadeIn 0.18s ease-out; }
-.admin-slide-up { animation: adminSlideUp 0.24s cubic-bezier(0.16, 1, 0.3, 1); }
-@media (prefers-reduced-motion: reduce) {
-  .admin-fade-in, .admin-slide-up { animation: none; }
 }
 
 /* Soft focus in the admin — light indigo glow instead of black outlines. */

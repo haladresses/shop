@@ -504,13 +504,13 @@ export default function ProductForm({
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={img.url} alt="product" className="w-full h-full object-cover" />
-                <div className="absolute inset-x-0 top-0 flex items-center justify-between p-1 bg-gradient-to-b from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute inset-x-0 top-0 flex items-center justify-between p-1 bg-black/50 opacity-0 group-hover:opacity-100">
                   <span className="text-white/80 cursor-grab"><LuGripVertical size={14} /></span>
                   <button type="button" onClick={() => removeImage(idx)} className="w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center" aria-label="Remove image">
                     <LuX size={12} />
                   </button>
                 </div>
-                <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-1 bg-gradient-to-t from-black/60 to-transparent">
+                <div className="absolute inset-x-0 bottom-0 flex items-center justify-between p-1 bg-black/55">
                   <button
                     type="button"
                     onClick={() => setPrimary(idx)}
@@ -569,6 +569,21 @@ export default function ProductForm({
             </select>
             <p className="text-xs text-slate-400 mt-1">The category decides which specification fields this product has.</p>
           </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label>Description (English)</Label>
+              <textarea className="admin-input" rows={3} value={form.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} />
+            </div>
+            <div>
+              <Label>Description (Arabic)</Label>
+              <textarea className="admin-input" rows={3} dir="rtl" value={form.descriptionAr} onChange={(e) => set("descriptionAr", e.target.value)} />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card title="Price">
+        <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <Label>Purchase Price (OMR)</Label>
@@ -591,6 +606,11 @@ export default function ProductForm({
             categories={categories}
             price={form.salePrice || form.basePrice}
           />
+        </div>
+      </Card>
+
+      <Card title="SKU & Barcode">
+        <div className="space-y-4">
           <div>
             <Label>SKU</Label>
             <input className="admin-input" value={form.sku} onChange={(e) => set("sku", e.target.value)} />
@@ -631,27 +651,20 @@ export default function ProductForm({
               </div>
             )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label>Description (English)</Label>
-              <textarea className="admin-input" rows={3} value={form.descriptionEn} onChange={(e) => set("descriptionEn", e.target.value)} />
-            </div>
-            <div>
-              <Label>Description (Arabic)</Label>
-              <textarea className="admin-input" rows={3} dir="rtl" value={form.descriptionAr} onChange={(e) => set("descriptionAr", e.target.value)} />
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-4 pt-1">
-            {[
-              { key: "isActive", label: "Active" }, { key: "isFeatured", label: "Featured" },
-              { key: "isNew", label: "New Arrival" }, { key: "isBestSeller", label: "Best Seller" },
-            ].map(({ key, label }) => (
-              <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" checked={form[key as keyof ProductFormValue] as boolean} onChange={(e) => set(key as keyof ProductFormValue, e.target.checked as never)} className="rounded" />
-                {label}
-              </label>
-            ))}
-          </div>
+        </div>
+      </Card>
+
+      <Card title="Shop Visibility" desc="Active products are shown in the shop. The other options add the product to those sections.">
+        <div className="flex flex-wrap gap-x-6 gap-y-3">
+          {[
+            { key: "isActive", label: "Active" }, { key: "isFeatured", label: "Featured" },
+            { key: "isNew", label: "New Arrival" }, { key: "isBestSeller", label: "Best Seller" },
+          ].map(({ key, label }) => (
+            <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={form[key as keyof ProductFormValue] as boolean} onChange={(e) => set(key as keyof ProductFormValue, e.target.checked as never)} className="rounded" />
+              {label}
+            </label>
+          ))}
         </div>
       </Card>
 
@@ -865,7 +878,7 @@ export default function ProductForm({
         </div>
       </Card>
 
-      <div className="flex items-center gap-3 sticky bottom-0 bg-slate-50/80 backdrop-blur-sm py-3 -mx-1 px-1 rounded-xl">
+      <div className="admin-savebar">
         <button type="submit" disabled={saving || uploading} className="admin-btn admin-btn-primary px-8 disabled:opacity-60">
           {saving ? "Saving..." : submitLabel}
         </button>

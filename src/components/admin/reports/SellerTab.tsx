@@ -42,7 +42,7 @@ export default function SellerTab({ query, onSeller }: { query: string; onSeller
     { key: "refundCount", label: "Returns #", ar: "عدد المرتجعات", kind: "int", value: (r) => r.refundCount, total: t?.refundCount },
     { key: "refunds", label: "Refunds handled", ar: "قيمة المرتجعات", kind: "money", value: (r) => r.refunds, total: t?.refunds },
     { key: "net", label: "Net", ar: "الصافي", kind: "money", value: (r) => r.net, total: t?.net, className: "font-semibold" },
-    { key: "avgTicket", label: "Avg ticket", ar: "متوسط الفاتورة", kind: "money", value: (r) => r.avgTicket, total: t?.avgTicket },
+    { key: "avgTicket", label: "Average sale", ar: "متوسط الفاتورة", kind: "money", value: (r) => r.avgTicket, total: t?.avgTicket },
     { key: "share", label: "Share of sales", ar: "النسبة", kind: "pct", value: (r) => r.share, total: data?.rows.length ? 100 : undefined },
     { key: "first", label: "First sale", ar: "أول بيع", kind: "text", value: (r) => (r.firstSale ? dateTime(r.firstSale) : "-") },
     { key: "last", label: "Last sale", ar: "آخر بيع", kind: "text", value: (r) => (r.lastSale ? dateTime(r.lastSale) : "-") },

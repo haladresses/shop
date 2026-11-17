@@ -331,7 +331,7 @@ export function SettlementPicker({
             type="button"
             disabled={v === "REFUND" && !canRefund}
             onClick={() => onChange(v)}
-            className={`text-left rounded-xl border p-3 transition-colors disabled:opacity-40 ${value === v ? "border-indigo-400 bg-indigo-50/60" : "border-slate-200 hover:bg-slate-50"}`}
+            className={`text-left rounded-xl border p-3 disabled:opacity-40 ${value === v ? "border-indigo-400 bg-indigo-50/60" : "border-slate-200 hover:bg-slate-50"}`}
           >
             <span className="block text-sm font-medium text-slate-800">{title}</span>
             <span className="block text-xs text-slate-500 mt-0.5">{hint}</span>

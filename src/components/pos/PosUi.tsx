@@ -31,7 +31,7 @@ export function beep(kind: "ok" | "error" = "ok") {
 /** One key of the on-screen PIN pad (sign-in and lock screen). */
 export function PadKey({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
   return (
-    <button onClick={onClick} disabled={disabled} className="h-16 rounded-2xl bg-white border border-slate-200 text-2xl font-medium text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-95 transition disabled:opacity-40">
+    <button onClick={onClick} disabled={disabled} className="h-16 rounded-2xl bg-white border border-slate-200 text-2xl font-medium text-slate-700 hover:bg-slate-50 active:bg-slate-100 disabled:opacity-40">
       {children}
     </button>
   );
@@ -63,11 +63,11 @@ export function PosModal({
   const width = { sm: "max-w-sm", md: "max-w-lg", lg: "max-w-2xl", xl: "max-w-4xl", "2xl": "max-w-6xl" }[size];
   return (
     <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
-      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] pos-fade-in" onClick={onClose} />
+      <div className="absolute inset-0 bg-slate-900/50" onClick={onClose} />
       <div
         role="dialog"
         aria-modal="true"
-        className={`relative w-full ${width} bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[92vh] pos-pop-in`}
+        className={`relative w-full ${width} bg-white rounded-t-3xl sm:rounded-2xl shadow-xl flex flex-col max-h-[92vh]`}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
           <h3 className="font-semibold text-slate-800 text-lg">{title}</h3>

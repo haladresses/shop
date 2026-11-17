@@ -6,7 +6,7 @@ export function PrintFrame({ title, titleAr, subtitle, children }: { title: stri
   const { store, periodLabel, filtersLabel } = useReport();
   const printed = new Date().toLocaleString("en-GB", { timeZone: "Asia/Muscat", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   return (
-    <div className="bg-white text-black" style={{ fontFamily: 'Vazirmatn, SBC, Tahoma, "Segoe UI", Arial, sans-serif', fontSize: 10.5, lineHeight: 1.35 }}>
+    <div className="bg-white text-black" style={{ fontFamily: 'Vazirmatn, Inter, SBC, Tahoma, "Segoe UI", Arial, sans-serif', fontSize: 10.5, lineHeight: 1.35 }}>
       <div className="flex items-start justify-between gap-6 pb-2" style={{ borderBottom: "2px solid #000" }}>
         <div>
           <div className="text-[15px] font-bold">{store.store_name_en || "Hala Dresses"}</div>

@@ -7,7 +7,7 @@ const CategoryItem = ({ category, active, onSelect }) => {
     <button
       type="button"
       className={`${
-        active ? "text-blue" : "text-dark-4"
+        active ? "text-blue" : "text-dark"
       } group flex items-center justify-between ease-out duration-200 hover:text-blue`}
       onClick={() => onSelect(active ? "" : category.slug)}
     >
@@ -59,7 +59,7 @@ const CategoryDropdown = ({ categories, activeSlug = "", onSelect, label = "Cate
           e.preventDefault();
           setToggleDropdown(!toggleDropdown);
         }}
-        className={`cursor-pointer flex items-center justify-between py-3 pl-6 pr-5.5 ${
+        className={`cursor-pointer flex items-center justify-between py-3 ps-6 pe-5.5 ${
           toggleDropdown && "shadow-filter"
         }`}
       >
@@ -91,7 +91,7 @@ const CategoryDropdown = ({ categories, activeSlug = "", onSelect, label = "Cate
       {/* dropdown && 'shadow-filter */}
       {/* <!-- dropdown menu --> */}
       <div
-        className={`flex-col gap-3 py-6 pl-6 pr-5.5 ${
+        className={`flex-col gap-3 py-6 ps-6 pe-5.5 ${
           toggleDropdown ? "flex" : "hidden"
         }`}
       >

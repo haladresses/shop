@@ -50,10 +50,9 @@ export default function RolesPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-800">Roles & permissions</h1>
           <p className="text-sm text-slate-500">
             {data.roles.length} roles, {people} {people === 1 ? "person" : "people"}. A role is a set of permissions; give it to people on the{" "}
-            <Link href="/admin/users" className="text-indigo-600 hover:underline">People</Link> page.
+            <Link href="/admin/users" className="text-indigo-600 hover:underline">Users</Link> page.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -89,8 +88,8 @@ export default function RolesPage() {
                       <span className="flex flex-wrap items-center gap-1.5">
                         <span className="font-medium text-slate-800 group-hover:text-indigo-600">{r.nameEn}</span>
                         {r.nameAr && <span className="text-xs text-slate-400" dir="rtl">{r.nameAr}</span>}
-                        {r.isSystem && <span className="text-[10px] font-semibold uppercase tracking-wide rounded px-1.5 py-0.5 bg-slate-100 text-slate-500">Built-in</span>}
-                        {viewer.roleId === r.id && <span className="text-[10px] font-semibold uppercase tracking-wide rounded px-1.5 py-0.5 bg-indigo-50 text-indigo-600">Your role</span>}
+                        {r.isSystem && <span className="text-xs font-medium rounded px-1.5 py-0.5 bg-slate-100 text-slate-500">Built-in</span>}
+                        {viewer.roleId === r.id && <span className="text-xs font-medium rounded px-1.5 py-0.5 bg-indigo-50 text-indigo-600">Your role</span>}
                       </span>
                       {r.description && <span className="block text-xs text-slate-500 mt-0.5 max-w-md">{r.description}</span>}
                     </span>

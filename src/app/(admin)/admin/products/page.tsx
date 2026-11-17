@@ -47,6 +47,24 @@ export default function ProductsPage() {
   const [copyTarget, setCopyTarget] = useState<Product | null>(null);
   const [copying, setCopying] = useState(false);
   const [copyError, setCopyError] = useState("");
+  // Catalogue-wide counts for the stat cards. They ignore the search, the
+  // filters and the current page, so the cards always describe the whole shop.
+  const [counts, setCounts] = useState({ all: 0, active: 0, featured: 0, fresh: 0 });
+
+  const loadCounts = useCallback(async () => {
+    const count = (query: string) =>
+      fetch(`/api/products?pageSize=1${query}`, { cache: "no-store" })
+        .then((r) => r.json())
+        .then((d) => (d.success ? (d.meta.total as number) : 0))
+        .catch(() => 0);
+    const [all, active, featured, fresh] = await Promise.all([
+      count(""),
+      count("&isActive=true"),
+      count("&isFeatured=true"),
+      count("&isNew=true"),
+    ]);
+    setCounts({ all, active, featured, fresh });
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -103,6 +121,7 @@ export default function ProductsPage() {
   };
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadCounts(); }, [loadCounts]);
 
   const toggleField = async (id: string, field: string, value: boolean) => {
     await fetch(`/api/products/${id}`, {
@@ -111,6 +130,7 @@ export default function ProductsPage() {
       body: JSON.stringify({ [field]: !value }),
     });
     load();
+    loadCounts();
   };
 
   const confirmDelete = async () => {
@@ -126,36 +146,45 @@ export default function ProductsPage() {
     }
     setDeleteTarget(null);
     load();
+    loadCounts();
   };
 
   const totalPages = Math.ceil(total / 20);
-  const activeCount = products.filter((p) => p.isActive).length;
-  const featuredCount = products.filter((p) => p.isFeatured).length;
-  const newCount = products.filter((p) => p.isNew).length;
 
   const stats = [
-    { label: "Total Products", value: total, icon: LuPackage, accent: "from-indigo-500 to-violet-500", ring: "ring-indigo-100" },
-    { label: "Active", value: activeCount, icon: LuCircleCheck, accent: "from-emerald-400 to-teal-500", ring: "ring-emerald-100" },
-    { label: "Featured", value: featuredCount, icon: LuStar, accent: "from-amber-400 to-orange-500", ring: "ring-amber-100" },
-    { label: "New Arrivals", value: newCount, icon: LuSparkles, accent: "from-sky-400 to-blue-500", ring: "ring-sky-100" },
+    { label: "Total Products", value: counts.all, icon: LuPackage },
+    { label: "Active", value: counts.active, icon: LuCircleCheck },
+    { label: "Featured", value: counts.featured, icon: LuStar },
+    { label: "New Arrivals", value: counts.fresh, icon: LuSparkles },
   ];
 
-  const price = (p: Product) => (
-    p.salePrice ? (
-      <span className="inline-flex items-baseline gap-1.5">
-        <span className="text-emerald-600 font-semibold">{Number(p.salePrice).toFixed(3)}</span>
-        <span className="text-xs text-slate-400 line-through">{Number(p.basePrice).toFixed(3)}</span>
+  // The shop charges the sale price when one is set. The regular price is
+  // only shown (crossed out) when it is really higher.
+  const price = (p: Product) => {
+    const current = Number(p.salePrice ?? p.basePrice);
+    const regular = Number(p.basePrice);
+    return (
+      <span className="inline-flex items-baseline gap-1.5 whitespace-nowrap">
+        <span className="font-semibold text-slate-800">{current.toFixed(3)}</span>
+        {regular > current && <span className="text-xs text-slate-400 line-through">{regular.toFixed(3)}</span>}
       </span>
-    ) : (
-      <span className="font-semibold text-slate-700">{Number(p.basePrice).toFixed(3)}</span>
-    )
+    );
+  };
+
+  // Edit is the everyday action; Duplicate and Delete are quieter icon buttons.
+  const rowActions = (p: Product) => (
+    <div className="inline-flex items-center gap-1">
+      <Link href={`/admin/products/${p.id}`} className="admin-btn admin-btn-secondary !py-1.5 !px-2.5 !text-xs"><LuPencil size={14} /> Edit</Link>
+      <button type="button" onClick={() => { setCopyError(""); setCopyTarget(p); }} className="admin-icon-btn" title="Duplicate" aria-label="Duplicate"><LuCopy size={15} /></button>
+      <button type="button" onClick={() => { setDeleteError(""); setDeleteTarget(p); }} className="admin-icon-btn admin-icon-btn-danger" title="Delete" aria-label="Delete"><LuTrash2 size={15} /></button>
+    </div>
   );
 
   const flags = (p: Product) => (
     <div className="flex gap-1 flex-wrap">
       {p.isFeatured && <span className="badge badge-confirmed">Featured</span>}
       {p.isNew && <span className="badge badge-processing">New</span>}
-      {p.isBestSeller && <span className="badge badge-delivered">Best</span>}
+      {p.isBestSeller && <span className="badge badge-delivered">Best seller</span>}
     </div>
   );
 
@@ -176,32 +205,30 @@ export default function ProductsPage() {
         ))}
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-3 flex-wrap">
-          <div className="relative">
-            <LuSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input className="admin-input w-full sm:w-56 pl-9" placeholder="Search products..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
-          </div>
-          <select className="admin-input admin-select w-full sm:w-52" value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}>
-            <option value="">All Categories</option>
-            {categoryOptions.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-          </select>
-          <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5" role="group" aria-label="Filter by status">
-            {([["", "All"], ["true", "Active"], ["false", "Hidden"]] as [StatusFilter, string][]).map(([v, label]) => (
-              <button
-                key={label}
-                type="button"
-                aria-pressed={statusFilter === v}
-                onClick={() => { setStatusFilter(v); setPage(1); }}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${statusFilter === v ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:text-slate-700"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+      {/* Toolbar: search, category, status, then the main action */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full sm:w-64">
+          <LuSearch size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input className="admin-input !pl-9" placeholder="Search products..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
         </div>
-        <Link href="/admin/products/new" className="admin-btn admin-btn-primary inline-flex items-center gap-1.5">
+        <select className="admin-input admin-select !w-full sm:!w-52" value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}>
+          <option value="">All Categories</option>
+          {categoryOptions.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+        </select>
+        <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5" role="group" aria-label="Filter by status">
+          {([["", "All"], ["true", "Active"], ["false", "Hidden"]] as [StatusFilter, string][]).map(([v, label]) => (
+            <button
+              key={label}
+              type="button"
+              aria-pressed={statusFilter === v}
+              onClick={() => { setStatusFilter(v); setPage(1); }}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium ${statusFilter === v ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:text-slate-700"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <Link href="/admin/products/new" className="admin-btn admin-btn-primary sm:ml-auto">
           <LuPlus size={16} /> Add Product
         </Link>
       </div>
@@ -235,18 +262,15 @@ export default function ProductsPage() {
                   </div>
                   <button
                     onClick={() => toggleField(p.id, "isActive", p.isActive)}
-                    className={`badge cursor-pointer h-fit ${p.isActive ? "badge-delivered" : "badge-cancelled"}`}
+                    className={`badge cursor-pointer h-fit ${p.isActive ? "badge-delivered" : "badge-refunded"}`}
+                    title={p.isActive ? "Click to hide from the shop" : "Click to show in the shop"}
                   >
-                    {p.isActive ? "Active" : "Inactive"}
+                    {p.isActive ? "Active" : "Hidden"}
                   </button>
                 </div>
                 <div className="mt-3 flex items-center justify-between">
                   {flags(p)}
-                  <div className="flex gap-2">
-                    <Link href={`/admin/products/${p.id}`} className="admin-btn admin-btn-secondary text-xs py-1"><LuPencil size={14} /> Edit</Link>
-                    <button onClick={() => { setCopyError(""); setCopyTarget(p); }} className="admin-btn admin-btn-secondary text-xs py-1" title="Duplicate"><LuCopy size={14} /></button>
-                    <button onClick={() => { setDeleteError(""); setDeleteTarget(p); }} className="admin-btn admin-btn-danger text-xs py-1"><LuTrash2 size={14} /></button>
-                  </div>
+                  {rowActions(p)}
                 </div>
               </div>
             ))}
@@ -263,9 +287,9 @@ export default function ProductsPage() {
                     <th>Category</th>
                     <th>Price</th>
                     <th className="text-center">Variants</th>
-                    <th>Flags</th>
+                    <th>Tags</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th className="text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -291,17 +315,14 @@ export default function ProductsPage() {
                       <td>
                         <button
                           onClick={() => toggleField(p.id, "isActive", p.isActive)}
-                          className={`badge cursor-pointer ${p.isActive ? "badge-delivered" : "badge-cancelled"}`}
+                          className={`badge cursor-pointer ${p.isActive ? "badge-delivered" : "badge-refunded"}`}
+                          title={p.isActive ? "Click to hide from the shop" : "Click to show in the shop"}
                         >
-                          {p.isActive ? "Active" : "Inactive"}
+                          {p.isActive ? "Active" : "Hidden"}
                         </button>
                       </td>
-                      <td>
-                        <div className="flex gap-2">
-                          <Link href={`/admin/products/${p.id}`} className="admin-btn admin-btn-secondary text-xs py-1"><LuPencil size={14} /> Edit</Link>
-                          <button onClick={() => { setCopyError(""); setCopyTarget(p); }} className="admin-btn admin-btn-secondary text-xs py-1" title="Duplicate this product"><LuCopy size={14} /> Copy</button>
-                          <button onClick={() => { setDeleteError(""); setDeleteTarget(p); }} className="admin-btn admin-btn-danger text-xs py-1"><LuTrash2 size={14} /> Del</button>
-                        </div>
+                      <td className="text-right">
+                        {rowActions(p)}
                       </td>
                     </tr>
                   ))}
@@ -316,7 +337,7 @@ export default function ProductsPage() {
         <div className="flex items-center justify-between admin-card px-4 py-3">
           <span className="text-sm text-slate-500">Total: {total}</span>
           <div className="flex gap-2 items-center">
-            <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40"><LuChevronLeft size={14} /> Prev</button>
+            <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40"><LuChevronLeft size={14} /> Previous</button>
             <span className="text-sm">Page {page} of {totalPages}</span>
             <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Next <LuChevronRight size={14} /></button>
           </div>

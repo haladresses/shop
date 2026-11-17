@@ -18,7 +18,6 @@ export default function NewPromotionPage() {
         <Link href="/admin/promotions" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-1">
           <LuChevronLeft size={16} /> Promotions
         </Link>
-        <h1 className="text-xl font-semibold text-slate-800">New promotion</h1>
       </div>
       {canManage === null ? (
         <div className="flex justify-center py-16">

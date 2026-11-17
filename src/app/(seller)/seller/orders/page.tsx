@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
+import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { formatVariantLabel } from "@/lib/utils";
 
 type ColorPart = { part: string; color: string; colorHex?: string | null };
@@ -24,6 +25,12 @@ const statusColors: Record<string, string> = {
   DELIVERED: "bg-green-100 text-green-700", CANCELLED: "bg-red-100 text-red-700",
 };
 
+/** "PARTIALLY_PAID" -> "Partially paid" */
+const humanize = (s: string) => {
+  const t = s.replace(/_/g, " ").toLowerCase();
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+
 export default function SellerOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [total, setTotal] = useState(0);
@@ -46,13 +53,13 @@ export default function SellerOrdersPage() {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg font-semibold text-slate-800">Orders</h2>
-        <p className="text-sm text-slate-500">{total} orders total</p>
+        <p className="text-sm text-slate-500">{total} order{total === 1 ? "" : "s"} in total</p>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="w-7 h-7 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+            <div className="w-7 h-7 border-[3px] border-slate-200 border-t-indigo-600 rounded-full animate-spin" />
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -70,7 +77,7 @@ export default function SellerOrdersPage() {
               <tbody>
                 {orders.map((o) => (
                   <tr key={o.id} className="border-t border-slate-100 hover:bg-slate-50">
-                    <td className="px-4 py-3 font-mono font-medium text-sky-600">{o.orderNumber}</td>
+                    <td className="px-4 py-3 font-mono font-medium text-slate-800">{o.orderNumber}</td>
                     <td className="px-4 py-3 text-slate-600">
                       {o.items.map((i) => {
                         const variant = formatVariantLabel(i.variant || {});
@@ -80,15 +87,15 @@ export default function SellerOrdersPage() {
                     <td className="px-4 py-3 font-medium">{Number(o.total).toFixed(3)} OMR</td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[o.status] || "bg-slate-100 text-slate-600"}`}>
-                        {o.status}
+                        {humanize(o.status)}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${o.paymentStatus === "PAID" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                        {o.paymentStatus}
+                        {humanize(o.paymentStatus)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-slate-400 text-sm">{new Date(o.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 text-slate-500 text-sm whitespace-nowrap">{new Date(o.createdAt).toLocaleDateString("en-GB")}</td>
                   </tr>
                 ))}
                 {orders.length === 0 && (
@@ -99,10 +106,10 @@ export default function SellerOrdersPage() {
           </div>
         )}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t">
-            <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="text-xs px-3 py-1.5 border rounded-lg disabled:opacity-40">← Prev</button>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
+            <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="inline-flex items-center gap-1 text-xs px-3 py-1.5 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 disabled:opacity-40"><LuChevronLeft size={14} /> Previous</button>
             <span className="text-sm text-slate-500">Page {page} of {totalPages}</span>
-            <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="text-xs px-3 py-1.5 border rounded-lg disabled:opacity-40">Next →</button>
+            <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className="inline-flex items-center gap-1 text-xs px-3 py-1.5 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 disabled:opacity-40">Next <LuChevronRight size={14} /></button>
           </div>
         )}
       </div>

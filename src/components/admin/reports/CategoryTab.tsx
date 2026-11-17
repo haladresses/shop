@@ -86,7 +86,7 @@ export default function CategoryTab({ query, onCategory }: { query: string; onCa
       ),
     },
     { key: "products", label: "Products sold", ar: "المنتجات", kind: "int", value: (r) => r.fig.products, total: t?.products },
-    { key: "qtySold", label: "Qty sold", ar: "الكمية", kind: "int", value: (r) => r.fig.qtySold, total: t?.qtySold },
+    { key: "qtySold", label: "Quantity sold", ar: "الكمية", kind: "int", value: (r) => r.fig.qtySold, total: t?.qtySold },
     { key: "qtyReturned", label: "Returned", ar: "المرتجع", kind: "int", value: (r) => r.fig.qtyReturned, total: t?.qtyReturned },
     { key: "netQty", label: "Net qty", ar: "صافي الكمية", kind: "int", value: (r) => r.fig.netQty, total: t?.netQty },
     { key: "gross", label: "Gross sales", ar: "إجمالي المبيعات", kind: "money", value: (r) => r.fig.gross, total: t?.gross },

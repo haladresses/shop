@@ -11,6 +11,7 @@ import { AppDispatch } from "@/redux/store";
 import { addItemToCart } from "@/redux/features/cart-slice";
 import { updateproductDetails } from "@/redux/features/product-details";
 import {
+  compareSizes,
   fetchProductBySlug,
   mapApiProduct,
   type ApiProduct,
@@ -193,7 +194,7 @@ const ShopDetails = () => {
   const sizes = useMemo(() => {
     const set = new Set<string>();
     variants.forEach((v) => v.size && set.add(v.size));
-    return Array.from(set);
+    return Array.from(set).sort(compareSizes);
   }, [variants]);
 
   // The exact sellable variant for the chosen colour + size — the colour
@@ -215,6 +216,8 @@ const ShopDetails = () => {
     variants
       .filter((v) => v.size === size && (!activeVariant || colorKey(v) === colorKey(activeVariant)))
       .reduce((n, v) => n + (v.inventory?.quantity ?? 0), 0);
+  // Pieces left of the chosen size, for a calm "Only N left" hint.
+  const activeSizeLeft = activeSize ? sizeStock(activeSize) : 0;
 
   // Pricing (respect the selected variant's adjustment).
   const adjust = selectedVariant?.priceAdjustment != null ? Number(selectedVariant.priceAdjustment) : activeVariant?.priceAdjustment != null ? Number(activeVariant.priceAdjustment) : 0;
@@ -307,7 +310,7 @@ const ShopDetails = () => {
   if (loading) {
     return (
       <>
-        <Breadcrumb title={isArabic ? "تفاصيل المنتج" : "Shop Details"} pages={[isArabic ? "تفاصيل المنتج" : "shop details"]} />
+        <Breadcrumb pages={[isArabic ? "المتجر" : "Shop"]} />
         <div className="flex justify-center items-center py-40">
           <div className="w-10 h-10 rounded-full border-2 border-blue border-t-transparent animate-spin" />
         </div>
@@ -318,7 +321,7 @@ const ShopDetails = () => {
   if (notFound || !api || !product) {
     return (
       <>
-        <Breadcrumb title={isArabic ? "تفاصيل المنتج" : "Shop Details"} pages={[isArabic ? "تفاصيل المنتج" : "shop details"]} />
+        <Breadcrumb pages={[isArabic ? "المتجر" : "Shop"]} />
         <div className="text-center py-40 text-dark-4">
           {isArabic ? "لم يتم العثور على المنتج." : "Product not found."}
         </div>
@@ -328,12 +331,16 @@ const ShopDetails = () => {
 
   return (
     <>
+      {/* Trail only: the product name below is the page heading. */}
       <Breadcrumb
-        title={api.category ? pick(api.category.nameEn, api.category.nameAr ?? "", isArabic) : isArabic ? "المتجر" : "Shop"}
-        pages={[isArabic ? "المتجر" : "Shop", "/", title]}
+        pages={[
+          isArabic ? "المتجر" : "Shop",
+          api.category ? pick(api.category.nameEn, api.category.nameAr ?? "", isArabic) : "",
+          title,
+        ]}
       />
 
-      <section className="overflow-hidden relative pb-20 pt-5 lg:pt-20 xl:pt-28">
+      <section className="overflow-hidden relative pb-16 lg:pb-20 pt-2 lg:pt-6">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0" dir={isArabic ? "rtl" : "ltr"}>
           <div className="flex flex-col lg:flex-row gap-7.5 xl:gap-17.5">
             {/* Gallery */}
@@ -428,7 +435,7 @@ const ShopDetails = () => {
             {/* Content */}
             <div className="max-w-[539px] w-full">
               <div className="flex items-center justify-between gap-3 mb-3">
-                <h2 data-product-title className="font-semibold text-xl sm:text-2xl xl:text-custom-3 text-dark">{title}</h2>
+                <h1 data-product-title className="font-semibold text-xl sm:text-2xl xl:text-custom-3 text-dark">{title}</h1>
               </div>
 
               <div className="flex flex-wrap items-center gap-4 mb-5">
@@ -507,7 +514,7 @@ const ShopDetails = () => {
                 <div className="mb-5">
                   <h4 className="font-medium text-dark mb-2.5">
                     {isArabic ? "اللون" : "Color"}
-                    {activeVariant?.color && <span className="text-dark-4 font-normal"> : {activeVariant.color}</span>}
+                    {activeVariant?.color && <span className="text-dark-4 font-normal">: {activeVariant.color}</span>}
                   </h4>
                   <div className="flex flex-wrap items-center gap-2.5">
                     {colorVariants.map((v) => {
@@ -564,20 +571,20 @@ const ShopDetails = () => {
                           disabled={left <= 0}
                           onClick={() => setActiveSize(active ? "" : s)}
                           aria-pressed={active}
-                          className={`relative min-w-[52px] h-12 px-3 rounded-xl border text-sm font-medium duration-200 ${
+                          className={`min-w-[52px] h-12 px-3 rounded-xl border text-sm font-medium duration-200 ${
                             active ? "border-dark bg-dark text-white" : "border-gray-3 text-dark hover:border-blue/50"
                           } disabled:opacity-40 disabled:line-through disabled:cursor-not-allowed disabled:hover:border-gray-3`}
                         >
                           {s}
-                          {left > 0 && left <= 2 && (
-                            <span className="absolute -top-2 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 whitespace-nowrap rounded-full bg-[#F59E0B] text-white text-[9px] font-semibold px-1.5">
-                              {isArabic ? `بقي ${left}` : `${left} left`}
-                            </span>
-                          )}
                         </button>
                       );
                     })}
                   </div>
+                  {activeSizeLeft > 0 && activeSizeLeft <= 2 && (
+                    <p className="mt-2.5 text-custom-sm text-blue">
+                      {isArabic ? `بقي ${activeSizeLeft} فقط` : `Only ${activeSizeLeft} left`}
+                    </p>
+                  )}
                 </div>
               )}
               {choiceError && (
@@ -591,7 +598,7 @@ const ShopDetails = () => {
                   {specs.slice(0, 4).map((s, i) => (
                     <div key={`${i}-${s.label}`} className="flex items-center justify-between gap-4 px-4 py-2.5">
                       <span className="text-custom-sm text-dark-4">{s.label}</span>
-                      <span className="text-custom-sm font-medium text-dark text-right">{s.value}</span>
+                      <span className="text-custom-sm font-medium text-dark text-end">{s.value}</span>
                     </div>
                   ))}
                 </div>
@@ -656,26 +663,43 @@ const ShopDetails = () => {
       <div className="lg:hidden h-[84px]" aria-hidden />
 
       {/* Tabs */}
-      <section className="overflow-hidden bg-gray-2 py-12 lg:py-20">
+      <section className="overflow-hidden bg-meta py-12 lg:py-20">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0" dir={isArabic ? "rtl" : "ltr"}>
-          <div className="flex flex-wrap items-center gap-3 mb-9">
-            {([
-              ["description", isArabic ? "الوصف" : "Description"],
-              ["specs", isArabic ? "المواصفات" : "Specifications"],
-              ["reviews", `${isArabic ? "التقييمات" : "Reviews"} (${product.reviews})`],
-              ["whatsapp", `${isArabic ? "تقييمات واتساب" : "WhatsApp Reviews"} (${waReviews.length})`],
-            ] as const).map(([id, label]) => (
-              <button
-                key={id}
-                onClick={() => setActiveTab(id)}
-                className={`font-medium text-custom-sm py-2.5 px-5 rounded-md duration-200 ${
-                  activeTab === id ? "bg-blue text-white" : "bg-white text-dark hover:text-blue"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          {/* Only tabs with content are shown; a lone "Description" needs no tab bar.
+              Customers can't post reviews on the site yet, so "Reviews" only
+              appears once a product actually has some. */}
+          {(() => {
+            const tabs = (
+              [
+                ["description", isArabic ? "الوصف" : "Description", true],
+                ["specs", isArabic ? "المواصفات" : "Specifications", specs.length > 0],
+                ["reviews", `${isArabic ? "التقييمات" : "Reviews"} (${product.reviews})`, product.reviews > 0],
+                ["whatsapp", `${isArabic ? "تقييمات واتساب" : "WhatsApp Reviews"} (${waReviews.length})`, waReviews.length > 0],
+              ] as const
+            ).filter(([, , shown]) => shown);
+            if (tabs.length < 2) {
+              return (
+                <h2 className="font-semibold text-xl text-dark mb-6">
+                  {isArabic ? "الوصف" : "Description"}
+                </h2>
+              );
+            }
+            return (
+              <div className="flex flex-wrap items-center gap-3 mb-9">
+                {tabs.map(([id, label]) => (
+                  <button
+                    key={id}
+                    onClick={() => setActiveTab(id)}
+                    className={`font-medium text-custom-sm py-2.5 px-5 rounded-md duration-200 ${
+                      activeTab === id ? "bg-blue text-white" : "bg-white text-dark hover:text-blue"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
 
           <div className="bg-white rounded-xl shadow-1 p-6 sm:p-9">
             {activeTab === "description" && (
@@ -684,19 +708,15 @@ const ShopDetails = () => {
               </div>
             )}
 
-            {activeTab === "specs" && (
-              specs.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10">
-                  {specs.map((s, i) => (
-                    <div key={`${i}-${s.label}`} className="flex items-center justify-between gap-4 py-3 border-b border-gray-3">
-                      <span className="text-dark-4">{s.label}</span>
-                      <span className="font-medium text-dark text-right">{s.value}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-dark-4">{isArabic ? "لا توجد مواصفات." : "No specifications available."}</p>
-              )
+            {activeTab === "specs" && specs.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10">
+                {specs.map((s, i) => (
+                  <div key={`${i}-${s.label}`} className="flex items-center justify-between gap-4 py-3 border-b border-gray-3">
+                    <span className="text-dark-4">{s.label}</span>
+                    <span className="font-medium text-dark text-end">{s.value}</span>
+                  </div>
+                ))}
+              </div>
             )}
 
             {activeTab === "reviews" && (
@@ -709,46 +729,42 @@ const ShopDetails = () => {
               </div>
             )}
 
-            {activeTab === "whatsapp" && (
-              waReviews.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {waReviews.map((r) => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => setWaLightbox(r.imageUrl)}
-                      className="group text-left overflow-hidden rounded-xl border border-gray-3 bg-white hover:shadow-1 transition-shadow"
-                    >
-                      <div className="relative aspect-[3/4] bg-gray-1 overflow-hidden">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={r.imageUrl}
-                          alt={r.customerName || "WhatsApp review"}
-                          loading="lazy"
-                          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
-                        />
+            {activeTab === "whatsapp" && waReviews.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                {waReviews.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setWaLightbox(r.imageUrl)}
+                    className="group text-start overflow-hidden rounded-xl border border-gray-3 bg-white hover:shadow-1 transition-shadow"
+                  >
+                    <div className="relative aspect-[3/4] bg-gray-1 overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={r.imageUrl}
+                        alt={r.customerName || "WhatsApp review"}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                      />
+                    </div>
+                    {(r.customerName || r.caption) && (
+                      <div className="p-2.5">
+                        {r.customerName && <div className="text-custom-sm font-medium text-dark">{r.customerName}</div>}
+                        {r.caption && <div className="mt-0.5 text-custom-xs text-dark-4 line-clamp-2">{r.caption}</div>}
                       </div>
-                      {(r.customerName || r.caption) && (
-                        <div className="p-2.5">
-                          {r.customerName && <div className="text-custom-sm font-medium text-dark">{r.customerName}</div>}
-                          {r.caption && <div className="mt-0.5 text-custom-xs text-dark-4 line-clamp-2">{r.caption}</div>}
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-dark-4">
-                  {isArabic ? "لا توجد تقييمات واتساب بعد." : "No WhatsApp reviews yet."}
-                </p>
-              )
+                    )}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </div>
       </section>
 
       <RecentlyViewdItems categorySlug={api.category?.slug} excludeId={api.id} />
-      <Newsletter />
+      <div className="py-12 sm:py-16">
+        <Newsletter />
+      </div>
 
       {/* WhatsApp review lightbox */}
       {waLightbox && (

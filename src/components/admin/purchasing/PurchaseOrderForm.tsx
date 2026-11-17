@@ -533,7 +533,7 @@ export default function PurchaseOrderForm({ initial }: { initial: EditorInitial 
                 <tr>
                   <th>Item</th>
                   <th className="text-right">On hand</th>
-                  <th className="text-right w-24">Qty</th>
+                  <th className="text-right w-24">Quantity</th>
                   <th className="text-right w-32">Unit cost{pricesIncludeTax ? " (incl.)" : ""}</th>
                   <th className="text-right w-20">Disc %</th>
                   <th className="text-right w-20">VAT %</th>
@@ -626,7 +626,7 @@ export default function PurchaseOrderForm({ initial }: { initial: EditorInitial 
                 Paid now (with “Place” or “Receive”)
               </label>
               {payNow && (
-                <div className="grid grid-cols-2 gap-2 admin-fade-in">
+                <div className="grid grid-cols-2 gap-2">
                   <input type="number" min="0" step="0.001" className="admin-input text-right" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} />
                   <select className="admin-input admin-select" value={payMethod} onChange={(e) => setPayMethod(e.target.value)}>
                     {PAYMENT_METHOD_OPTIONS.map((m) => (
@@ -762,7 +762,7 @@ function ReorderModal({
       {loading ? (
         <div className="flex justify-center py-10"><span className="spinner" /></div>
       ) : visible.length === 0 ? (
-        <p className="text-center text-slate-400 py-10">{rows.length && onlyThis ? "Nothing low in stock from this supplier. Untick the filter to see everything." : "Nothing is low in stock. 🎉"}</p>
+        <p className="text-center text-slate-400 py-10">{rows.length && onlyThis ? "Nothing low in stock from this supplier. Untick the filter to see everything." : "Nothing is low in stock."}</p>
       ) : (
         <div className="flex justify-end mb-2">
           <button type="button" className="text-xs text-indigo-600 hover:underline" onClick={() => setPicked(Object.fromEntries(visible.map((r) => [r.key, String(r.suggestedQty)])))}>

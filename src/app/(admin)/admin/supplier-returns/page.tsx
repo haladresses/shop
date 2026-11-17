@@ -94,11 +94,10 @@ export default function SupplierReturnsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-800">Supplier returns</h1>
           <p className="text-sm text-slate-500">Goods sent back to suppliers (debit notes). Stock goes down and the value comes off what you owe, or the supplier refunds you.</p>
         </div>
         <div className="flex gap-2">
-          <a href={csvHref()} className="admin-btn admin-btn-secondary"><LuDownload size={15} /> CSV</a>
+          <a href={csvHref()} className="admin-btn admin-btn-secondary"><LuDownload size={15} /> Export CSV</a>
           {perms.receive && (
             <Link href="/admin/supplier-returns/new" className="admin-btn admin-btn-primary"><LuPlus size={16} /> Return goods</Link>
           )}

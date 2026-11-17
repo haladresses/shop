@@ -45,7 +45,7 @@ export default function PaymentsTab({ query }: { query: string }) {
           { key: "pos", label: "POS", kind: "money", value: (r) => r.pos, total: t.pos, muted: true },
           { key: "online", label: "Online", kind: "money", value: (r) => r.online, total: t.online, muted: true },
           { key: "amount", label: "Taken", labelAr: "المحصّل", kind: "money", value: (r) => r.amount, total: t.amount, className: "font-medium" },
-          { key: "avg", label: "Avg payment", kind: "money", value: (r) => r.avg },
+          { key: "avg", label: "Average payment", kind: "money", value: (r) => r.avg },
           { key: "share", label: "Share", kind: "pct", value: (r) => r.share, total: data.rows.length ? 100 : 0 },
           { key: "refundCount", label: "Returns", kind: "int", value: (r) => r.refundCount, total: t.refundCount },
           { key: "refunds", label: "Refunded", labelAr: "المسترد", kind: "money", value: (r) => r.refunds, total: t.refunds },

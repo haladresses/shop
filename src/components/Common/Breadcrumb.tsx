@@ -7,8 +7,10 @@ import { useLanguage } from "@/app/context/LanguageContext";
 /**
  * Page title + trail. Compact on phones (single line trail above a smaller
  * title) so products start higher on the screen; mirrors automatically in RTL.
+ * Without a title only the trail is shown (e.g. the product page, whose own
+ * heading is the product name).
  */
-const Breadcrumb = ({ title, pages }: { title: string; pages: string[] }) => {
+const Breadcrumb = ({ title, pages }: { title?: string; pages: string[] }) => {
   const { isArabic } = useLanguage();
   const trail = pages.filter((p) => p && p !== "/");
 
@@ -16,7 +18,7 @@ const Breadcrumb = ({ title, pages }: { title: string; pages: string[] }) => {
     <div className="overflow-hidden pt-[73px] xl:pt-[125px] bg-white" dir={isArabic ? "rtl" : "ltr"}>
       <div className="border-t border-gray-3">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0 py-3 sm:py-5 xl:py-6 flex flex-col-reverse gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <h1 className="font-semibold text-dark text-lg sm:text-2xl xl:text-custom-2 leading-tight truncate">{title}</h1>
+          {title && <h1 className="font-semibold text-dark text-lg sm:text-2xl xl:text-custom-2 leading-tight truncate">{title}</h1>}
           <nav aria-label="Breadcrumb" className="min-w-0">
             <ol className="flex items-center gap-1.5 text-xs sm:text-custom-sm text-dark-4 whitespace-nowrap overflow-hidden">
               <li className="hover:text-blue shrink-0">

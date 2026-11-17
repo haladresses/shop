@@ -9,13 +9,8 @@ import { addItemToCart } from "@/redux/features/cart-slice";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { flyToCart } from "@/lib/cartFx";
 import { Product, ProductOption } from "@/types/product";
+import { compareSizes } from "@/lib/storefront";
 
-const SIZE_RANK: Record<string, number> = { XXS: 0, XS: 1, S: 2, M: 3, L: 4, XL: 5, XXL: 6, "3XL": 7 };
-const sizeSort = (a: string, b: string) => {
-  const ra = SIZE_RANK[a.toUpperCase()] ?? 50 + (parseFloat(a) || 0);
-  const rb = SIZE_RANK[b.toUpperCase()] ?? 50 + (parseFloat(b) || 0);
-  return ra - rb || a.localeCompare(b);
-};
 
 /**
  * Quick-add picker for products with options: colour + size chips with live
@@ -31,7 +26,7 @@ export default function QuickAddSheet({ item, onClose }: { item: Product; onClos
   const firstInStock = options.find((o) => o.stock > 0);
   const [color, setColor] = useState<string | null>(firstInStock?.color ?? colors[0] ?? null);
   const sizesForColor = useMemo(
-    () => options.filter((o) => (colors.length ? o.color === color : true)).filter((o) => o.size).sort((a, b) => sizeSort(a.size!, b.size!)),
+    () => options.filter((o) => (colors.length ? o.color === color : true)).filter((o) => o.size).sort((a, b) => compareSizes(a.size!, b.size!)),
     [options, colors.length, color],
   );
   const [size, setSize] = useState<string | null>(null);
@@ -158,19 +153,17 @@ export default function QuickAddSheet({ item, onClose }: { item: Product; onClos
                     disabled={o.stock <= 0}
                     onClick={() => setSize(o.size)}
                     aria-pressed={size === o.size}
-                    className={`relative h-11 rounded-xl text-sm font-medium border transition ${
+                    className={`h-11 rounded-xl text-sm font-medium border transition ${
                       size === o.size ? "bg-dark text-white border-dark" : "border-gray-3 text-dark hover:border-blue/50"
                     } disabled:opacity-40 disabled:line-through disabled:hover:border-gray-3`}
                   >
                     {o.size}
-                    {o.stock > 0 && o.stock <= 2 && (
-                      <span className="absolute -top-2 start-1/2 -translate-x-1/2 rtl:translate-x-1/2 whitespace-nowrap rounded-full bg-[#F59E0B] text-white text-[9px] font-semibold px-1.5">
-                        {t(`${o.stock} left`, `بقي ${o.stock}`)}
-                      </span>
-                    )}
                   </button>
                 ))}
               </div>
+              {selected?.size && stock > 0 && stock <= 2 && (
+                <p className="mt-2 text-custom-sm text-blue">{t(`Only ${stock} left`, `بقي ${stock} فقط`)}</p>
+              )}
             </div>
           )}
 

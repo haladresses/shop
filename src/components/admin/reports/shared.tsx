@@ -319,7 +319,7 @@ export function DataTable<T>({
         <div className="flex flex-wrap items-center gap-2">
           {toolbar}
           <button type="button" onClick={exportCsv} disabled={rows.length === 0} className="admin-btn admin-btn-secondary !px-2.5 !py-1.5 text-xs disabled:opacity-40" title="Download as CSV (opens in Excel)">
-            <LuDownload size={13} /> CSV
+            <LuDownload size={13} /> Export CSV
           </button>
           <button
             type="button"
@@ -397,7 +397,7 @@ export function DataTable<T>({
       {footer}
 
       <PrintArea id={printId}>
-        <div style={{ fontFamily: 'Vazirmatn, SBC, Tahoma, "Segoe UI", Arial, sans-serif', color: "#000" }}>
+        <div style={{ fontFamily: 'Vazirmatn, Inter, SBC, Tahoma, "Segoe UI", Arial, sans-serif', color: "#000" }}>
           <PrintHeader title={title} titleAr={titleAr} extra={printExtra} />
           <table style={printTable}>
             <thead>
@@ -475,7 +475,7 @@ export function Pager({ page, totalPages, total, onPage }: { page: number; total
     <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-2.5 border-t border-slate-200 text-sm">
       <span className="text-slate-500 mr-auto">{int(total)} receipts</span>
       <button disabled={page <= 1} onClick={() => onPage(1)} className="admin-btn admin-btn-secondary !px-2.5 !py-1 text-xs disabled:opacity-40">First</button>
-      <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="admin-btn admin-btn-secondary !px-2.5 !py-1 text-xs disabled:opacity-40">Prev</button>
+      <button disabled={page <= 1} onClick={() => onPage(page - 1)} className="admin-btn admin-btn-secondary !px-2.5 !py-1 text-xs disabled:opacity-40">Previous</button>
       <span className="text-slate-600">
         Page {page} of {totalPages}
       </span>

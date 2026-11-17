@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { LuUndo2 } from "react-icons/lu";
-import AdminModal from "@/components/admin/AdminModal";
 import Link from "next/link";
-import { LuSettings } from "react-icons/lu";
+import { LuSettings, LuUndo2 } from "react-icons/lu";
+import AdminModal from "@/components/admin/AdminModal";
+import { humanize, paymentStatusLabel } from "@/components/admin/labels";
 
 type Payment = {
   id: string;
@@ -27,9 +27,9 @@ const statusColors: Record<string, string> = {
 const methodLabels: Record<string, string> = {
   CASH_ON_DELIVERY: "Cash on Delivery",
   BANK_TRANSFER: "Bank Transfer",
-  CARD: "Credit Card",
+  CARD: "Card",
   THAWANI: "Thawani",
-  STRIPE: "Stripe",
+  STRIPE: "Card (online)",
 };
 
 export default function PaymentsPage() {
@@ -87,23 +87,23 @@ export default function PaymentsPage() {
           href="/admin/settings?tab=payment-gateway"
           className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600 hover:border-indigo-300 hover:text-indigo-700"
         >
-          <LuSettings size={16} /> Payment gateway (Thawani) setup has moved to <strong>Settings → Payment gateway</strong>
+          <LuSettings size={16} /> Payment gateway (Thawani) settings are in <strong>Settings → Payment gateway</strong>
         </Link>
       )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="stat-card">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Total Revenue</p>
-          <p className="text-2xl font-bold text-slate-800 mt-1">{stats.totalRevenue.toFixed(3)} OMR</p>
+          <p className="text-sm text-slate-500">Total Revenue</p>
+          <p className="text-xl font-bold text-slate-800 mt-1 tabular-nums">{stats.totalRevenue.toFixed(3)} OMR</p>
         </div>
         <div className="stat-card">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Pending Payments</p>
-          <p className="text-2xl font-bold text-amber-600 mt-1">{stats.pendingAmount.toFixed(3)} OMR</p>
+          <p className="text-sm text-slate-500">Pending Payments</p>
+          <p className="text-xl font-bold text-slate-800 mt-1 tabular-nums">{stats.pendingAmount.toFixed(3)} OMR</p>
         </div>
         <div className="stat-card">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Paid Orders</p>
-          <p className="text-2xl font-bold text-green-600 mt-1">{stats.paidCount}</p>
+          <p className="text-sm text-slate-500">Paid Orders</p>
+          <p className="text-xl font-bold text-slate-800 mt-1 tabular-nums">{stats.paidCount}</p>
         </div>
       </div>
 
@@ -129,16 +129,16 @@ export default function PaymentsPage() {
                     <td className="font-mono font-medium text-indigo-600">{p.order.orderNumber}</td>
                     <td>{p.order.user?.nameEn || p.order.user?.email || "Guest"}</td>
                     <td className="font-medium">{Number(p.amount).toFixed(3)} OMR</td>
-                    <td className="text-slate-600">{methodLabels[p.method] || p.method}</td>
-                    <td><span className={`badge ${statusColors[p.status] || "badge-unpaid"}`}>{p.status}</span></td>
+                    <td className="text-slate-600">{methodLabels[p.method] || humanize(p.method)}</td>
+                    <td><span className={`badge ${statusColors[p.status] || "badge-unpaid"}`}>{paymentStatusLabel(p.status)}</span></td>
                     <td className="font-mono text-xs text-slate-400">{p.transactionId || "-"}</td>
-                    <td className="text-slate-500 text-sm">{new Date(p.createdAt).toLocaleDateString()}</td>
+                    <td className="text-slate-500 text-sm">{new Date(p.createdAt).toLocaleDateString("en-GB")}</td>
                     <td>
                       {p.method === "THAWANI" && p.status === "PAID" && (
                         <div className="flex justify-end">
                           <button
                             onClick={() => { setRefundError(""); setRefundTarget(p); }}
-                            className="admin-btn admin-btn-secondary text-xs py-1 text-red-600 hover:bg-red-50"
+                            className="admin-btn admin-btn-danger !py-1.5 !px-2.5 !text-xs"
                           >
                             <LuUndo2 size={13} /> Refund
                           </button>

@@ -24,7 +24,6 @@ export default function NewProductPage() {
         <Link href="/admin/products" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-2">
           <LuChevronLeft size={16} /> Back to products
         </Link>
-        <h1 className="text-xl font-semibold text-slate-800">Add Product</h1>
         <p className="text-sm text-slate-500">Create a new product with images, specifications and variants.</p>
       </div>
       <ProductForm initial={emptyProductForm} onSubmit={handleSubmit} submitLabel="Create Product" />

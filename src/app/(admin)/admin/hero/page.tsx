@@ -168,7 +168,7 @@ export default function HeroAdminPage() {
           <button
             key={id}
             onClick={() => setTab(id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${tab === id ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${tab === id ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
           >
             <Icon size={16} /> {label}
             {count !== null && <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs bg-black/10">{count}</span>}
@@ -264,7 +264,7 @@ export default function HeroAdminPage() {
 
           <button
             onClick={() => { setSlides((p) => [...p, { ...EMPTY_HERO_SLIDE }]); setOpen(slides.length); setDirty(true); }}
-            className="flex items-center gap-2 w-full justify-center py-3.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+            className="flex items-center gap-2 w-full justify-center py-3.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-500 hover:border-indigo-400 hover:text-indigo-600"
           >
             <LuPlus size={18} /> Add slide
           </button>
@@ -285,7 +285,7 @@ export default function HeroAdminPage() {
                 <button
                   key={v}
                   onClick={() => set("layout", v)}
-                  className={`text-start rounded-xl border-2 p-3 transition-colors ${settings.layout === v ? "border-indigo-500 bg-indigo-50" : "border-slate-200 hover:border-slate-300"}`}
+                  className={`text-start rounded-xl border-2 p-3 ${settings.layout === v ? "border-indigo-500 bg-indigo-50" : "border-slate-200 hover:border-slate-300"}`}
                 >
                   <LayoutThumb kind={v} />
                   <p className="text-sm font-medium text-slate-800 mt-2">{label}</p>
@@ -389,7 +389,7 @@ export default function HeroAdminPage() {
           ))}
           <button
             onClick={() => { setFeatures((p) => [...p, { ...emptyFeature }]); setDirty(true); }}
-            className="flex items-center gap-2 w-full justify-center py-3.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-500 hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+            className="flex items-center gap-2 w-full justify-center py-3.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-500 hover:border-indigo-400 hover:text-indigo-600"
           >
             <LuPlus size={18} /> Add feature box
           </button>
@@ -397,7 +397,7 @@ export default function HeroAdminPage() {
       )}
 
       {/* Save bar */}
-      <div className="fixed bottom-0 inset-x-0 lg:start-64 z-30 bg-white/90 backdrop-blur border-t border-slate-200 px-4 sm:px-6 py-3 flex items-center gap-3">
+      <div className="fixed bottom-0 inset-x-0 lg:start-64 z-30 bg-white border-t border-slate-200 px-4 sm:px-6 py-3 flex items-center gap-3">
         <button onClick={save} disabled={saving || !dirty} className="admin-btn admin-btn-primary px-8 disabled:opacity-50">
           {saving ? "Saving..." : "Publish changes"}
         </button>
@@ -523,7 +523,7 @@ function ImageField({
         <div className={`relative ${size} rounded-xl overflow-hidden border border-slate-200 bg-slate-50 group`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={url} alt="" className={`w-full h-full ${small ? "object-contain p-3" : "object-cover object-top"}`} />
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
             <label className="px-3 py-1.5 rounded-lg bg-white text-xs font-medium cursor-pointer">
               Replace
               <input type="file" accept="image/*" className="hidden" onChange={(e) => onFile(e.target.files)} />
@@ -578,9 +578,9 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`w-11 h-6 rounded-full transition-colors shrink-0 ${checked ? "bg-indigo-600" : "bg-slate-200"}`}
+        className={`w-11 h-6 rounded-full shrink-0 ${checked ? "bg-indigo-600" : "bg-slate-200"}`}
       >
-        <span className={`block w-5 h-5 bg-white rounded-full shadow transition-transform ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
+        <span className={`block w-5 h-5 bg-white rounded-full shadow ${checked ? "translate-x-5" : "translate-x-0.5"}`} />
       </button>
     </label>
   );

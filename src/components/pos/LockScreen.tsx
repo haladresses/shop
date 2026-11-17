@@ -107,7 +107,7 @@ export default function LockScreen({
       className="fixed inset-0 z-[200] overflow-y-auto bg-[#F7F2EE] outline-none print:hidden"
     >
       <div className="min-h-full flex flex-col items-center justify-center p-6">
-        <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-[360px] flex flex-col items-center">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 w-full max-w-[360px] flex flex-col items-center">
           <div className="relative mb-3">
             <div className="w-20 h-20 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center overflow-hidden ring-4 ring-white shadow">
               {user?.avatar ? (
@@ -128,9 +128,9 @@ export default function LockScreen({
 
           {usePin ? (
             <>
-              <div className={`flex gap-3 mb-4 ${err ? "pos-shake" : ""}`}>
+              <div className="flex gap-3 mb-4">
                 {Array.from({ length: PIN_LENGTH }).map((_, i) => (
-                  <span key={i} className={`w-4 h-4 rounded-full border-2 transition-all ${i < value.length ? "bg-rose-500 border-rose-500 scale-110" : "border-slate-300"}`} />
+                  <span key={i} className={`w-4 h-4 rounded-full border-2 ${i < value.length ? "bg-rose-500 border-rose-500" : "border-slate-300"}`} />
                 ))}
               </div>
               <div className="h-6 mb-2 text-sm text-center">
@@ -187,7 +187,7 @@ export default function LockScreen({
 
         <button
           onClick={onSwitchUser}
-          className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-rose-600 hover:bg-white/70 px-4 py-2 rounded-xl"
+          className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white px-4 py-2 rounded-xl"
         >
           <LuUsers size={16} /> Switch user
         </button>

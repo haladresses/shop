@@ -9,7 +9,6 @@ import SiteDocument from "@/components/SiteDocument";
 import { ModalProvider } from "../context/QuickViewModalContext";
 import { CartModalProvider } from "../context/CartSidebarModalContext";
 import { ReduxProvider } from "@/redux/provider";
-import QuickViewModal from "@/components/Common/QuickViewModal";
 import CartSidebarModal from "@/components/Common/CartSidebarModal";
 import { PreviewSliderProvider } from "../context/PreviewSliderContext";
 import { LanguageProvider } from "../context/LanguageContext";
@@ -84,7 +83,6 @@ export default function RootLayout({
                 <Header />
                 {children}
 
-                <QuickViewModal />
                 <CartSidebarModal />
                 <PreviewSliderModal />
                 <MobileNav />

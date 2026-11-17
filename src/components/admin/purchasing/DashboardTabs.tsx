@@ -78,7 +78,7 @@ export function SuppliersTab({ perms, reloadKey, onChanged }: { perms: Purchasin
       <div className="p-3 border-b border-slate-100 grid gap-2 md:grid-cols-[minmax(0,1fr)_150px_170px_170px]">
         <div className="relative">
           <LuSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input value={search} onChange={(e) => reset(() => setSearch(e.target.value))} placeholder="Name, code, phone, category, VAT no." className="admin-input !py-2 !pl-9 text-sm" />
+          <input value={search} onChange={(e) => reset(() => setSearch(e.target.value))} placeholder="Name, code, phone, category, VAT number" className="admin-input !py-2 !pl-9 text-sm" />
         </div>
         <select value={status} onChange={(e) => reset(() => setStatus(e.target.value))} className="admin-input admin-select !py-2 text-sm">
           <option value="active">Active</option>
@@ -125,7 +125,7 @@ export function SuppliersTab({ perms, reloadKey, onChanged }: { perms: Purchasin
                     <td>
                       <div className="flex items-center gap-2">
                         <Link href={`/admin/suppliers/${s.id}`} onClick={(e) => e.stopPropagation()} className="font-medium text-slate-800 hover:text-indigo-600">{s.nameEn}</Link>
-                        {!s.isActive && <span className="text-[10px] font-semibold uppercase text-slate-400">inactive</span>}
+                        {!s.isActive && <span className="text-xs text-slate-400">Inactive</span>}
                         {s.rating ? (
                           <span className="inline-flex items-center gap-0.5 text-[11px] text-amber-500"><LuStar size={11} className="fill-amber-400" />{s.rating}</span>
                         ) : null}
@@ -280,7 +280,7 @@ export function PayablesTab({ perms, reloadKey, onChanged }: { perms: Purchasing
                   </td>
                   <td>
                     <Link href={`/admin/purchases/${r.id}`} className="font-mono text-indigo-600 hover:underline">{r.number}</Link>
-                    {r.supplierReference && <p className="text-xs text-slate-400">inv {r.supplierReference}</p>}
+                    {r.supplierReference && <p className="text-xs text-slate-400">Invoice {r.supplierReference}</p>}
                   </td>
                   <td>
                     {r.supplier && <Link href={`/admin/suppliers/${r.supplier.id}`} className="text-slate-800 hover:text-indigo-600">{r.supplier.nameEn}</Link>}

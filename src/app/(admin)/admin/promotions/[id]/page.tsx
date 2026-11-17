@@ -82,7 +82,7 @@ function Performance({ detail }: { detail: PromotionDetail }) {
           <Stat label="Orders" value={stats.redemptions.toLocaleString()} />
           <Stat label="Discount given" value={omr(stats.discount)} />
           <Stat label="Sales with deal" value={omr(stats.revenue)} />
-          <Stat label="Avg saving" value={omr(avgSaving)} />
+          <Stat label="Average saving" value={omr(avgSaving)} />
         </div>
         <p className="px-4 pt-3 pb-2 text-sm font-semibold text-slate-700 border-t border-slate-100">Last 30 days, by day</p>
         {activeDays.length === 0 ? (
@@ -165,7 +165,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
       <p className="text-[11px] text-slate-500">{label}</p>
-      <p className="font-semibold text-slate-800 tabular-nums truncate">{value}</p>
+      <p className="font-semibold text-slate-800 tabular-nums break-words">{value}</p>
     </div>
   );
 }

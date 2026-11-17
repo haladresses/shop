@@ -150,8 +150,8 @@ export function StatusBadge({ status }: { status: string }) {
 export function PayBadge({ status, overdue, days }: { status: string; overdue?: boolean; days?: number }) {
   if (overdue) {
     return (
-      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap bg-rose-600 text-white">
-        Overdue{days ? ` ${days}d` : ""}
+      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap bg-rose-100 text-rose-700">
+        Overdue{days ? ` ${days} day${days === 1 ? "" : "s"}` : ""}
       </span>
     );
   }
@@ -189,15 +189,15 @@ export function Kpi({
   return (
     <Tag
       onClick={onClick}
-      className={`bg-white rounded-2xl border border-slate-200/70 p-4 flex items-start gap-3 min-w-0 text-left ${onClick ? "hover:border-slate-300 transition-colors" : ""}`}
+      className={`bg-white rounded-2xl border border-slate-200/70 p-4 flex items-start gap-3 min-w-0 text-left ${onClick ? "hover:border-slate-300" : ""}`}
     >
       <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${color}`}>
         <Icon size={20} />
       </span>
       <div className="min-w-0">
         <p className="text-xs text-slate-500">{label}</p>
-        <p className="text-lg font-bold text-slate-800 tabular-nums truncate">{value}</p>
-        {sub && <p className="text-[11px] text-slate-400 truncate">{sub}</p>}
+        <p className="text-lg font-bold text-slate-800 tabular-nums break-words">{value}</p>
+        {sub && <p className="text-[11px] text-slate-400">{sub}</p>}
       </div>
     </Tag>
   );
@@ -218,7 +218,7 @@ export function TabBar<T extends string>({
         <button
           key={id}
           onClick={() => onChange(id)}
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium ${
             value === id ? "bg-slate-800 text-white" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -349,7 +349,7 @@ export function SupplierPicker({
         <LuChevronDown size={16} className="text-slate-400 shrink-0" />
       </button>
       {open && (
-        <div className="absolute z-30 mt-1 w-full min-w-[260px] bg-white rounded-xl shadow-lg ring-1 ring-slate-200 overflow-hidden admin-fade-in">
+        <div className="absolute z-30 mt-1 w-full min-w-[260px] bg-white rounded-xl shadow-lg ring-1 ring-slate-200 overflow-hidden">
           <div className="relative border-b border-slate-100">
             <LuSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input

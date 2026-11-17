@@ -110,7 +110,7 @@ export default function StatementView({ supplierId }: { supplierId: string }) {
           </div>
         )}
         <span className="flex-1" />
-        <button onClick={exportCsv} disabled={!st} className="admin-btn admin-btn-secondary !py-1.5 text-sm"><LuDownload size={14} /> CSV</button>
+        <button onClick={exportCsv} disabled={!st} className="admin-btn admin-btn-secondary !py-1.5 text-sm"><LuDownload size={14} /> Export CSV</button>
         <button
           onClick={() => printArea("supplier-statement", { page: "a4", title: st ? `Statement ${st.supplier.code}` : "Statement" })}
           disabled={!st}

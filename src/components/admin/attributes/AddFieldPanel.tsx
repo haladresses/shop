@@ -48,7 +48,7 @@ export default function AddFieldPanel({
   );
 
   return (
-    <div className="border-b border-slate-200 bg-slate-50/70 px-4 sm:px-5 py-4 admin-fade-in">
+    <div className="border-b border-slate-200 bg-slate-50/70 px-4 sm:px-5 py-4">
       <div className="flex items-center gap-2 mb-4">
         <div className="relative flex-1">
           <LuSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
@@ -99,7 +99,7 @@ export default function AddFieldPanel({
                   key={kit.id}
                   disabled={!missing.length}
                   onClick={() => onAddKit(missing, kit.labelEn)}
-                  className="text-left rounded-xl border border-slate-200 bg-white p-3 transition hover:border-indigo-300 hover:shadow-sm disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:shadow-none"
+                  className="text-left rounded-xl border border-slate-200 bg-white p-3 hover:border-indigo-300 disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:shadow-none"
                 >
                   <span className="block text-sm font-medium text-slate-800">{kit.labelEn}</span>
                   <span className="block text-xs text-slate-400" dir="rtl">{kit.labelAr}</span>
@@ -138,7 +138,7 @@ export default function AddFieldPanel({
                         : s === "added" ? "Already added"
                         : `Add “${p.labelEn}”${p.options?.length ? ` with ${p.options.length} options` : ""}`
                     }
-                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${
+                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
                       s === "available"
                         ? "border-slate-200 bg-white text-slate-700 hover:border-indigo-300 hover:bg-indigo-50/50"
                         : "border-slate-200 bg-slate-100 text-slate-400 cursor-default"
@@ -166,7 +166,7 @@ export default function AddFieldPanel({
                 key={t.value}
                 type="button"
                 onClick={() => onAddBlank(t.value)}
-                className="flex items-start gap-3 text-left rounded-xl border border-slate-200 bg-white p-3 transition hover:border-indigo-300 hover:shadow-sm"
+                className="flex items-start gap-3 text-left rounded-xl border border-slate-200 bg-white p-3 hover:border-indigo-300 hover:shadow-sm"
               >
                 <TypeTile type={t.value} />
                 <span className="min-w-0">

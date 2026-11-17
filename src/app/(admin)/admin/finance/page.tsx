@@ -13,6 +13,7 @@ import {
 } from "react-icons/lu";
 import AdminModal from "@/components/admin/AdminModal";
 import { EXPENSE_CATEGORIES, Granularity } from "@/lib/finance";
+import { humanize } from "@/components/admin/labels";
 
 type Totals = {
   grossSales: number;
@@ -221,7 +222,7 @@ export default function FinancePage() {
               <span className="text-slate-400 text-sm">to</span>
               <input type="date" value={range.to} min={range.from} onChange={(e) => { setPreset(""); setRange((r) => ({ ...r, to: e.target.value })); }} className="admin-input !py-1.5 text-sm !w-auto min-w-0" />
               <button onClick={exportCsv} disabled={!data} className="admin-btn admin-btn-secondary !py-1.5 text-sm shrink-0" title="Export CSV">
-                <LuDownload size={15} /> CSV
+                <LuDownload size={15} /> Export CSV
               </button>
             </div>
           </div>
@@ -248,7 +249,7 @@ export default function FinancePage() {
                 <Kpi label={t.netProfit < 0 ? "Net loss" : "Net profit"} value={omr(t.netProfit)} change={pctChange(t.netProfit, p.netProfit)} tone={t.netProfit < 0 ? "loss" : "profit"} />
                 <Kpi label="Expenses" value={omr(t.expenses)} change={pctChange(t.expenses, p.expenses)} invert />
                 <Kpi label="Orders" value={t.orders.toLocaleString()} change={pctChange(t.orders, p.orders)} />
-                <Kpi label="Avg. order value" value={omr(t.avgOrderValue)} change={pctChange(t.avgOrderValue, p.avgOrderValue)} />
+                <Kpi label="Average order value" value={omr(t.avgOrderValue)} change={pctChange(t.avgOrderValue, p.avgOrderValue)} />
                 <Kpi label="Items sold" value={t.itemsSold.toLocaleString()} change={pctChange(t.itemsSold, p.itemsSold)} />
                 <Kpi label="Refunds" value={omr(t.refunds)} change={pctChange(t.refunds, p.refunds)} invert />
               </div>
@@ -343,7 +344,7 @@ export default function FinancePage() {
                           <tbody>
                             {data.paymentMethods.map((m) => (
                               <tr key={m.method}>
-                                <td>{m.method.replace(/_/g, " ").toLowerCase().replace(/^\w/, (c) => c.toUpperCase())}</td>
+                                <td>{humanize(m.method)}</td>
                                 <td className="text-right">{m.count}</td>
                                 <td className="text-right">{num(m.amount)}</td>
                               </tr>
@@ -455,7 +456,7 @@ function Kpi({ label, value, sub, change, invert, tone }: { label: string; value
   return (
     <div className="bg-white rounded-2xl border border-slate-200/70 p-4 min-w-0">
       <p className="text-xs font-medium text-slate-500">{label}</p>
-      <p className={`text-lg sm:text-xl font-bold mt-1 tabular-nums truncate ${tone === "loss" ? "text-rose-600" : "text-slate-800"}`}>{value}</p>
+      <p className={`text-lg sm:text-xl font-bold mt-1 tabular-nums break-words ${tone === "loss" ? "text-rose-600" : "text-slate-800"}`}>{value}</p>
       <div className="flex items-center gap-2 mt-1 min-h-[18px]">
         {change !== null ? (
           <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${good ? "text-emerald-600" : "text-rose-600"}`}>
@@ -463,7 +464,7 @@ function Kpi({ label, value, sub, change, invert, tone }: { label: string; value
             {Math.abs(change).toFixed(1)}%
           </span>
         ) : (
-          <span className="text-xs text-slate-400">new</span>
+          <span className="text-xs text-slate-400">No earlier data</span>
         )}
         {sub && <span className="text-xs text-slate-400 truncate">{sub}</span>}
       </div>
@@ -649,9 +650,9 @@ function ExpensesTab({ canManage, onChange }: { canManage: boolean; onChange: ()
                     <td><span className="badge bg-slate-100 text-slate-700">{e.category}</span></td>
                     <td className="max-w-[320px]">
                       <p className="truncate">{e.description || "-"}</p>
-                      {e.reference && <p className="text-xs text-slate-400">Ref: {e.reference}</p>}
+                      {e.reference && <p className="text-xs text-slate-400">Reference: {e.reference}</p>}
                     </td>
-                    <td className="text-slate-500 text-sm">{e.paymentMethod.replace(/_/g, " ").toLowerCase()}</td>
+                    <td className="text-slate-500 text-sm">{humanize(e.paymentMethod)}</td>
                     <td className="text-right tabular-nums font-medium">{num(e.amount)}</td>
                     {canManage && (
                       <td className="text-right whitespace-nowrap">
@@ -667,7 +668,7 @@ function ExpensesTab({ canManage, onChange }: { canManage: boolean; onChange: ()
         )}
         {totalPages > 1 && (
           <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-slate-100">
-            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Prev</button>
+            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Previous</button>
             <span className="text-sm text-slate-500">Page {page} of {totalPages}</span>
             <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Next</button>
           </div>

@@ -370,7 +370,7 @@ export default function PoEditor({ initial, onCancel }: { initial: EditorInitial
                   <tr>
                     <th>Item</th>
                     <th className="text-right w-20">On hand</th>
-                    <th className="text-right w-24">Qty</th>
+                    <th className="text-right w-24">Quantity</th>
                     <th className="text-right w-32">Unit cost{f.pricesIncludeTax ? " (incl.)" : ""}</th>
                     <th className="text-right w-20">Disc %</th>
                     <th className="text-right w-20">VAT %</th>
@@ -652,7 +652,7 @@ function ReorderModal({
       {loading ? (
         <div className="flex justify-center py-10"><span className="spinner" /></div>
       ) : rows.length === 0 ? (
-        <p className="text-center text-slate-500 py-10">Nothing is at or below its low-stock alert. 🎉</p>
+        <p className="text-center text-slate-500 py-10">Nothing is at or below its low-stock alert.</p>
       ) : (
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">

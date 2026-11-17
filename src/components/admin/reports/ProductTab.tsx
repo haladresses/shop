@@ -104,7 +104,7 @@ export default function ProductTab({
       ? [{ key: "variant", label: "Colour / size", ar: "اللون / المقاس", kind: "text" as const, value: (r: Row) => r.variantLabel }]
       : []),
     { key: "category", label: "Category", ar: "الفئة", kind: "text", value: (r) => r.categoryName },
-    { key: "qtySold", label: "Qty sold", ar: "الكمية المباعة", kind: "int", value: (r) => r.qtySold, total: t.qtySold },
+    { key: "qtySold", label: "Quantity sold", ar: "الكمية المباعة", kind: "int", value: (r) => r.qtySold, total: t.qtySold },
     { key: "qtyReturned", label: "Returned", ar: "المرتجع", kind: "int", value: (r) => r.qtyReturned, total: t.qtyReturned },
     { key: "netQty", label: "Net qty", ar: "صافي الكمية", kind: "int", value: (r) => r.netQty, total: t.netQty, className: "font-medium" },
     { key: "gross", label: "Gross sales", ar: "إجمالي المبيعات", kind: "money", value: (r) => r.gross, total: t.gross },
@@ -117,7 +117,7 @@ export default function ProductTab({
     { key: "profit", label: "Gross profit", ar: "إجمالي الربح", kind: "money", value: (r) => r.profit, total: t.profit, render: (r) => <span className={r.profit < 0 ? "text-rose-600 font-medium" : "font-medium"}>{money(r.profit)}</span> },
     { key: "margin", label: "Margin", ar: "الهامش", kind: "pct", value: (r) => r.margin, total: t.margin },
     { key: "share", label: "Share of sales", ar: "حصة المبيعات", kind: "pct", value: (r) => r.share, total: share },
-    { key: "avgPrice", label: "Avg price", ar: "متوسط السعر", kind: "money", value: (r) => r.avgPrice, total: t.avgPrice },
+    { key: "avgPrice", label: "Average price", ar: "متوسط السعر", kind: "money", value: (r) => r.avgPrice, total: t.avgPrice },
     { key: "stock", label: "In stock", ar: "المخزون", kind: "int", value: (r) => r.stock },
   ];
 

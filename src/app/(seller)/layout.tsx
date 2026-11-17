@@ -11,6 +11,8 @@ export default function SellerRootLayout({
   return (
     <SiteDocument
       lang="en"
+      // Plain, motion-free portal (see seller.css "No motion").
+      bodyClassName="seller-body"
       head={
         <>
           <title>Seller Portal | Hala Dresses</title>

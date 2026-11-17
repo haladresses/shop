@@ -321,7 +321,7 @@ export default function ReturnModal({
                 key={m}
                 type="button"
                 onClick={() => { setMode(m); setErr(""); }}
-                className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-left transition ${mode === m ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-800"}`}
+                className={`flex items-center justify-center gap-2 rounded-xl px-3 py-2.5 text-left ${mode === m ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-800"}`}
               >
                 <Icon size={18} />
                 <span>

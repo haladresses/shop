@@ -21,9 +21,9 @@ const PriceDropdown = ({ title, currency, min, max, value, onChange }: PriceDrop
     <div className="bg-white shadow-1 rounded-lg">
       <div
         onClick={() => setToggleDropdown(!toggleDropdown)}
-        className="cursor-pointer flex items-center justify-between py-3 pl-6 pr-5.5"
+        className="cursor-pointer flex items-center justify-between py-3 ps-6 pe-5.5"
       >
-        <p className="text-dark">{title}</p>
+        <p className="text-dark font-medium">{title}</p>
         <button
           onClick={() => setToggleDropdown(!toggleDropdown)}
           id="price-dropdown-btn"

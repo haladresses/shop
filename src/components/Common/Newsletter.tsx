@@ -76,7 +76,7 @@ const Newsletter = () => {
       <div className="max-w-[1170px] mx-auto px-4 sm:px-8 xl:px-0">
         <div className="relative z-1 overflow-hidden rounded-3xl bg-blue">
 
-          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 sm:gap-8 px-5 sm:px-7.5 xl:pl-12.5 xl:pr-14 py-9 sm:py-11">
+          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 sm:gap-8 px-5 sm:px-7.5 xl:ps-12.5 xl:pe-14 py-9 sm:py-11">
             <div className="max-w-[491px] w-full">
               <h2 className="max-w-[399px] text-white font-bold text-lg sm:text-xl xl:text-heading-4 mb-3">
                 {copy.title}

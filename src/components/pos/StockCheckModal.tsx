@@ -178,7 +178,7 @@ function ProductStock({ lines, inCart, onAdd }: { lines: StockLine[]; inCart: (k
           </p>
         </div>
         <div className="text-right shrink-0">
-          <p className={`text-2xl font-bold tabular-nums ${!tracked ? "text-slate-400" : total === 0 ? "text-rose-600" : "text-slate-900"}`}>{tracked ? total : "–"}</p>
+          <p className={`text-2xl font-bold tabular-nums ${!tracked ? "text-slate-400" : total === 0 ? "text-rose-600" : "text-slate-900"}`}>{tracked ? total : "-"}</p>
           <p className="text-[11px] text-slate-500">{tracked ? "in stock" : "not stock-tracked"}{inSale > 0 && ` · ${inSale} in this sale`}</p>
         </div>
       </div>
@@ -214,7 +214,7 @@ function ProductStock({ lines, inCart, onAdd }: { lines: StockLine[]; inCart: (k
                             onClick={() => left > 0 && onAdd(l)}
                             disabled={left <= 0}
                             title={`${l.sku ? `SKU ${l.sku} · ` : ""}${l.barcode ? `${l.barcode} · ` : ""}${l.unitPrice.toFixed(3)} OMR${l.location ? ` · ${l.location}` : ""}`}
-                            className={`w-full rounded-xl px-2 py-2 ring-1 text-center transition ${CELL[lvl]} ${left > 0 ? "hover:ring-2 hover:ring-rose-300" : "cursor-default"}`}
+                            className={`w-full rounded-xl px-2 py-2 ring-1 text-center ${CELL[lvl]} ${left > 0 ? "hover:ring-2 hover:ring-rose-300" : "cursor-default"}`}
                           >
                             <span className="block text-lg font-bold leading-none tabular-nums">{l.stock}</span>
                             <span className="block text-[10px] mt-0.5 leading-none">

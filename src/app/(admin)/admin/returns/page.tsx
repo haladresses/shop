@@ -95,7 +95,7 @@ export default function ReturnsPage() {
       </div>
 
       <div className="rounded-2xl border border-slate-200/70 bg-white p-3 flex flex-col md:flex-row md:items-center gap-2 flex-wrap">
-        <input value={filters.search} onChange={(e) => setFilter("search", e.target.value)} placeholder="Order, credit note no. or reason" className="admin-input !py-2 text-sm md:max-w-xs" />
+        <input value={filters.search} onChange={(e) => setFilter("search", e.target.value)} placeholder="Search order, credit note or reason" className="admin-input !py-2 text-sm md:max-w-xs" />
         <select value={filters.method} onChange={(e) => setFilter("method", e.target.value)} className="admin-input admin-select !py-2 text-sm md:max-w-[180px]">
           <option value="">All refund methods</option>
           <option value="CASH">Cash</option>
@@ -176,7 +176,7 @@ export default function ReturnsPage() {
         )}
         {totalPages > 1 && (
           <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-slate-100">
-            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Prev</button>
+            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Previous</button>
             <span className="text-sm text-slate-500">Page {page} of {totalPages}</span>
             <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="admin-btn admin-btn-secondary text-xs disabled:opacity-40">Next</button>
           </div>

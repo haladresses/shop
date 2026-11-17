@@ -8,7 +8,14 @@
   }
 
   body {
-    @apply font-sbc font-normal text-base text-dark-3 relative z-1;
+    @apply font-sbc font-normal text-base text-dark-3 relative z-1 antialiased;
+  }
+
+  /* Inter reads best slightly tighter at heading sizes. Left-to-right only:
+     Arabic is a joined script and must keep normal spacing. :where() keeps
+     the specificity at zero, so a tracking utility on a heading still wins. */
+  :where([dir="ltr"]) :where(h1, h2, h3) {
+    letter-spacing: -0.015em;
   }
 
   *,
@@ -49,7 +56,7 @@
    Limited by unicode-range to the Arabic script, and listed FIRST in every
    font stack, so any Arabic character — storefront, admin, POS, printed
    receipts, invoices and stickers — renders in Vazirmatn, while Latin text
-   keeps its own font (SBC), even within the same line. One variable file
+   renders in Inter (below), even within the same line. One variable file
    covers weights 100–900. */
 @font-face {
   font-family: "Vazirmatn";
@@ -59,6 +66,21 @@
   font-style: normal;
   font-display: swap;
   unicode-range: U+0600-06FF, U+0750-077F, U+0870-089F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+25CC;
+}
+
+/* ───────── English typeface: Inter (SIL OFL, self-hosted) ─────────
+   Built for screens: real weights 100-900 (no faux bold), clear at small
+   sizes, and even-width digits for prices, receipts and reports. Limited to
+   the Latin range and listed right after Vazirmatn in every font stack, so
+   English text and numbers use Inter while Arabic keeps Vazirmatn. */
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/inter/Inter-Variable-latin.woff2") format("woff2-variations"),
+    url("/fonts/inter/Inter-Variable-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 /* Arabic is a joined script: letter-spacing tears the letters apart, so
@@ -285,7 +307,7 @@ input[type='search']::-webkit-search-results-decoration {
 }
 
 .custom-select-common .select-selected {
-  @apply bg-gray-1 rounded-md !border-r text-dark-4 py-3 pl-5 pr-9 duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20;
+  @apply bg-gray-1 rounded-md !border-r text-dark-4 py-3 pl-5 pr-9 duration-200 focus:border-blue focus:ring-2 focus:ring-blue/20;
 }
 .custom-select-common .select-selected:after {
   content: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.41469 5.03569L2.41467 5.03571L2.41749 5.03846L7.76749 10.2635L8.0015 10.492L8.23442 10.2623L13.5844 4.98735L13.5844 4.98735L13.5861 4.98569C13.6809 4.89086 13.8199 4.89087 13.9147 4.98569C14.0092 5.08024 14.0095 5.21864 13.9155 5.31345C13.9152 5.31373 13.915 5.31401 13.9147 5.31429L8.16676 10.9622L8.16676 10.9622L8.16469 10.9643C8.06838 11.0606 8.02352 11.0667 8.00039 11.0667C7.94147 11.0667 7.89042 11.0522 7.82064 10.9991L2.08526 5.36345C1.99127 5.26865 1.99154 5.13024 2.08609 5.03569C2.18092 4.94086 2.31986 4.94086 2.41469 5.03569Z' fill='%238D93A5' stroke='%238D93A5' stroke-width='0.666667'/%3E%3C/svg%3E%0A");
@@ -382,13 +404,7 @@ input[type='search']::-webkit-search-results-decoration {
   @apply !bg-blue;
 }
 /* ───────── POS ───────── */
-@keyframes pos-fade-in { from { opacity: 0 } to { opacity: 1 } }
-@keyframes pos-pop-in { from { opacity: 0; transform: translateY(12px) scale(.97) } to { opacity: 1; transform: none } }
-@keyframes pos-slide-up { from { transform: translateY(100%) } to { transform: none } }
 @keyframes pos-shake { 10%, 90% { transform: translateX(-1px) } 20%, 80% { transform: translateX(3px) } 30%, 50%, 70% { transform: translateX(-5px) } 40%, 60% { transform: translateX(5px) } }
-.pos-fade-in { animation: pos-fade-in .18s ease-out }
-.pos-pop-in { animation: pos-pop-in .22s cubic-bezier(.2, .9, .3, 1.2) }
-.pos-slide-up { animation: pos-slide-up .28s cubic-bezier(.2, .9, .3, 1) }
 .pos-shake { animation: pos-shake .4s both }
 
 /* ───────── Printing (see lib/print.ts + components/print/PrintArea.tsx) ─────────
@@ -407,7 +423,7 @@ input[type='search']::-webkit-search-results-decoration {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pos-fade-in, .pos-pop-in, .pos-slide-up, .pos-shake { animation: none !important; }
+  .pos-shake { animation: none !important; }
 }
 
 /* ───────── Hero ───────── */

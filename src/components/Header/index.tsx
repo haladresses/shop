@@ -205,7 +205,7 @@ const Header = () => {
 
             {/* Account */}
             <Link href={dashboardHref} className="hidden sm:flex items-center gap-2 group rounded-full px-1.5 py-1 transition-colors hover:bg-blue/5">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${user ? "bg-gradient-to-br from-blue to-blue-dark text-white group-hover:brightness-105" : "bg-blue/10 text-blue group-hover:bg-blue/20"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${user ? "bg-blue text-white group-hover:bg-blue-dark" : "bg-blue/10 text-blue group-hover:bg-blue/20"}`}>
                 {user ? (
                   <span className="text-xs font-semibold uppercase">
                     {(accountLabel || shownEmail || "?").trim().charAt(0)}

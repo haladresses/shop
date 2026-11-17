@@ -18,9 +18,9 @@ const ColorsDropdwon = ({ title, emptyLabel, options, selected, onToggle }: Colo
     <div className="bg-white shadow-1 rounded-lg">
       <div
         onClick={() => setToggleDropdown(!toggleDropdown)}
-        className={`cursor-pointer flex items-center justify-between py-3 pl-6 pr-5.5 ${toggleDropdown && "shadow-filter"}`}
+        className={`cursor-pointer flex items-center justify-between py-3 ps-6 pe-5.5 ${toggleDropdown && "shadow-filter"}`}
       >
-        <p className="text-dark">{title}</p>
+        <p className="text-dark font-medium">{title}</p>
         <button
           aria-label="button for colors dropdown"
           className={`text-dark ease-out duration-200 ${toggleDropdown && "rotate-180"}`}

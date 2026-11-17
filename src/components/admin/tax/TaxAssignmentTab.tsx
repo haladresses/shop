@@ -283,7 +283,7 @@ export default function TaxAssignmentTab({ canManage }: { canManage: boolean }) 
         </div>
 
         {canManage && selected.size > 0 && (
-          <div className="flex flex-wrap items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-2.5 admin-fade-in">
+          <div className="flex flex-wrap items-center gap-2 rounded-xl bg-slate-900 text-white px-4 py-2.5">
             <span className="text-sm font-medium mr-2">{selected.size} selected</span>
             <select
               className="admin-input admin-select !w-auto !py-1.5 text-sm text-slate-800"

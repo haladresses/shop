@@ -295,7 +295,8 @@ const Checkout = () => {
         return;
       }
 
-      router.push("/mail-success");
+      const orderNumber = data.data.orderNumber as string | undefined;
+      router.push(orderNumber ? `/mail-success?order=${encodeURIComponent(orderNumber)}` : "/mail-success");
     } catch {
       setError(
         t("Something went wrong. Please try again.", "حدث خطأ ما. حاول مرة أخرى.")
@@ -306,12 +307,12 @@ const Checkout = () => {
   };
 
   const inputClass =
-    "rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-transparent focus:shadow-input focus:ring-2 focus:ring-blue/20";
+    "rounded-md border border-gray-3 bg-gray-1 placeholder:text-dark-5 w-full py-2.5 px-5 outline-none duration-200 focus:border-blue focus:ring-2 focus:ring-blue/20";
 
   return (
     <>
       <Breadcrumb title={t("Checkout", "إتمام الطلب")} pages={["checkout"]} />
-      <section className="overflow-hidden py-20 bg-gray-2">
+      <section className="overflow-hidden py-14 sm:py-20 bg-meta">
         <div className="max-w-[1170px] w-full mx-auto px-4 sm:px-8 xl:px-0">
           <form onSubmit={handleSubmit}>
             <div className="flex flex-col lg:flex-row gap-7.5 xl:gap-11">
@@ -319,7 +320,7 @@ const Checkout = () => {
               <div className="lg:max-w-[670px] w-full">
                 <div className="bg-white shadow-1 rounded-[10px] p-4 sm:p-8.5">
                   <h2 className="font-medium text-dark text-xl sm:text-2xl mb-5.5">
-                    {t("Shipping details", "تفاصيل الشحن")}
+                    {t("Shipping Details", "تفاصيل الشحن")}
                   </h2>
 
                   <div className="flex flex-col lg:flex-row gap-5 mb-5">
@@ -443,10 +444,7 @@ const Checkout = () => {
                       rows={4}
                       value={form.notes}
                       onChange={handleChange}
-                      placeholder={t(
-                        "Notes about your order, e.g. special notes for delivery.",
-                        "ملاحظات حول طلبك، مثل ملاحظات خاصة بالتوصيل."
-                      )}
+                      placeholder={t("e.g. Delivery instructions", "مثال: تعليمات التوصيل")}
                       className={inputClass}
                     ></textarea>
                   </div>
@@ -600,12 +598,13 @@ const Checkout = () => {
                       </p>
                       <p className="mb-1">
                         {(isArabic ? storeInfo.store_name_ar : storeInfo.store_name_en) ||
-                          "Hala Dresses"}{" "}
-                       : {storeInfo.store_address || t("Muscat, Oman", "مسقط، عمان")}
+                          t("Hala Dresses", "حلا للازياء")}
+                        {" · "}
+                        {storeInfo.store_address || t("Muscat, Oman", "مسقط، عمان")}
                         {storeInfo.store_phone && (
                           <>
-                            {" "}
-                           : <span dir="ltr">{storeInfo.store_phone}</span>
+                            {" · "}
+                            <span dir="ltr">{storeInfo.store_phone}</span>
                           </>
                         )}
                       </p>
@@ -632,7 +631,7 @@ const Checkout = () => {
                       <h4 className="font-medium text-dark">
                         {t("Product", "المنتج")}
                       </h4>
-                      <h4 className="font-medium text-dark text-right">
+                      <h4 className="font-medium text-dark text-end">
                         {t("Subtotal", "المجموع الفرعي")}
                       </h4>
                     </div>
@@ -656,7 +655,7 @@ const Checkout = () => {
                               </span>
                             )}
                           </p>
-                          <p className="text-dark text-right whitespace-nowrap">
+                          <p className="text-dark text-end whitespace-nowrap">
                             {(item.discountedPrice * item.quantity).toFixed(3)}{" "}
                             {currency}
                           </p>
@@ -667,7 +666,7 @@ const Checkout = () => {
                     {quote?.appliedPromotions.map((p) => (
                       <div key={p.id} className="flex items-center justify-between py-4 border-b border-gray-3 gap-3">
                         <p className="text-green">{t(p.nameEn, p.nameAr)}</p>
-                        <p className="text-green text-right whitespace-nowrap">
+                        <p className="text-green text-end whitespace-nowrap">
                           -{p.discount.toFixed(3)} {currency}
                         </p>
                       </div>
@@ -680,7 +679,7 @@ const Checkout = () => {
 
                     <div className="flex items-center justify-between py-5 border-b border-gray-3">
                       <p className="text-dark">{t("Shipping Fee", "رسوم الشحن")}</p>
-                      <p className="text-dark text-right">
+                      <p className="text-dark text-end">
                         {shownShipping === 0
                           ? t("Free", "مجاني")
                           : `${shownShipping.toFixed(3)} ${currency}`}
@@ -692,7 +691,7 @@ const Checkout = () => {
                         <p className="text-dark">
                           {quote!.pricesIncludeTax ? t("Includes VAT", "شامل ضريبة القيمة المضافة") : t("VAT", "ضريبة القيمة المضافة")}
                         </p>
-                        <p className="text-dark text-right">
+                        <p className="text-dark text-end">
                           {quote!.pricesIncludeTax ? "" : "+"}
                           {quote!.taxTotal.toFixed(3)} {currency}
                         </p>
@@ -704,7 +703,7 @@ const Checkout = () => {
                       <p className="font-medium text-lg text-dark">
                         {t("Total", "الإجمالي")}
                       </p>
-                      <p className="font-medium text-lg text-dark text-right">
+                      <p className="font-medium text-lg text-dark text-end">
                         {total.toFixed(3)} {currency}
                       </p>
                     </div>
